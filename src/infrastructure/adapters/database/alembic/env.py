@@ -19,8 +19,6 @@ config = context.config
 config.set_main_option("sqlalchemy.url", str(SQLALCHEMY_DATABASE_URI))
 config.set_main_option("script_location", "myapp:migrations")
 
-
-
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
@@ -36,6 +34,7 @@ from src.infrastructure.adapters.database.models.model_base import base
 import src.infrastructure.adapters.database.models
 
 target_metadata = base.metadata
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -64,6 +63,8 @@ def run_migrations_offline() -> None:
     )
 
     with context.begin_transaction():
+        context.execute(f'create schema if not exists {target_metadata.schema};')
+        context.execute(f'set search_path to {target_metadata.schema}')
         context.run_migrations()
 
 
@@ -82,10 +83,18 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, target_metadata=target_metadata,
+            # new
+            version_table_schema=target_metadata.schema,
+            include_schemas=True
         )
 
         with context.begin_transaction():
+            """
+            By default search_path is setted to "$user",public 
+            that why alembic can't create foreign keys correctly
+            """
+            context.execute('SET search_path TO public')
             context.run_migrations()
 
 

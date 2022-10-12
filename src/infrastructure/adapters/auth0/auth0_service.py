@@ -3,6 +3,7 @@ from functools import wraps
 
 # Error handler
 import inject
+from flask import _request_ctx_stack
 from flask_restx import abort
 from flask_restx.reqparse import request as rq_flask
 from requests import request
@@ -57,8 +58,7 @@ def requires_auth(f):
 
     @wraps(f)
     @inject.autoparams('api_error')
-    def decorated(api: None, *args, **kwargs):
-        # token_expired_error = token_expired_error
+    def decorated(*args, **kwargs):
         token = get_token_auth_header()
         url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
         jsonurl = request("GET", url, headers={}, data={})
@@ -95,7 +95,7 @@ def requires_auth(f):
                 e = api_error('InvalidHeaderUnknownError')
                 abort(code=e.status_code, message=e.message, error=e.error)
 
-            # _request_ctx_stack.top.current_user = payload
+            _request_ctx_stack.top.current_user = payload
             return f(*args, **kwargs)
 
         e = api_error('InvalidHeaderByKeyError')

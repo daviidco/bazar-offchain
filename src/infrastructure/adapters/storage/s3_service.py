@@ -3,14 +3,14 @@ import inject
 from botocore.exceptions import ClientError
 
 from src.domain.ports.object_file_interface import IStorage
-from src.infrastructure.config.default_infra import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+from src.infrastructure.config.default_infra import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME
 
 
 class S3Repository(IStorage):
 
     @inject.autoparams()
-    def __init__(self, bucket_name, s3_client=None, session=None):
-        self.bucket_name = bucket_name
+    def __init__(self, bucket_name=None, s3_client=None, session=None):
+        self.bucket_name = bucket_name if bucket_name is not None else AWS_BUCKET_NAME
         self.s3_client = s3_client
         self.session = session
 
@@ -73,10 +73,9 @@ class S3Repository(IStorage):
             error = True
         return error
 
-    def put_object(self, body: any, bucket: str, key: str, content_type: str):
+    def put_object(self, body: any, key: str, content_type: str, bucket: str = None):
         res = False
         try:
-            folder_name = "name/ofyour/folders"
             self.s3_client.put_object(Body=body, Bucket=self.bucket_name, Key=key, ContentType=content_type)
             res = True
         except ClientError as e:

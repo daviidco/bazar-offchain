@@ -115,6 +115,15 @@ Set environment variables in virtual environment if you want to do testing
 export FLASK_APP="entrypoint:app"
 ```
 
+Install dependencies poetry from poetry.lock
+```
+poetry install
+```
+or install dependencies poetry from requirements.txt
+```
+poetry add $( cat requirements.txt )
+```
+
 Configure the database with the commands
 ```
 flask db init

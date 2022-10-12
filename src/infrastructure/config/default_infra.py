@@ -24,8 +24,10 @@ DB_USER = _get_env_variable(f"{ENV}_DB_USERNAME")
 DB_PASSWORD = _get_env_variable(f"{ENV}_DB_PASSWORD")
 DB_HOST = _get_env_variable(f"{ENV}_DB_HOST")
 DB_NAME = _get_env_variable(f"{ENV}_DB_NAME")
+DB_SCHEMA = _get_env_variable(f"{ENV}_DB_SCHEMA")
 
 SQLALCHEMY_DATABASE_URI = fr"{DB_ENGINE}://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}".replace('%', '%%')
+
 
 # AWS Credentials
 AWS_ACCESS_KEY_ID = _get_env_variable(f"{ENV}_AWS_ACCESS_KEY_ID")

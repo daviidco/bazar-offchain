@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -14,6 +14,7 @@ class CompanyBaseEntity(BaseModel):
     operative_years: int
     country: str
     city: str
+    path_photo_profile: Optional[str] = None
 
     class Config:
         orm_mode = True

@@ -4,6 +4,7 @@ from flask_restx import Api
 from src.infrastructure.adapters.flask import app
 from src.infrastructure.adapters.flask.app.controllers.user.blueprints.user_blueprint_v1 import users_v1_01_bp
 from src.infrastructure.adapters.flask.app.controllers.company.blueprints.company_bp_v1_0_1 import companies_v1_01_bp
+from src.infrastructure.adapters.flask.app.controllers.avatar.blueprints.avatar_bp_v1_0_1 import avatars_v1_01_bp
 from src.infrastructure.adapters.flask.app.utils.error_handling import ObjectNotFound, AppErrorBaseClass, \
     IntegrityErrorApp, AuthError
 from src.infrastructure.adapters.flask.app.utils.logger import configure_logging
@@ -43,6 +44,7 @@ def create_app(settings_module):
     # Blueprints register
     app.register_blueprint(users_v1_01_bp, url_prefix=f'{prefix}')
     app.register_blueprint(companies_v1_01_bp, url_prefix=f'{prefix}')
+    app.register_blueprint(avatars_v1_01_bp, url_prefix=f'{prefix}')
     app.logger.info('Blueprints Registered')
 
     @app.route(f'{prefix}/help', methods=['GET'])

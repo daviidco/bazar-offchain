@@ -1,7 +1,7 @@
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, AnyHttpUrl
 
 from src.domain.entities.common_entity import UuidEntity, PaginationEntity
 
@@ -14,7 +14,7 @@ class CompanyBaseEntity(BaseModel):
     operative_years: int
     country: str
     city: str
-    path_photo_profile: Optional[str] = None
+    profile_images: List[AnyHttpUrl] = None
 
     class Config:
         orm_mode = True
@@ -22,6 +22,7 @@ class CompanyBaseEntity(BaseModel):
 
 class CompanyNewEntity(CompanyBaseEntity):
     uuid_user: UUID
+    profile_image: AnyHttpUrl = None
 
 
 class CompanyEntity(CompanyBaseEntity, UuidEntity):

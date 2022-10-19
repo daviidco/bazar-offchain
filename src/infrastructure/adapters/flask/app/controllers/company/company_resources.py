@@ -1,5 +1,4 @@
 import json
-from typing import List
 
 import inject
 from flask import _request_ctx_stack
@@ -7,14 +6,10 @@ from flask_cors import cross_origin
 from flask_restx import Resource, Namespace
 from flask_restx.reqparse import request
 
-
 from src.application.company.company_uc import GetCompany, GetAllCompanies, CreateCompany
 from src.domain.entities.common_entity import JwtEntity
 from src.domain.entities.company_entity import CompanyNewEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
-from src.infrastructure.adapters.flask.app.utils.error_handling import AppErrorBaseClass
-# from app.third_parties.auth0.aurh0_service import requires_auth
-# from app.third_parties.storage.s3_service.py import upload_file_to_s3
 
 
 api = Namespace("/companies", description="Company controller")

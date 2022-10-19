@@ -5,8 +5,6 @@ from src.infrastructure.adapters.flask import app
 from src.infrastructure.adapters.flask.app.controllers.user.blueprints.user_blueprint_v1 import users_v1_01_bp
 from src.infrastructure.adapters.flask.app.controllers.company.blueprints.company_bp_v1_0_1 import companies_v1_01_bp
 from src.infrastructure.adapters.flask.app.controllers.avatar.blueprints.avatar_bp_v1_0_1 import avatars_v1_01_bp
-from src.infrastructure.adapters.flask.app.utils.error_handling import ObjectNotFound, AppErrorBaseClass, \
-    IntegrityErrorApp, AuthError
 from src.infrastructure.adapters.flask.app.utils.logger import configure_logging
 from src.infrastructure.adapters.flask.configuration_injector import configure_inject
 
@@ -26,13 +24,6 @@ def create_app(settings_module):
     app.logger.info(f'Environment configuration file: {path_config_file}')
 
     configure_inject(app)
-
-    # Initialize extensions
-    # db.init_app(app)
-    # ma.init_app(app)
-    # migrate.init_app(app, db)
-    # storage.init_app(app)
-    # auth0.init_app(app)
 
     # Catch errors 404
     Api(app,  catch_all_404s=True)

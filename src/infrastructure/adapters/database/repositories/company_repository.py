@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from src.domain.entities.company_entity import CompanyEntity, CompanyNewEntity, CompaniesPaginationEntity
 from src.domain.ports.company_interface import ICompanyRepository
 from src.infrastructure.adapters.database.models import User
-from src.infrastructure.adapters.database.models.company import Company, ProfileImage
+from src.infrastructure.adapters.database.models.company import Company, ProfileImage, FilesCompany, File
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
@@ -65,11 +65,11 @@ class CompanyRepository(ICompanyRepository):
                 session_trans.begin()
                 try:
 
-                    session_trans.add(object_to_save)
+                    # session_trans.add(object_to_save)
 
                     list_profile_images = self.build_urls_profile_images(profile_image)
 
-                    # Save in cloud
+                    # Save files in cloud and urls in database
                     if objects_cloud:
                         path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
                         # prefix = f"{jwt_entity.rol}/{company_entity.uuid_user}/{path_datetime}"
@@ -77,14 +77,23 @@ class CompanyRepository(ICompanyRepository):
 
                         for o in objects_cloud:
                             key = f"{prefix}/{o.filename}"
+                            file_to_save = File(name=o.filename,
+                                                 url=key)
+                            object_to_save.files.append(file_to_save)
                             self.__storage_repository.put_object(body=o, key=key, content_type=o.content_type)
-                except Exception as e:
-                    session_trans.rollback()
+                    session_trans.add(object_to_save)
+
+                except AssertionError as e:
+                    # self.__storage_repository.delete_all_objects_path(key=prefix + "/")
                     e = api_error('CompanySavingError')
                     abort(code=e.status_code, message=e.message, error=e.error)
+                except Exception as e:
+                    session_trans.rollback()
+                    self.__storage_repository.delete_all_objects_path(key=prefix+"/")
+                    abort(code=e.code, message=None, error=e.data['error'])
+
                 else:
                     session_trans.commit()
-
                     res_company = CompanyEntity.from_orm(object_to_save)
                     res_company.profile_images = list_profile_images
                     session_trans.close()

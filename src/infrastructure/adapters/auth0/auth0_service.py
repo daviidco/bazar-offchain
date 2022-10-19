@@ -1,7 +1,6 @@
 import json
 from functools import wraps
 
-# Error handler
 import inject
 from flask import _request_ctx_stack
 from flask_restx import abort
@@ -10,7 +9,7 @@ from requests import request
 
 from jose import jwt
 
-from src.infrastructure.adapters.flask.app.utils.error_handling import AuthError, TokenExpiredError, api_error
+from src.infrastructure.adapters.flask.app.utils.error_handling import  api_error
 from src.infrastructure.config.default_infra import AUTH0_DOMAIN, AUTH0_API_AUDIENCE, AUTH0_ALGORITHMS
 
 
@@ -21,32 +20,20 @@ def get_token_auth_header():
     if not auth:
         e = api_error('AuthorizationHeaderMissing')
         abort(code=e.status_code, message=e.message, error=e.error)
-        raise AuthError({"code": "authorization_header_missing",
-                         "description":
-                             "Authorization header is expected"}, 401)
 
     parts = auth.split()
 
     if parts[0].lower() != "bearer":
         e = api_error('InvalidHeaderByBearer')
         abort(code=e.status_code, message=e.message, error=e.error)
-        raise AuthError({"code": "invalid_header",
-                         "description":
-                             "Authorization header must start with"
-                             " Bearer"}, 401)
 
     elif len(parts) == 1:
         e = api_error('BearerTokenMissing')
         abort(code=e.status_code, message=e.message, error=e.error)
-        raise AuthError({"code": "invalid_header",
-                         "description": "Token not found"}, 401)
+
     elif len(parts) > 2:
         e = api_error('InvalidHeaderByShapeToken')
         abort(code=e.status_code, message=e.message, error=e.error)
-        raise AuthError({"code": "invalid_header",
-                         "description":
-                             "Authorization header must be"
-                             " Bearer token"}, 401)
 
     token = parts[1]
     return token

@@ -8,7 +8,6 @@ from flask_restx.reqparse import request
 from src.application.user.user_uc import GetUser, GetAllUsers, CreateUser
 from src.domain.entities.user_entity import UserNewEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
-from src.infrastructure.adapters.flask.app.utils.error_handling import AppErrorBaseClass
 
 api = Namespace(name='users', description="User controller")
 

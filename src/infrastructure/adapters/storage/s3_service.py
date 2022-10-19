@@ -1,8 +1,10 @@
 import boto3
 import inject
 from botocore.exceptions import ClientError
+from flask_restx import abort
 
 from src.domain.ports.object_file_interface import IStorage
+from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.default_infra import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME
 
 
@@ -22,6 +24,7 @@ class S3Repository(IStorage):
             self.session = boto3.Session(aws_access_key_id=AWS_ACCESS_KEY_ID,
                                          aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
         self.s3_resource = self.session.resource('s3')
+        self.s3_bucket = self.s3_resource.Bucket(self.bucket_name)
 
     def copy_object(self, origin_key: str, destination_key: str, origin_bucket: str, destination_bucket: str):
         error = False
@@ -79,7 +82,10 @@ class S3Repository(IStorage):
             self.s3_client.put_object(Body=body, Bucket=self.bucket_name, Key=key, ContentType=content_type)
             res = True
         except ClientError as e:
-            self.logger.info("Error uploading object -> %s", str(e))
+            msj = e.args[0]
+            e = api_error('S3Error')
+            e.error['description'] = msj
+            abort(code=e.status_code, message=e.message, error=e.error)
         return res
 
     def file_exists(self, file_key: str):
@@ -132,6 +138,19 @@ class S3Repository(IStorage):
                 "Failed to delete object '{}' from S3. {}".format(file_key, e.response)
             )
         return validation
+
+    def delete_all_objects_path(self, key: str):
+        res = False
+        try:
+            self.s3_bucket.objects.filter(Prefix=key).delete()
+            res = True
+        except ClientError as e:
+            msj = e.args[0]
+            e = api_error('S3Error')
+            e.error['description'] = msj
+            abort(code=e.status_code, message=e.message, error=e.error)
+
+        return res
 
     def upload_file_obj(self, buffer):
         error = False

@@ -59,6 +59,12 @@ APIErrors = {
                                     "message": "Existing User",
                                     "description": "Existing user in system off-chain.",
                                     "status_code": 401}},
-    # Errors Flask E2200 - ...
+    # Errors Flask E2200 - E2300
+
+    # Errors AWS E2300 - ...
+    'S3Error': {"error": {"code": "E2300",
+                          "message": "Error bucket s3",
+                          "description": "Undefined.",
+                          "status_code": 401}},
 
 }

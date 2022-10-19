@@ -1,8 +1,23 @@
+# -*- coding: utf-8 -*-
+#
+# This source code is the confidential, proprietary information of
+# Bazar Network S.A.S., you may not disclose such Information,
+# and may only use it in accordance with the terms of the license
+# agreement you entered into with Bazar Network S.A.S.
+#
+# 2022: Bazar Network S.A.S.
+# All Rights Reserved.
+#
+
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 from src.infrastructure.config.default_infra import SQLALCHEMY_DATABASE_URI, DB_SCHEMA
 
 
+#
+# This class lets connect with postgresql
+# @author David Córdoba
+#
 class PostgresAdapter:
     def __init__(self) -> None:
         self.engine = create_engine(SQLALCHEMY_DATABASE_URI,

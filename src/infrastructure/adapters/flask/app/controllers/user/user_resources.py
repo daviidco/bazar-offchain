@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+#
+# This source code is the confidential, proprietary information of
+# Bazar Network S.A.S., you may not disclose such Information,
+# and may only use it in accordance with the terms of the license
+# agreement you entered into with Bazar Network S.A.S.
+#
+# 2022: Bazar Network S.A.S.
+# All Rights Reserved.
+#
+
 import json
 
 import inject
@@ -8,6 +19,11 @@ from flask_restx.reqparse import request
 from src.application.user.user_uc import GetUser, GetAllUsers, CreateUser
 from src.domain.entities.user_entity import UserNewEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
+
+#
+# This file contains the user endpoints Api-rest
+# @author David Córdoba
+#
 
 api = Namespace(name='users', description="User controller")
 

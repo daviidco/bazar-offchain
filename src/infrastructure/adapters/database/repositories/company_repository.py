@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+#
+# This source code is the confidential, proprietary information of
+# Bazar Network S.A.S., you may not disclose such Information,
+# and may only use it in accordance with the terms of the license
+# agreement you entered into with Bazar Network S.A.S.
+#
+# 2022: Bazar Network S.A.S.
+# All Rights Reserved.
+#
+
 from datetime import datetime
 
 from flask_restx import abort
@@ -9,6 +20,11 @@ from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.company import Company, ProfileImage, FilesCompany, File
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
+
+#
+# This repository contains logic main related with company.
+# @author David Córdoba
+#
 
 class CompanyRepository(ICompanyRepository):
 
@@ -65,8 +81,6 @@ class CompanyRepository(ICompanyRepository):
                 session_trans.begin()
                 try:
 
-                    # session_trans.add(object_to_save)
-
                     list_profile_images = self.build_urls_profile_images(profile_image)
 
                     # Save files in cloud and urls in database
@@ -78,18 +92,18 @@ class CompanyRepository(ICompanyRepository):
                         for o in objects_cloud:
                             key = f"{prefix}/{o.filename}"
                             file_to_save = File(name=o.filename,
-                                                 url=key)
+                                                url=key)
                             object_to_save.files.append(file_to_save)
                             self.__storage_repository.put_object(body=o, key=key, content_type=o.content_type)
                     session_trans.add(object_to_save)
 
                 except AssertionError as e:
-                    # self.__storage_repository.delete_all_objects_path(key=prefix + "/")
+                    self.__storage_repository.delete_all_objects_path(key=prefix + "/")
                     e = api_error('CompanySavingError')
                     abort(code=e.status_code, message=e.message, error=e.error)
                 except Exception as e:
                     session_trans.rollback()
-                    self.__storage_repository.delete_all_objects_path(key=prefix+"/")
+                    self.__storage_repository.delete_all_objects_path(key=prefix + "/")
                     abort(code=e.code, message=None, error=e.data['error'])
 
                 else:

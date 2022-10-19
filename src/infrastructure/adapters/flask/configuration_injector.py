@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+#
+# This source code is the confidential, proprietary information of
+# Bazar Network S.A.S., you may not disclose such Information,
+# and may only use it in accordance with the terms of the license
+# agreement you entered into with Bazar Network S.A.S.
+#
+# 2022: Bazar Network S.A.S.
+# All Rights Reserved.
+#
+
+
 import inject
 from flask import Flask
 
@@ -11,6 +23,10 @@ from src.infrastructure.adapters.database.repositories.company_repository import
 from src.infrastructure.adapters.database.repositories.user_repository import UserRepository
 from src.infrastructure.adapters.storage.s3_service import S3Repository
 
+#
+# This file contains the injections
+# @author David Córdoba
+#
 
 def configure_inject(application: Flask) -> None:
     def config(binder: inject.Binder) -> None:
@@ -18,7 +34,5 @@ def configure_inject(application: Flask) -> None:
         binder.bind(IUserRepository, UserRepository(psql_adapter))
         binder.bind(ICompanyRepository, CompanyRepository(psql_adapter, S3Repository()))
         binder.bind(IAvatarRepository, AvatarRepository(psql_adapter))
-        # binder.bind(IStorage, S3Repository)
-        # binder.bind(IStorage, CompanyRepository(psql_adapter.session))
 
     inject.configure(config)

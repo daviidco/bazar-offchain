@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+#
+# This source code is the confidential, proprietary information of
+# Bazar Network S.A.S., you may not disclose such Information,
+# and may only use it in accordance with the terms of the license
+# agreement you entered into with Bazar Network S.A.S.
+#
+# 2022: Bazar Network S.A.S.
+# All Rights Reserved.
+#
+
 from datetime import datetime
 import uuid
 
@@ -10,6 +21,10 @@ from src.infrastructure.adapters.database.models.model_base import base
 from src.infrastructure.config.default_infra import UTC_TIME_ZONE
 
 
+#
+# These models are related with company model  they are defined to create database table.
+# @author David Córdoba
+#
 class StatusFile(base):
     __tablename__ = 'status_file'
     id = Column(Integer, primary_key=True)
@@ -79,7 +94,6 @@ class Company(base):
 
     def __init__(self, company_name, address, chamber_commerce, legal_representative,
                  operative_years, country, city, user_id, profile_image_id):
-
         self.company_name = company_name
         self.address = address
         self.chamber_commerce = chamber_commerce
@@ -95,6 +109,7 @@ class Company(base):
 
     def __str__(self):
         return f'{self.company_name}: {self.chamber_commerce}'
+
 
 class File(base):
     # Don't forget import model in __all_models.py

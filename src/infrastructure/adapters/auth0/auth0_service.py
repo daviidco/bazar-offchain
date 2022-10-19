@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+#
+# This source code is the confidential, proprietary information of
+# Bazar Network S.A.S., you may not disclose such Information,
+# and may only use it in accordance with the terms of the license
+# agreement you entered into with Bazar Network S.A.S.
+#
+# 2022: Bazar Network S.A.S.
+# All Rights Reserved.
+#
+
 import json
 from functools import wraps
 
@@ -11,6 +22,12 @@ from jose import jwt
 
 from src.infrastructure.adapters.flask.app.utils.error_handling import  api_error
 from src.infrastructure.config.default_infra import AUTH0_DOMAIN, AUTH0_API_AUDIENCE, AUTH0_ALGORITHMS
+
+
+#
+# These methods lets verify the user with Auth0 Service.
+# @author David Córdoba
+#
 
 
 def get_token_auth_header():

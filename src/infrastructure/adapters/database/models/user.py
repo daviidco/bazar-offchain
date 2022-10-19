@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+#
+# This source code is the confidential, proprietary information of
+# Bazar Network S.A.S., you may not disclose such Information,
+# and may only use it in accordance with the terms of the license
+# agreement you entered into with Bazar Network S.A.S.
+#
+# 2022: Bazar Network S.A.S.
+# All Rights Reserved.
+#
+
 from datetime import datetime
 import uuid
 from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey
@@ -8,6 +19,11 @@ from sqlalchemy_utils import UUIDType
 from src.infrastructure.adapters.database.models.model_base import base
 from src.infrastructure.config.default_infra import UTC_TIME_ZONE
 
+
+#
+# These models are related with user model they are defined to create database table.
+# @author David Córdoba
+#
 
 class StatusUser(base):
     __tablename__ = 'status_user'

@@ -1,6 +1,21 @@
+# -*- coding: utf-8 -*-
+#
+# This source code is the confidential, proprietary information of
+# Bazar Network S.A.S., you may not disclose such Information,
+# and may only use it in accordance with the terms of the license
+# agreement you entered into with Bazar Network S.A.S.
+#
+# 2022: Bazar Network S.A.S.
+# All Rights Reserved.
+#
+
 from abc import ABC, abstractmethod
 
 
+#
+# This interface or port lets define the methods to implement by S3repository.
+# @author David Córdoba
+#
 class IStorage(ABC):
 
     @abstractmethod

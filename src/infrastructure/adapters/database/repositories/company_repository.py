@@ -87,7 +87,7 @@ class CompanyRepository(ICompanyRepository):
                     if objects_cloud:
                         path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
                         # prefix = f"{jwt_entity.rol}/{company_entity.uuid_user}/{path_datetime}"
-                        prefix = f"seller/{company_entity.uuid_user}/documents_company/{path_datetime}"
+                        prefix = f"undefined/{company_entity.uuid_user}/documents_company/{path_datetime}"
 
                         for o in objects_cloud:
                             key = f"{prefix}/{o.filename}"

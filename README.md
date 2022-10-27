@@ -47,6 +47,7 @@ git clone https://github.com/bazarnetwork/bazar-offchain.git
 ```
 .
 ├── alembic.ini
+├── application.py
 ├── poetry.lock
 ├── pyproject.toml
 ├── src
@@ -107,12 +108,15 @@ git clone https://github.com/bazarnetwork/bazar-offchain.git
 │           ├── staging.py
 │           └── testing.py
 └── tests
+└── .ebxtensions
 ```
 
 ## ⚙️ Configure bazar-offchain
 Set environment variables in virtual environment if you want to do testing
 ```
-export FLASK_APP="entrypoint:app"
+set -a
+source .flaskenv
+set +a
 ```
 
 Install dependencies poetry from poetry.lock
@@ -126,14 +130,10 @@ poetry add $( cat requirements.txt )
 
 Configure the database with the commands
 ```
-flask db init
-flask db migrate -m "Initial_db"
-flask db upgrade
+alembic revision --autogenerate -m "Create models name_model" 
+alembic upgrade head  
 ```
-Fix import before upgrade in first migration path: migrations/versions/....init_db.py
-```
-flask db upgrade
-```
+
 
 ## ▶️ Run API bazar-offchain
 Run Api:

@@ -6,9 +6,6 @@ import sys
 
 sys.path = ['', '..'] + sys.path[1:]
 
-# breakpoint()
-
-
 from alembic import context
 
 from src.infrastructure.config.default_infra import SQLALCHEMY_DATABASE_URI
@@ -34,7 +31,6 @@ from src.infrastructure.adapters.database.models.model_base import base
 import src.infrastructure.adapters.database.models
 
 target_metadata = base.metadata
-
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

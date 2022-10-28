@@ -8,8 +8,7 @@
 # 2022: Bazar Network S.A.S.
 # All Rights Reserved.
 #
-
-
+from typing import List, Union
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -45,7 +44,7 @@ class ErrorEntity(BaseModel):
 class JwtEntity(BaseModel):
     iss: str
     sub: str
-    aud: str
+    aud: Union[str, List[str]]
     iat: int
     exp: int
     azp: str

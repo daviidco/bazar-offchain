@@ -67,7 +67,11 @@ def requires_auth(f):
         url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
         jsonurl = request("GET", url, headers={}, data={})
         jwks = json.loads(jsonurl.content)
-        unverified_header = jwt.get_unverified_header(token)
+        try:
+            unverified_header = jwt.get_unverified_header(token)
+        except Exception as e:
+            e = api_error('InvalidHeaderByKeyError')
+            abort(code=e.status_code, message=e.message, error=e.error)
         rsa_key = {}
         for key in jwks["keys"]:
             if key["kid"] == unverified_header["kid"]:
@@ -100,6 +104,15 @@ def requires_auth(f):
                 abort(code=e.status_code, message=e.message, error=e.error)
 
             _request_ctx_stack.top.current_user = payload
+            try:
+                domain = AUTH0_API_AUDIENCE.split('.')[0]
+                domain_roles = f'{domain}/roles'
+                if domain_roles in payload:
+                    kwargs['role'] = payload[domain_roles][0]
+            except Exception:
+                e = api_error('RoleAccessTokenError')
+                abort(code=e.status_code, message=e.message, error=e.error)
+
             return f(*args, **kwargs)
 
         e = api_error('InvalidHeaderByKeyError')

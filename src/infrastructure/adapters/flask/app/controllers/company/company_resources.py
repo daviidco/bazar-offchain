@@ -48,11 +48,12 @@ class CompaniesResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def post(self):
+    def post(self, *args, **kwargs):
         jwt_entity = JwtEntity.parse_obj(_request_ctx_stack.top.current_user)
+        role = kwargs['role']
         entity = CompanyNewEntity.parse_obj(json.loads(request.form['body']))
         files = request.files.getlist('files[]')
-        result = self.create_company.execute(jwt_entity, entity, files)
+        result = self.create_company.execute(role, entity, files)
         return json.loads(result.json()), 201
 
 

@@ -9,11 +9,17 @@
 # All Rights Reserved.
 #
 
-from src.infrastructure.adapters.database.models.user import User
-from src.infrastructure.adapters.database.models.company import *
-from src.infrastructure.adapters.database.models.product import *
+from abc import ABC, abstractmethod
+
+from src.domain.entities.basic_product_entity import ProductsBaseList
+
 
 #
-# This file lets recognize the models to work with alembic.
+# This interface or port lets define the methods to implement by basic_product_repository.
 # @author David Córdoba
 #
+class IBasicProductRepository(ABC):
+
+    @abstractmethod
+    def get_all_basic_products(self) -> ProductsBaseList:
+        raise Exception('Not implemented method')

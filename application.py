@@ -16,9 +16,9 @@ from flask_restx import Api
 from src.infrastructure.adapters.flask.app.controllers.user.blueprints.user_blueprint_v1 import users_v1_01_bp
 from src.infrastructure.adapters.flask.app.controllers.company.blueprints.company_bp_v1_0_1 import companies_v1_01_bp
 from src.infrastructure.adapters.flask.app.controllers.avatar.blueprints.avatar_bp_v1_0_1 import avatars_v1_01_bp
+from src.infrastructure.adapters.flask.app.controllers.product.blueprints.product_bp_v1_0_1 import products_v1_01_bp
 from src.infrastructure.adapters.flask.app.utils.logger import configure_logging
 from src.infrastructure.adapters.flask.configuration_injector import configure_inject
-
 
 application = Flask(__name__)
 settings_module = os.getenv('APP_SETTINGS_MODULE')
@@ -36,17 +36,27 @@ application.logger.info(f'Environment configuration file: {path_config_file}')
 configure_inject(application)
 
 # Catch errors 404
-Api(application,  catch_all_404s=True)
+Api(application, catch_all_404s=True)
 
 # Disable strict mode when URL ends with /
 application.url_map.strict_slashes = False
+
+
+@application.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
 
 prefix = '/api'
 # Blueprints register
 application.register_blueprint(users_v1_01_bp, url_prefix=f'{prefix}')
 application.register_blueprint(companies_v1_01_bp, url_prefix=f'{prefix}')
 application.register_blueprint(avatars_v1_01_bp, url_prefix=f'{prefix}')
+application.register_blueprint(products_v1_01_bp, url_prefix=f'{prefix}')
 application.logger.info('Blueprints Registered')
+
 
 @application.route(f'{prefix}/help', methods=['GET'])
 def help():

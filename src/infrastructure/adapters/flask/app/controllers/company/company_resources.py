@@ -40,7 +40,7 @@ class CompaniesResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def get(self):
+    def get(self, *args, **kwargs):
         limit = request.json['limit']
         offset = request.json['offset']
         result = self.get_all_companies.execute(limit, offset)
@@ -67,7 +67,7 @@ class CompanyResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def get(self, company_uuid):
+    def get(self, company_uuid, *args, **kwargs):
         result = self.get_company.execute(company_uuid)
         return json.loads(result.json()), 200
 

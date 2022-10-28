@@ -145,7 +145,7 @@ class ProductRepository(IProductRepository):
             e = api_error('IncotermNotExists')
             abort(code=e.status_code, message=e.message, error=e.error)
 
-    def new_product(self, product_entity: ProductNewEntity, objects_cloud: list, images: list) -> ProductEntity:
+    def new_product(self, role:str, product_entity: ProductNewEntity, objects_cloud: list, images: list) -> ProductEntity:
         basic_product_id = self.get_basic_product_id_by_uuid(product_entity.basic_product_uuid)
         product_type_id = self.get_product_type_id_by_uuid(product_entity.product_type_uuid)
         variety_id = self.get_variety_id_by_uuid(product_entity.variety_uuid)
@@ -176,8 +176,7 @@ class ProductRepository(IProductRepository):
                 # Save files in cloud and urls in database
                 if objects_cloud:
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                    # prefix = f"{jwt_entity.rol}/{company_entity.uuid_user}/{path_datetime}"
-                    prefix = f"undefined/{product_entity.uuid_user}/documents_product/{path_datetime}"
+                    prefix = f"{role}/{product_entity.uuid_user}/documents_product/{path_datetime}"
                     for idx, o in enumerate(objects_cloud):
                         key = f"{prefix}/{o.filename}"
 
@@ -199,8 +198,7 @@ class ProductRepository(IProductRepository):
                 # Save images in cloud and urls in database
                 if images:
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                    # prefix = f"{jwt_entity.rol}/{company_entity.uuid_user}/{path_datetime}"
-                    prefix_images = f"undefined/{product_entity.uuid_user}/{object_to_save.uuid}" \
+                    prefix_images = f"{role}/{product_entity.uuid_user}/{object_to_save.uuid}" \
                                     f"/product_images/{path_datetime}"
                     for i in images:
                         key = f"{prefix_images}/{i.filename}"

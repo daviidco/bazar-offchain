@@ -42,7 +42,7 @@ class ProductResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def get(self):
+    def get(self, *args, **kwargs):
         limit = request.json['limit']
         offset = request.json['offset']
         result = self.get_all_products.execute(limit, offset)
@@ -52,10 +52,11 @@ class ProductResource(Resource):
     @requires_auth
     def post(self, *args, **kwargs):
         role = kwargs['role']
+        # role = 'undefinded'
         entity = ProductNewEntity.parse_obj(json.loads(request.form['body']))
         files = request.files.getlist('files[]')
         images = request.files.getlist('images[]')
-        result = self.create_product.execute(entity, files, images)
+        result = self.create_product.execute(role, entity, files, images)
         return json.loads(result.json()), 201
 
 
@@ -68,7 +69,7 @@ class BasicProductsResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def get(self):
+    def get(self, *args, **kwargs):
         result = self.get_all_basic_products.execute()
         return json.loads(result.json()), 200
 
@@ -82,7 +83,7 @@ class BasicProductsResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def get(self, uuid_basic_product):
+    def get(self, uuid_basic_product, *args, **kwargs):
         result = self.get_products_type_by_uuid_basic_product.execute(uuid_basic_product)
         return json.loads(result.json()), 200
 
@@ -96,7 +97,7 @@ class BasicProductsResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def get(self, uuid_basic_product):
+    def get(self, uuid_basic_product, *args, **kwargs):
         result = self.get_varieties_by_uuid_basic_product.execute(uuid_basic_product)
         return json.loads(result.json()), 200
 
@@ -104,13 +105,13 @@ class BasicProductsResource(Resource):
 @api.route("/sustainability-certifications")
 class BasicProductsResource(Resource):
     @inject.autoparams('get_all_sustainability_certifications')
-    def __init__(self, api: None, get_all_sustainability_certifications: GetSustainabilityCertifications):
+    def __init__(self, api: None, get_all_sustainability_certifications: GetSustainabilityCertifications, *args, **kwargs):
         self.api = api
         self.get_all_sustainability_certifications = get_all_sustainability_certifications
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def get(self):
+    def get(self, *args, **kwargs):
         result = self.get_all_sustainability_certifications.execute()
         return json.loads(result.json()), 200
 
@@ -124,7 +125,7 @@ class BasicProductsResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def get(self):
+    def get(self, *args, **kwargs):
         result = self.get_all_incoterms.execute()
         return json.loads(result.json()), 200
 
@@ -138,6 +139,6 @@ class BasicProductsResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def get(self):
+    def get(self, *args, **kwargs):
         result = self.get_all_minimum_orders.execute()
         return json.loads(result.json()), 200

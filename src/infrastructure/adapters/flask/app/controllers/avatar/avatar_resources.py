@@ -36,7 +36,7 @@ class AvatarsResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def get(self):
+    def get(self, *args, **kwargs):
         limit = request.json['limit'] if request.data else None
         offset = request.json['offset'] if request.data else None
         result = self.get_all_avatars.execute(limit, offset)

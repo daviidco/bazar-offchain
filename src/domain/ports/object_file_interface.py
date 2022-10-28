@@ -40,6 +40,10 @@ class IStorage(ABC):
         raise Exception('Not implemented method')
 
     @abstractmethod
+    def put_list_object(self, files: list, prefix: str, bucket: str = None):
+        raise Exception('Not implemented method')
+
+    @abstractmethod
     def file_exists(self, file_key: str):
         raise Exception('Not implemented method')
 

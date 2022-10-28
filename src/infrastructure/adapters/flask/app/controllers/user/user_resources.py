@@ -38,7 +38,7 @@ class UsersResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def get(self):
+    def get(self, *args, **kwargs):
         limit = request.json['limit']
         offset = request.json['offset']
         result = self.get_all_users.execute(limit, offset)
@@ -46,7 +46,7 @@ class UsersResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def post(self):
+    def post(self, *args, **kwargs):
         entity = UserNewEntity.parse_obj(request.json)
         result = self.create_user.execute(entity)
         return json.loads(result.json()), 201
@@ -62,6 +62,6 @@ class UserResource(Resource):
 
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
-    def get(self, user_uuid):
+    def get(self, user_uuid, *args, **kwargs):
         result = self.get_user.execute(user_uuid)
         return json.loads(result.json()), 200

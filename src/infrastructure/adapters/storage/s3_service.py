@@ -100,6 +100,21 @@ class S3Repository(IStorage):
             msj = e.args[0]
             e = api_error('S3Error')
             e.error['description'] = msj
+            abort(code=e.status_code, message=None, error=e.error)
+        return res
+
+    def put_list_object(self, files: list, prefix: str, bucket: str = None):
+        res = False
+        bucket_name = self.bucket_name if bucket is None else bucket
+        try:
+            for o in files:
+                key = f"{prefix}/{o.filename}"
+                self.s3_client.put_object(Body=o, Bucket=bucket_name, Key=key, ContentType=o.content_type)
+            res = True
+        except ClientError as e:
+            msj = e.args[0]
+            e = api_error('S3Error')
+            e.error['description'] = msj
             abort(code=e.status_code, message=e.message, error=e.error)
         return res
 

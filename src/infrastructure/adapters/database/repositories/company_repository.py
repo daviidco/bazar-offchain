@@ -47,13 +47,12 @@ class CompanyRepository(ICompanyRepository):
                 profile_images.append(f"{url_base}-b{format_file}")
         return profile_images
 
-    def new_company(self, jwt_entity, company_entity: CompanyNewEntity,
-                    objects_cloud: list) -> CompanyEntity:
+    def new_company(self, role: str, company_entity: CompanyNewEntity, objects_cloud: list) -> CompanyEntity:
         user = self.session.query(User).filter_by(uuid=company_entity.uuid_user).first()
         if user is None:
             user_to_save = User(
                 uuid=company_entity.uuid_user,
-                rol="seller"  # jwt_entity.rol,
+                rol=role
             )
             self.session.add(user_to_save)
             self.session.commit()
@@ -86,8 +85,7 @@ class CompanyRepository(ICompanyRepository):
                     # Save files in cloud and urls in database
                     if objects_cloud:
                         path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                        # prefix = f"{jwt_entity.rol}/{company_entity.uuid_user}/{path_datetime}"
-                        prefix = f"undefined/{company_entity.uuid_user}/documents_company/{path_datetime}"
+                        prefix = f"{role}/{company_entity.uuid_user}/documents_company/{path_datetime}"
 
                         for o in objects_cloud:
                             key = f"{prefix}/{o.filename}"

@@ -57,6 +57,11 @@ APIErrors = {
                                           "description": "Unable to find appropriate key.",
                                           "status_code": 401}},
 
+    'RoleAccessTokenError': {"error": {"code": "E2008",
+                                       "message": "Role not found",
+                                       "description": "Role not found in access token.",
+                                       "status_code": 401}},
+
     # Errors S3 E2100 - E2200
 
     # Company
@@ -66,9 +71,9 @@ APIErrors = {
                                        "status_code": 401}},
 
     'CompanySavingError': {"error": {"code": "E2201",
-                                           "message": "Error saving company",
-                                           "description": "Please check the documents and json body.",
-                                           "status_code": 401}},
+                                     "message": "Error saving company",
+                                     "description": "Please check the documents and json body.",
+                                     "status_code": 401}},
 
     # User
 
@@ -76,12 +81,50 @@ APIErrors = {
                                     "message": "Existing User",
                                     "description": "Existing user in system off-chain.",
                                     "status_code": 401}},
+
+    # Product
+
+    'BasicProductNotExists': {"error": {"code": "E2203",
+                                        "message": "Basic product not exists",
+                                        "description": "Basic product type not exists please verify uuid.",
+                                        "status_code": 422}},
+
+    'ProductTypeNotExists': {"error": {"code": "E2204",
+                                       "message": "Product type not exists",
+                                       "description": "Product type not exists please verify uuid.",
+                                       "status_code": 422}},
+
+    'VarietyNotExists': {"error": {"code": "E2205",
+                                   "message": "Variety type not exists",
+                                   "description": "Variety not exists please verify uuid.",
+                                   "status_code": 422}},
+
+    'MinimumOrderNotExists': {"error": {"code": "E2206",
+                                        "message": "Minimum Order not exists",
+                                        "description": "Minimum Order not exists please verify uuid.",
+                                        "status_code": 422}},
+
+    'IncotermNotExists': {"error": {"code": "E2207",
+                                    "message": "Minimum Order not exists",
+                                    "description": "Minimum Order not exists please verify uuid.",
+                                    "status_code": 422}},
+
+    'NumCertificationsVSNumFilesError': {"error": {"code": "E2208",
+                                                   "message": "Number certifications different number files",
+                                                   "description": "Please verify the number files to upload",
+                                                   "status_code": 500}},
+
+    'ObjectNotFound': {"error": {"code": "E2203",
+                                 "message": "Object not found",
+                                 "description": "Object not found, please verify uuid.",
+                                 "status_code": 422}},
+
     # Errors Flask E2200 - E2300
 
     # Errors AWS E2300 - ...
     'S3Error': {"error": {"code": "E2300",
                           "message": "Error bucket s3",
                           "description": "Undefined.",
-                          "status_code": 401}},
+                          "status_code": 500}},
 
 }

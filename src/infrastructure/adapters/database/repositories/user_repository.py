@@ -46,6 +46,9 @@ class UserRepository(IUserRepository):
     def get_user_by_uuid(self, uuid: str) -> UserEntity:
         found_object = self.session.query(User).filter_by(uuid=uuid).first()
         found_object = UserEntity.from_orm(found_object) if found_object is not None else None
+        if found_object is None:
+            e = api_error('ObjectNotFound')
+            abort(code=e.status_code, message=e.message, error=e.error)
         return found_object
 
     def get_users_count(self) -> int:

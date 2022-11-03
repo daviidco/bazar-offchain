@@ -29,7 +29,7 @@ from src.infrastructure.adapters.auth0.auth0_service import requires_auth
 # @author David Córdoba
 #
 
-api = Namespace("/products", description="Product controller")
+api = Namespace("products", description="Product controller", path='/api/v1/products')
 
 
 @api.route("/")
@@ -40,6 +40,7 @@ class ProductResource(Resource):
         self.get_all_products = get_all_products
         self.create_product = create_product
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
@@ -48,11 +49,11 @@ class ProductResource(Resource):
         result = self.get_all_products.execute(limit, offset)
         return json.loads(result.json()), 200
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
         role = kwargs['role']
-        # role = 'undefinded'
         entity = ProductNewEntity.parse_obj(json.loads(request.form['body']))
         files = request.files.getlist('files[]')
         images = request.files.getlist('images[]')
@@ -67,6 +68,7 @@ class BasicProductsResource(Resource):
         self.api = api
         self.get_all_basic_products = get_all_basic_products
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
@@ -81,6 +83,7 @@ class BasicProductsResource(Resource):
         self.api = api
         self.get_products_type_by_uuid_basic_product = get_products_type_by_uuid_basic_product
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, uuid_basic_product, *args, **kwargs):
@@ -95,6 +98,7 @@ class BasicProductsResource(Resource):
         self.api = api
         self.get_varieties_by_uuid_basic_product = get_varieties_by_uuid_basic_product
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, uuid_basic_product, *args, **kwargs):
@@ -109,6 +113,7 @@ class BasicProductsResource(Resource):
         self.api = api
         self.get_all_sustainability_certifications = get_all_sustainability_certifications
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
@@ -123,6 +128,7 @@ class BasicProductsResource(Resource):
         self.api = api
         self.get_all_incoterms = get_all_incoterms
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
@@ -137,6 +143,7 @@ class BasicProductsResource(Resource):
         self.api = api
         self.get_all_minimum_orders = get_all_minimum_orders
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):

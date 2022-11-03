@@ -13,10 +13,11 @@ import json
 
 import inject
 from flask_cors import cross_origin
-from flask_restx import Resource, Namespace
+from flask_restx import Resource, Namespace, fields
 from flask_restx.reqparse import request
 
 from src.application.company.avatar_uc import GetAllAvatars
+from src.domain.entities.common_entity import InputPaginationEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
 
 #
@@ -24,7 +25,7 @@ from src.infrastructure.adapters.auth0.auth0_service import requires_auth
 # @author David Córdoba
 #
 
-api = Namespace("/avatars", description="Avatar controller")
+api = Namespace("avatars", description="Avatar controller", path='/api/v1/avatars')
 
 
 @api.route("/")
@@ -34,10 +35,18 @@ class AvatarsResource(Resource):
         self.api = api
         self.get_all_avatars = get_all_avatars
 
+    resource_fields = api.model('Resource', {
+        'name': fields.String,
+    })
+
+    schema = InputPaginationEntity.schema()
+    model = api.schema_model("InputPaginationEntity", schema)
+
+    @api.doc(params=schema['properties'], security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
-        limit = request.json['limit'] if request.data else None
-        offset = request.json['offset'] if request.data else None
+        limit = request.args.get('limit', None)
+        offset = request.args.get('offset', None)
         result = self.get_all_avatars.execute(limit, offset)
         return json.loads(result.json()), 200

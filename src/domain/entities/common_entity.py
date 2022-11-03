@@ -11,7 +11,7 @@
 from typing import List, Union
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 #
@@ -31,8 +31,8 @@ class PaginationEntity(BaseModel):
 
 
 class InputPaginationEntity(BaseModel):
-    limit: int
-    offset: int
+    limit: int = Field(description="limit the number of rows returned from a query")
+    offset: int = Field(description="Omit a specified number of rows before the beginning of the result set")
 
 
 class ErrorEntity(BaseModel):

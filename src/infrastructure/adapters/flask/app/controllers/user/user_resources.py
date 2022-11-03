@@ -25,7 +25,7 @@ from src.infrastructure.adapters.auth0.auth0_service import requires_auth
 # @author David Córdoba
 #
 
-api = Namespace(name='users', description="User controller")
+api = Namespace(name='users', description="User controller", path='/api/v1/users')
 
 
 @api.route("/")
@@ -36,6 +36,7 @@ class UsersResource(Resource):
         self.get_all_users = get_all_users
         self.create_user = create_user
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
@@ -44,6 +45,7 @@ class UsersResource(Resource):
         result = self.get_all_users.execute(limit, offset)
         return json.loads(result.json()), 201
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
@@ -60,6 +62,7 @@ class UserResource(Resource):
         self.api = api
         self.get_user = get_user
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, user_uuid, *args, **kwargs):

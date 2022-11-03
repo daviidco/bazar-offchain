@@ -34,10 +34,10 @@ class ProductBaseEntity(BaseModel):
     available_for_sale: float
     minimum_order_uuid: UUID
     expected_price_per_kg: float
-    incoterm_uuid: UUID
     assistance_logistic: bool
     additional_description: str
 
+    incoterms_uuid: List[UUID] = None
     sustainability_certifications_uuid: List[UUID] = None
 
     class Config:
@@ -49,8 +49,8 @@ class ProductNewEntity(ProductBaseEntity):
 
 
 class ProductEntity(ProductBaseEntity, UuidEntity):
-    product_images: List[AnyHttpUrl] = None
-    product_files: List[AnyHttpUrl] = None
+    url_images: List[AnyHttpUrl] = None
+    url_files: List[AnyHttpUrl] = None
 
 
 class ProductsListEntity(BaseModel):
@@ -59,4 +59,3 @@ class ProductsListEntity(BaseModel):
 
 class ProductsPaginationEntity(BaseModel):
     results: List[ProductBaseEntity]
-

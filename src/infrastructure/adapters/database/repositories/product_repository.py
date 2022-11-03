@@ -26,7 +26,7 @@ from src.domain.entities.sustainability_certifications_entity import Sustainabil
 from src.domain.entities.variety_entity import VarietiesListEntity, VarietyEntity
 from src.domain.ports.product_interface import IProductRepository
 from src.infrastructure.adapters.database.models.product import Product, BasicProduct, ProductType, Variety, \
-    MinimumOrder, Incoterm, SustainabilityCertification, ProductFile, ProductSustainabilityCertification
+    MinimumOrder, Incoterm, SustainabilityCertification, ProductFile, ProductSustainabilityCertification, ProductImage
 from src.infrastructure.adapters.database.models.company import Company, ProfileImage, FilesCompany, File
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
@@ -135,7 +135,7 @@ class ProductRepository(IProductRepository):
         else:
             e = api_error('IncotermNotExists')
             abort(code=e.status_code, message=e.message, error=e.error)
-            
+
     def get_sustainability_certifications_id_by_uuid(self, uuid: str) -> IncotermEntity:
         certification = self.session.query(SustainabilityCertification).filter_by(uuid=uuid).first()
         if certification is not None:
@@ -145,12 +145,16 @@ class ProductRepository(IProductRepository):
             e = api_error('IncotermNotExists')
             abort(code=e.status_code, message=e.message, error=e.error)
 
-    def new_product(self, role:str, product_entity: ProductNewEntity, objects_cloud: list, images: list) -> ProductEntity:
+    def new_product(self, role: str, product_entity: ProductNewEntity,
+                    objects_cloud: list, images: list) -> ProductEntity:
+
         basic_product_id = self.get_basic_product_id_by_uuid(product_entity.basic_product_uuid)
         product_type_id = self.get_product_type_id_by_uuid(product_entity.product_type_uuid)
         variety_id = self.get_variety_id_by_uuid(product_entity.variety_uuid)
         minimum_order_id = self.get_minimum_order_id_by_uuid(product_entity.minimum_order_uuid)
-        incoterm_id = self.get_incoterm_id_by_uuid(product_entity.incoterm_uuid)
+
+        if product_entity.sustainability_certifications_uuid is None:
+            product_entity.sustainability_certifications_uuid = []
 
         if len(product_entity.sustainability_certifications_uuid) != len(objects_cloud):
             e = api_error('NumCertificationsVSNumFilesError')
@@ -165,13 +169,16 @@ class ProductRepository(IProductRepository):
             available_for_sale=product_entity.available_for_sale,
             minimum_order_id=minimum_order_id,
             expected_price_per_kg=product_entity.expected_price_per_kg,
-            incoterm_id=incoterm_id,
             assistance_logistic=product_entity.assistance_logistic,
             additional_description=product_entity.additional_description,
         )
+
         with Session(self.engine) as session_trans:
             session_trans.begin()
             try:
+                for i in product_entity.incoterms_uuid:
+                    incoterm = session_trans.query(Incoterm).filter_by(uuid=i).first()
+                    object_to_save.incoterms.append(incoterm)
                 session_trans.add(object_to_save)
                 # Save files in cloud and urls in database
                 if objects_cloud:
@@ -196,30 +203,42 @@ class ProductRepository(IProductRepository):
                         session_trans.add(product_sustainability_certification)
                         self.__storage_repository.put_object(body=o, key=key, content_type=o.content_type)
                 # Save images in cloud and urls in database
+                session_trans.flush()
                 if images:
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
                     prefix_images = f"{role}/{product_entity.uuid_user}/{object_to_save.uuid}" \
                                     f"/product_images/{path_datetime}"
                     for i in images:
                         key = f"{prefix_images}/{i.filename}"
-                        file_to_save = File(name=o.filename,
-                                            url=key)
-                        object_to_save.f.append(file_to_save)
-                        self.__storage_repository.put_object(body=o, key=key, content_type=o.content_type)
+                        image_to_save = ProductImage(name=i.filename, product_id=object_to_save.id, url=key)
+                        object_to_save.product_images.append(image_to_save)
+                        self.__storage_repository.put_object(body=i, key=key, content_type=i.content_type)
 
             except AssertionError as e:
-                self.__storage_repository.delete_all_objects_path(key=prefix + "/")
-                self.__storage_repository.delete_all_objects_path(key=prefix_images + "/")
+                if objects_cloud:
+                    self.__storage_repository.delete_all_objects_path(key=prefix + "/")
+                if images:
+                    self.__storage_repository.delete_all_objects_path(key=prefix_images + "/")
                 e = api_error('CompanySavingError')
                 abort(code=e.status_code, message=e.message, error=e.error)
             except Exception as e:
                 session_trans.rollback()
-                self.__storage_repository.delete_all_objects_path(key=prefix + "/")
-                self.__storage_repository.delete_all_objects_path(key=prefix_images + "/")
+                if objects_cloud:
+                    self.__storage_repository.delete_all_objects_path(key=prefix + "/")
+                if images:
+                    self.__storage_repository.delete_all_objects_path(key=prefix_images + "/")
                 abort(code=e.code, message=None, error=e.data['error'])
             else:
                 session_trans.commit()
+                incoterms_uuid = [x.uuid for x in object_to_save.incoterms]
+                sustainability_certifications_uuid = [x.uuid for x in object_to_save.sustainability_certifications]
+                url_images = [x.url for x in object_to_save.product_images]
+                url_files = [x.files.url for x in object_to_save.product_sustainability_certifications]
                 res_product = ProductEntity.from_orm(object_to_save)
+                res_product.incoterms_uuid = incoterms_uuid
+                res_product.sustainability_certifications_uuid = sustainability_certifications_uuid
+                res_product.url_images = url_images
+                res_product.url_files = url_files
                 session_trans.close()
 
                 return res_product

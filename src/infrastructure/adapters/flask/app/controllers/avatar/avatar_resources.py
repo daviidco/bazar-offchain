@@ -30,17 +30,13 @@ api = Namespace("avatars", description="Avatar controller", path='/api/v1/avatar
 
 @api.route("/")
 class AvatarsResource(Resource):
+    schema = InputPaginationEntity.schema()
+    model = api.schema_model("InputPaginationEntity", schema)
+
     @inject.autoparams('get_all_avatars')
     def __init__(self, api: None, get_all_avatars: GetAllAvatars):
         self.api = api
         self.get_all_avatars = get_all_avatars
-
-    resource_fields = api.model('Resource', {
-        'name': fields.String,
-    })
-
-    schema = InputPaginationEntity.schema()
-    model = api.schema_model("InputPaginationEntity", schema)
 
     @api.doc(params=schema['properties'], security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])

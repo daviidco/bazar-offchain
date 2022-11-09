@@ -14,45 +14,66 @@ import json
 import inject
 from flask import _request_ctx_stack
 from flask_cors import cross_origin
-from flask_restx import Resource, Namespace
+from flask_restx import Resource, Namespace, reqparse
 from flask_restx.reqparse import request
+from werkzeug.datastructures import FileStorage
 
 from src.application.company.avatar_uc import GetAllAvatars
 from src.application.company.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
     GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, GetAllProducts
-from src.domain.entities.common_entity import JwtEntity
+from src.domain.entities.common_entity import JwtEntity, InputPaginationEntity
 from src.domain.entities.product_entity import ProductNewEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
+from src.infrastructure.adapters.flask.app.utils.ultils import get_schema_and_type
 
 #
 # This file contains the products endpoints Api-rest
 # @author David Córdoba
 #
 
-api = Namespace("/products", description="Product controller")
+api = Namespace("products", description="Product controller", path='/api/v1/products')
 
 
 @api.route("/")
 class ProductResource(Resource):
+    schema = InputPaginationEntity.schema()
+
+    schema_product = ProductNewEntity.schema()
+    model = api.schema_model("ProductNewEntity", schema_product)
+    help_new_product = json.dumps(get_schema_and_type(schema_product), indent=2)
+
+    # Object to upload file and json body in form data
+    upload_parser = reqparse.RequestParser()
+    upload_parser.add_argument('files[]', location='files',
+                               type=FileStorage, action='append', help='Product Files')
+
+    upload_parser.add_argument('images[]', location='images',
+                               type=FileStorage, action='append', help='Product Images')
+
+    upload_parser.add_argument('body', location='form',
+                               type=dict, required=False, help='Product Information \n' + help_new_product)
+
     @inject.autoparams('get_all_products', 'create_product')
     def __init__(self, api:None, get_all_products: GetAllProducts, create_product: CreateProduct):
         self.api = api
         self.get_all_products = get_all_products
         self.create_product = create_product
 
+    @api.doc(params=schema['properties'], security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
-        limit = request.json['limit']
-        offset = request.json['offset']
+        limit = request.args.get('limit', 10)
+        offset = request.args.get('offset', 1)
         result = self.get_all_products.execute(limit, offset)
         return json.loads(result.json()), 200
 
+    @api.expect(upload_parser)
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
         role = kwargs['role']
-        # role = 'undefinded'
         entity = ProductNewEntity.parse_obj(json.loads(request.form['body']))
         files = request.files.getlist('files[]')
         images = request.files.getlist('images[]')
@@ -67,6 +88,7 @@ class BasicProductsResource(Resource):
         self.api = api
         self.get_all_basic_products = get_all_basic_products
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
@@ -81,6 +103,7 @@ class BasicProductsResource(Resource):
         self.api = api
         self.get_products_type_by_uuid_basic_product = get_products_type_by_uuid_basic_product
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, uuid_basic_product, *args, **kwargs):
@@ -95,6 +118,7 @@ class BasicProductsResource(Resource):
         self.api = api
         self.get_varieties_by_uuid_basic_product = get_varieties_by_uuid_basic_product
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, uuid_basic_product, *args, **kwargs):
@@ -109,6 +133,7 @@ class BasicProductsResource(Resource):
         self.api = api
         self.get_all_sustainability_certifications = get_all_sustainability_certifications
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
@@ -123,6 +148,7 @@ class BasicProductsResource(Resource):
         self.api = api
         self.get_all_incoterms = get_all_incoterms
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
@@ -137,6 +163,7 @@ class BasicProductsResource(Resource):
         self.api = api
         self.get_all_minimum_orders = get_all_minimum_orders
 
+    @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):

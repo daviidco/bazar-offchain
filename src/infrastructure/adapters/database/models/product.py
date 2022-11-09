@@ -129,6 +129,30 @@ class StatusProduct(base):
     description = Column(String(250))
 
 
+class ProductImage(base):
+    __tablename__ = "product_images"
+    id = Column(Integer, primary_key=True)
+    uuid = Column(UUIDType, nullable=False, unique=True, default=uuid.uuid4)
+    name = Column(String(250))
+    product_id = Column(ForeignKey("products.id"))
+    url = Column(String(250))
+    created_at = Column(TIMESTAMP(timezone=True), default=datetime.now(UTC_TIME_ZONE), nullable=False)
+
+
+class ProductIncoterm(base):
+    __tablename__ = "product_incoterms"
+    product_id = Column(ForeignKey("products.id"), primary_key=True)
+    incoterm_id = Column(ForeignKey("incoterms.id"), primary_key=True)
+
+    # Relationship
+    product = relationship("Product", backref="incoterm_associations")
+    incoterm = relationship("Incoterm", backref="product_associations")
+
+    def __init__(self, product_id, incoterm_id):
+        self.product_id = product_id
+        self.incoterm_id = incoterm_id
+
+
 # Relationship MANY TO MANY
 # ProductCertification ->Association
 # Product -> Parent
@@ -154,8 +178,6 @@ class Product(base):
     minimum_order_id = Column(Integer, ForeignKey("minimums_order.id"), default=1)
     expected_price_per_kg = Column(Numeric, nullable=False, comment='Expected price per kg (USD)')
 
-    incoterm_id = Column(Integer, ForeignKey("incoterms.id"), default=1)
-
     assistance_logistic = Column(Boolean, nullable=False)
     additional_description = Column(Text)
 
@@ -167,9 +189,10 @@ class Product(base):
     product_type_r = relationship("ProductType", backref="products")
     variety_r = relationship("Variety", backref="products")
     minimum_order_r = relationship("MinimumOrder", backref="products")
-    incoterm_r = relationship("Incoterm", backref="products")
+    incoterms = relationship("Incoterm", secondary="product_incoterms")
     sustainability_certifications = relationship("SustainabilityCertification",
                                                  secondary='product_sustainability_certifications')
+    product_images = relationship("ProductImage", backref='products')
 
     # Association Proxy
     status = association_proxy("status_product", "status_product")
@@ -181,12 +204,10 @@ class Product(base):
     variety_uuid = association_proxy("variety_r", "uuid")
     minimum_order = association_proxy("minimum_order_r", "minimum_order")
     minimum_order_uuid = association_proxy("minimum_order_r", "uuid")
-    incoterm = association_proxy("incoterm_r", "incoterm")
-    incoterm_uuid = association_proxy("incoterm_r", "uuid")
 
     def __init__(self, basic_product_id, product_type_id, variety_id, capacity_per_year, date_in_port,
                  guild_or_association, available_for_sale, minimum_order_id, expected_price_per_kg,
-                 incoterm_id, assistance_logistic, additional_description):
+                 assistance_logistic, additional_description):
 
         self.basic_product_id = basic_product_id
         self.product_type_id = product_type_id
@@ -197,7 +218,6 @@ class Product(base):
         self.available_for_sale = available_for_sale
         self.minimum_order_id = minimum_order_id
         self.expected_price_per_kg = expected_price_per_kg
-        self.incoterm_id = incoterm_id
         self.assistance_logistic = assistance_logistic
         self.additional_description = additional_description
 
@@ -213,10 +233,6 @@ class SustainabilityCertification(base):
     id = Column(Integer, primary_key=True)
     uuid = Column(UUIDType, nullable=False, unique=True, default=uuid.uuid4)
     certification = Column(String(50), nullable=False, unique=True)
-
-    # Relationship
-    products = relationship("Product", secondary='product_sustainability_certifications',
-                            back_populates='sustainability_certifications')
 
     def __init__(self, certification):
         self.certification = certification
@@ -236,6 +252,7 @@ class ProductSustainabilityCertification(base):
 
     # Relationship
     files = relationship("ProductFile", backref="product_sustainability_certifications")
+    products = relationship('Product', backref="product_sustainability_certifications")
 
     def __init__(self, product_id, sustainability_certification_id, file_id):
         self.product_id = product_id
@@ -243,10 +260,10 @@ class ProductSustainabilityCertification(base):
         self.file_id = file_id
 
     def __repr__(self):
-        return f'<File {self.file_id} - Company {self.company_id}>'
+        return f'<File {self.file_id} - certification {self.sustainability_certification_id}>'
 
     def __str__(self):
-        return f'Company {self.company_id}: File {self.file_id}'
+        return f'File {self.file_id}: Certification {self.sustainability_certification_id}'
 
 
 class ProductFile(base):

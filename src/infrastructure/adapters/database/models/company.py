@@ -56,8 +56,8 @@ class FilesCompany(base):
     status_file_id = Column(ForeignKey("status_file.id"), nullable=False, default=1)
 
     # Relationship
-    files = relationship("File", backref="company_associations")
-    company = relationship("Company", backref="file_associations")
+    files = relationship("File", viewonly=True)
+    company = relationship("Company", viewonly=True)
 
     def __repr__(self):
         return f'<File {self.file_id} - Company {self.company_id}>'

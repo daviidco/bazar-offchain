@@ -82,39 +82,43 @@ APIErrors = {
                                     "description": "Existing user in system off-chain.",
                                     "status_code": 401}},
 
+    'RoleNotFound': {"error": {"code": "E2203",
+                               "message": "Role not found",
+                               "description": "Role not found at access_token please verify your token.",
+                               "status_code": 422}},
     # Product
 
-    'BasicProductNotExists': {"error": {"code": "E2203",
+    'BasicProductNotExists': {"error": {"code": "E2210",
                                         "message": "Basic product not exists",
                                         "description": "Basic product type not exists please verify uuid.",
                                         "status_code": 422}},
 
-    'ProductTypeNotExists': {"error": {"code": "E2204",
+    'ProductTypeNotExists': {"error": {"code": "E2211",
                                        "message": "Product type not exists",
                                        "description": "Product type not exists please verify uuid.",
                                        "status_code": 422}},
 
-    'VarietyNotExists': {"error": {"code": "E2205",
+    'VarietyNotExists': {"error": {"code": "E2212",
                                    "message": "Variety type not exists",
                                    "description": "Variety not exists please verify uuid.",
                                    "status_code": 422}},
 
-    'MinimumOrderNotExists': {"error": {"code": "E2206",
+    'MinimumOrderNotExists': {"error": {"code": "E2213",
                                         "message": "Minimum Order not exists",
                                         "description": "Minimum Order not exists please verify uuid.",
                                         "status_code": 422}},
 
-    'IncotermNotExists': {"error": {"code": "E2207",
+    'IncotermNotExists': {"error": {"code": "E2214",
                                     "message": "Minimum Order not exists",
                                     "description": "Minimum Order not exists please verify uuid.",
                                     "status_code": 422}},
 
-    'NumCertificationsVSNumFilesError': {"error": {"code": "E2208",
+    'NumCertificationsVSNumFilesError': {"error": {"code": "E2215",
                                                    "message": "Number certifications different number files",
                                                    "description": "Please verify the number files to upload",
                                                    "status_code": 500}},
 
-    'ObjectNotFound': {"error": {"code": "E2203",
+    'ObjectNotFound': {"error": {"code": "E2216",
                                  "message": "Object not found",
                                  "description": "Object not found, please verify uuid.",
                                  "status_code": 422}},

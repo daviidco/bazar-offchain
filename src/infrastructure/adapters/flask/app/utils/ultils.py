@@ -26,3 +26,9 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 def allowed_file(filename):
     """function to check file extension"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def get_schema_and_type(schema):
+    for key in list(schema['properties'].keys()):
+        schema["properties"][key] = schema["properties"][key]['type']
+    return schema['properties']

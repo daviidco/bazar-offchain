@@ -12,7 +12,6 @@
 from flask import Blueprint
 from flask_restx import Api
 
-from src.infrastructure.adapters.flask.app.controllers.product.product_resources import api as product_ns
 
 #
 # This file lets instance a blueprint.
@@ -21,4 +20,3 @@ from src.infrastructure.adapters.flask.app.controllers.product.product_resources
 products_v1_01_bp = Blueprint('products_v1_01_bp', __name__)
 
 api = Api(products_v1_01_bp, version="0.1.0", title="Product")
-api.add_namespace(product_ns, path='/v1/products')

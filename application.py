@@ -11,7 +11,7 @@
 import os
 
 from flask import Flask, jsonify
-from flask_restx import Api
+from flask_restx import Api, Resource
 
 from src.infrastructure.adapters.flask.app.controllers.user.blueprints.user_blueprint_v1 import users_v1_01_bp
 from src.infrastructure.adapters.flask.app.controllers.company.blueprints.company_bp_v1_0_1 import companies_v1_01_bp
@@ -35,9 +35,6 @@ application.logger.info(f'Environment configuration file: {path_config_file}')
 
 configure_inject(application)
 
-# Catch errors 404
-Api(application, catch_all_404s=True)
-
 # Disable strict mode when URL ends with /
 application.url_map.strict_slashes = False
 
@@ -49,7 +46,7 @@ def add_cors_headers(response):
     return response
 
 
-prefix = '/api'
+prefix = '/api/v1/'
 # Blueprints register
 application.register_blueprint(users_v1_01_bp, url_prefix=f'{prefix}')
 application.register_blueprint(companies_v1_01_bp, url_prefix=f'{prefix}')
@@ -57,20 +54,28 @@ application.register_blueprint(avatars_v1_01_bp, url_prefix=f'{prefix}')
 application.register_blueprint(products_v1_01_bp, url_prefix=f'{prefix}')
 application.logger.info('Blueprints Registered')
 
+# Initialize swagger
+import src.infrastructure.adapters.swagger.swagger_service
 
-@application.route(f'{prefix}/help', methods=['GET'])
-def help():
-    """Print available functions."""
-    routes = {}
-    rules = application.url_map.iter_rules()
-    for r in rules:
-        routes[r.rule] = {}
-        routes[r.rule]["functionName"] = r.endpoint
-        routes[r.rule]["methods"] = list(r.methods)
+application.register_blueprint(src.infrastructure.adapters.swagger.swagger_service.service_swagger)
 
-    routes.pop("/static/<path:filename>")
+# Catch errors 404
+api = Api(application, catch_all_404s=True)
 
-    return jsonify(routes)
+@api.route(f'{prefix}/help', methods=['GET'])
+class Help(Resource):
+    def get(self):
+        """Print available functions."""
+        routes = {}
+        rules = application.url_map.iter_rules()
+        for r in rules:
+            routes[r.rule] = {}
+            routes[r.rule]["functionName"] = r.endpoint
+            routes[r.rule]["methods"] = list(r.methods)
+
+        routes.pop("/static/<path:filename>")
+
+        return jsonify(routes)
 
 
 if __name__ == '__main__':

@@ -33,7 +33,10 @@ api = Api(service_swagger, title="Bazar-Network Api - Documentation",
                       "Remember you should first do login and set the Bearer token in option authorize.")
 
 # Recursive import of controllers app as Namespaces
-base_dir = os.getcwd()+"/app/controllers"
+# base_dir = os.getcwd()+"/app/controllers"
+if os.getcwd().endswith('flask'):
+    os.chdir('../../../../')
+base_dir = os.getcwd()+"/src/infrastructure/adapters/flask/app/controllers"
 module_managers_folders = os.listdir(base_dir)
 list_name_spaces = []
 for module in module_managers_folders:

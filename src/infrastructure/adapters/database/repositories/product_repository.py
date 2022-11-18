@@ -38,7 +38,8 @@ from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 class ProductRepository(IProductRepository):
 
-    def __init__(self, adapter_db, storage_repository):
+    def __init__(self, logger, adapter_db, storage_repository):
+        self.logger = logger
         self.engine = adapter_db.engine
         self.session = Session(adapter_db.engine)
         self.__storage_repository = storage_repository
@@ -98,6 +99,8 @@ class ProductRepository(IProductRepository):
             return basic_product_id
         else:
             e = api_error('BasicProductNotExists')
+            description = e.error.get('description', 'Not description')
+            self.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_product_type_id_by_uuid(self, uuid: str) -> ProductTypeEntity:
@@ -107,6 +110,8 @@ class ProductRepository(IProductRepository):
             return product_type_id
         else:
             e = api_error('ProductTypeNotExists')
+            description = e.error.get('description', 'Not description')
+            self.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_variety_id_by_uuid(self, uuid: str) -> VarietyEntity:
@@ -116,6 +121,8 @@ class ProductRepository(IProductRepository):
             return variety_id
         else:
             e = api_error('VarietyNotExists')
+            description = e.error.get('description', 'Not description')
+            self.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_minimum_order_id_by_uuid(self, uuid: str) -> MinimumOrderEntity:
@@ -125,6 +132,8 @@ class ProductRepository(IProductRepository):
             return minimum_order_id
         else:
             e = api_error('MinimumOrderNotExists')
+            description = e.error.get('description', 'Not description')
+            self.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_incoterm_id_by_uuid(self, uuid: str) -> IncotermEntity:
@@ -134,6 +143,8 @@ class ProductRepository(IProductRepository):
             return incoterm_id
         else:
             e = api_error('IncotermNotExists')
+            description = e.error.get('description', 'Not description')
+            self.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_sustainability_certifications_id_by_uuid(self, uuid: str) -> IncotermEntity:
@@ -158,6 +169,8 @@ class ProductRepository(IProductRepository):
 
         if len(product_entity.sustainability_certifications_uuid) != len(objects_cloud):
             e = api_error('NumCertificationsVSNumFilesError')
+            description = e.error.get('description', 'Not description')
+            self.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
         object_to_save = Product(
             basic_product_id=basic_product_id,
@@ -239,6 +252,7 @@ class ProductRepository(IProductRepository):
                 res_product.sustainability_certifications_uuid = sustainability_certifications_uuid
                 res_product.url_images = url_images
                 res_product.url_files = url_files
+                self.logger.info(f"{object_to_save} saved")
                 session_trans.close()
 
                 return res_product

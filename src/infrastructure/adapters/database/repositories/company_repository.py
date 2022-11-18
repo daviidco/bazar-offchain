@@ -28,7 +28,8 @@ from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 class CompanyRepository(ICompanyRepository):
 
-    def __init__(self, adapter_db, storage_repository):
+    def __init__(self, logger, adapter_db, storage_repository):
+        self.logger = logger
         self.engine = adapter_db.engine
         self.session = Session(adapter_db.engine)
         self.__storage_repository = storage_repository
@@ -48,6 +49,7 @@ class CompanyRepository(ICompanyRepository):
         return profile_images
 
     def new_company(self, role: str, company_entity: CompanyNewEntity, objects_cloud: list) -> CompanyEntity:
+        self.logger.info(f"Creating new company: {company_entity.company_name}")
         user = self.session.query(User).filter_by(uuid=company_entity.uuid_user).first()
         if user is None:
             user_to_save = User(
@@ -56,6 +58,7 @@ class CompanyRepository(ICompanyRepository):
             )
             self.session.add(user_to_save)
             self.session.commit()
+            self.logger.info(f"User {user_to_save.uuid} saved")
 
         user_id = user.id if user is not None else user_to_save.id
         company = self.session.query(Company).filter_by(user_id=user_id).first()
@@ -98,14 +101,17 @@ class CompanyRepository(ICompanyRepository):
                 except AssertionError as e:
                     self.__storage_repository.delete_all_objects_path(key=prefix + "/")
                     e = api_error('CompanySavingError')
+                    self.logger.error(f"{e.message}")
                     abort(code=e.status_code, message=e.message, error=e.error)
                 except Exception as e:
                     session_trans.rollback()
                     self.__storage_repository.delete_all_objects_path(key=prefix + "/")
+                    self.logger.error(f"Error undefended {str(e)}")
                     abort(code=e.code, message=None, error=e.data['error'])
 
                 else:
                     session_trans.commit()
+                    self.logger.info(f"Company {object_to_save.uuid} saved")
                     res_company = CompanyEntity.from_orm(object_to_save)
                     res_company.profile_images = list_profile_images
                     session_trans.close()
@@ -114,10 +120,13 @@ class CompanyRepository(ICompanyRepository):
 
         else:
             e = api_error('CompanyExistingError')
+            description = e.error.get('description', 'Not description')
+            self.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_company_by_uuid(self, uuid: str) -> CompanyEntity:
         try:
+            self.logger.error(f"Get company by uuid: {uuid}")
             found_object = self.session.query(Company).filter_by(uuid=uuid).first()
             result_object = CompanyEntity.from_orm(found_object) if found_object is not None else None
             profile_image = self.session.query(ProfileImage).filter_by(id=found_object.profile_image_id).first()
@@ -126,14 +135,17 @@ class CompanyRepository(ICompanyRepository):
             return result_object
 
         except Exception as e:
+            self.logger.error(f"Error undefended {str(e)}")
             raise Exception(f'Error: {str(e)}')
 
     def get_companies_count(self) -> int:
+        self.logger.error(f"Get total number companies")
         count = self.session.query(Company).count()
         count = count if count is not None else 0
         return count
 
     def get_all_companies(self, limit: int, offset: int) -> CompaniesPaginationEntity:
+        self.logger.error(f"Get all companies")
         total = self.get_companies_count()
         list_objects = self.session.query(Company).offset(offset).limit(limit).all()
         return CompaniesPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)

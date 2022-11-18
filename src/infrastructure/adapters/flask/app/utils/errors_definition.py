@@ -116,7 +116,7 @@ APIErrors = {
     'NumCertificationsVSNumFilesError': {"error": {"code": "E2215",
                                                    "message": "Number certifications different number files",
                                                    "description": "Please verify the number files to upload",
-                                                   "status_code": 500}},
+                                                   "status_code": 400}},
 
     'ObjectNotFound': {"error": {"code": "E2216",
                                  "message": "Object not found",

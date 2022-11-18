@@ -284,3 +284,5 @@ fabric.properties
 
 .idea/
 .flaskenv
+.ebextensions
+*.DS_Store

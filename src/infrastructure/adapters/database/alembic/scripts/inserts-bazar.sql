@@ -56,7 +56,7 @@ INSERT INTO products_type (uuid, product_type, basic_product_id) VALUES(gen_rand
 INSERT INTO products_type (uuid, product_type, basic_product_id) VALUES(gen_random_uuid(), 'Beans rosted', 2);
 INSERT INTO products_type (uuid, product_type, basic_product_id) VALUES(gen_random_uuid(), 'Packaged', 2);
 
-INSERT INTO products_type (uuid, product_type, basic_product_id) VALUES(gen_random_uuid(), 'Fruits', 1);
+INSERT INTO products_type (uuid, product_type, basic_product_id) VALUES(gen_random_uuid(), 'Fruits', 3);
 
 -- Populate varieties
 INSERT INTO varieties (uuid, variety, basic_product_id) VALUES(gen_random_uuid(), 'Arabica coffe',1);

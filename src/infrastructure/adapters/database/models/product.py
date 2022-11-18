@@ -145,8 +145,8 @@ class ProductIncoterm(base):
     incoterm_id = Column(ForeignKey("incoterms.id"), primary_key=True)
 
     # Relationship
-    product = relationship("Product", backref="incoterm_associations")
-    incoterm = relationship("Incoterm", backref="product_associations")
+    product = relationship("Product", viewonly=True)
+    incoterm = relationship("Incoterm", viewonly=True)
 
     def __init__(self, product_id, incoterm_id):
         self.product_id = product_id
@@ -225,7 +225,7 @@ class Product(base):
         return f'<Product {self.id}>'
 
     def __str__(self):
-        return f'{self.id}: {self.uuid}'
+        return f'<Product id:{self.id} - uuid: {self.uuid}>'
 
 
 class SustainabilityCertification(base):
@@ -251,8 +251,8 @@ class ProductSustainabilityCertification(base):
     file_id = Column(ForeignKey("product_files.id"), primary_key=True)
 
     # Relationship
-    files = relationship("ProductFile", backref="product_sustainability_certifications")
-    products = relationship('Product', backref="product_sustainability_certifications")
+    files = relationship('ProductFile', viewonly=True)
+    products = relationship('Product', backref="product_sustainability_certifications", viewonly=True)
 
     def __init__(self, product_id, sustainability_certification_id, file_id):
         self.product_id = product_id

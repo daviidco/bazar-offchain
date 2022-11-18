@@ -26,7 +26,8 @@ from src.infrastructure.config.default_infra import AWS_ACCESS_KEY_ID, AWS_SECRE
 class S3Repository(IStorage):
 
     @inject.autoparams()
-    def __init__(self, bucket_name=None, s3_client=None, session=None):
+    def __init__(self, logger, bucket_name=None, s3_client=None, session=None):
+        self.logger = logger
         self.bucket_name = bucket_name if bucket_name is not None else AWS_BUCKET_NAME
         self.s3_client = s3_client
         self.session = session

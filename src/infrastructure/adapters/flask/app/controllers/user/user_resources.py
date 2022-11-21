@@ -17,6 +17,7 @@ from flask_restx import Resource, Namespace
 from flask_restx.reqparse import request
 
 from src.application.user.user_uc import GetUser, GetAllUsers, CreateUser
+from src.domain.entities.common_entity import InputPaginationEntity, JwtEntity
 from src.domain.entities.user_entity import UserNewEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
 
@@ -30,20 +31,26 @@ api = Namespace(name='users', description="User controller", path='/api/v1/users
 
 @api.route("/")
 class UsersResource(Resource):
+
+    # Swagger params pagination
+    schema = InputPaginationEntity.schema()
+    model = api.schema_model("InputPaginationEntity", schema)
+
     @inject.autoparams('get_all_users', 'create_user')
     def __init__(self, api: None, get_all_users: GetAllUsers, create_user: CreateUser):
         self.api = api
         self.get_all_users = get_all_users
         self.create_user = create_user
 
-    @api.doc(security='Private JWT')
+    @api.doc(params=schema['properties'], security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
-        limit = request.json['limit']
-        offset = request.json['offset']
-        result = self.get_all_users.execute(limit, offset)
-        return json.loads(result.json()), 201
+        jwt = dict(request.headers).get('Authorization', None)
+        limit = request.args.get('limit', 10)
+        offset = request.args.get('offset', 0)
+        result = self.get_all_users.execute(limit, offset, jwt)
+        return json.loads(result.json()), 200
 
     @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])

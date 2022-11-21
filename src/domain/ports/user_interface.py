@@ -33,5 +33,5 @@ class IUserRepository(ABC):
         raise Exception('Not implemented method')
 
     @abstractmethod
-    def get_all_users(self, limit: int, offset: int) -> UsersPaginationEntity:
+    def get_all_users(self, limit: int, offset: int, jwt: str) -> UsersPaginationEntity:
         raise Exception('Not implemented method')

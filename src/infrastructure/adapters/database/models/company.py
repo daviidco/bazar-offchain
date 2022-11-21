@@ -85,12 +85,12 @@ class Company(base):
     updated_at = Column(TIMESTAMP(timezone=True), default=datetime.now(UTC_TIME_ZONE), nullable=False)
 
     # Relationship
-    user_r = relationship("User", backref="companies")
+    user_r = relationship("User", backref="company")
     image_profile_r = relationship("ProfileImage", backref="companies")
     files = relationship("File", secondary='files_company')
 
     # Association Proxy
-    profile_image_url = association_proxy("profile_images", "image_url")
+    profile_image_url = association_proxy("image_profile_r", "image_url")
 
     def __init__(self, company_name, address, chamber_commerce, legal_representative,
                  operative_years, country, city, user_id, profile_image_id):

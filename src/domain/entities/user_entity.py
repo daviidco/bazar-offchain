@@ -13,6 +13,7 @@ from datetime import date
 from typing import List
 
 from src.domain.entities.common_entity import UuidEntity, PaginationEntity
+from src.domain.entities.company_entity import CompanyEntity
 
 
 #
@@ -30,6 +31,9 @@ class UserNewEntity(UserBaseEntity):
 
 
 class UserEntity(UserBaseEntity):
+    first_name: str = None
+    last_name: str = None
+    company: List[CompanyEntity]
     status: str
     created_at: date = None
 

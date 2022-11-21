@@ -44,5 +44,5 @@ class GetAllUsers:
     def __init__(self, user_repository: IUserRepository):
         self.__user_repository = user_repository
 
-    def execute(self, limit: int, offset: int) -> UsersPaginationEntity:
-        return self.__user_repository.get_all_users(limit, offset)
+    def execute(self, limit: int, offset: int, jwt: str) -> UsersPaginationEntity:
+        return self.__user_repository.get_all_users(limit, offset, jwt)

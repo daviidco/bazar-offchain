@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from src.domain.ports.user_interface import IUserRepository
 from src.domain.entities.user_entity import UserNewEntity, UserEntity, UsersPaginationEntity
 from src.infrastructure.adapters.database.models.user import User
+from src.infrastructure.adapters.database.repositories.utils import get_user_names
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
@@ -56,7 +57,24 @@ class UserRepository(IUserRepository):
         count = count if count is not None else 0
         return count
 
-    def get_all_users(self, limit: int, offset: int) -> UsersPaginationEntity:
+    def get_all_users(self, limit: int, offset: int, jwt: str) -> UsersPaginationEntity:
         total = self.get_users_count()
         list_objects = self.session.query(User).offset(offset).limit(limit).all()
-        return UsersPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
+        response = UsersPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
+
+        # Exclude profile_images
+
+        for idx_r, x in enumerate(response.results):
+            # Call endpoint to get user_name microservice auth
+            first_name, last_name = get_user_names(jwt, response.results[idx_r].uuid)
+            response.results[idx_r].first_name = first_name
+            response.results[idx_r].last_name = last_name
+            for idx_c, y in enumerate(x.company):
+                try:
+                    response.results[idx_r].company[0] = y.dict(exclude={'profile_images'})
+
+                except Exception as e:
+                    continue
+
+
+        return response

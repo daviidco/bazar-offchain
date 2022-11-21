@@ -18,7 +18,6 @@ from flask_restx import Resource, Namespace, reqparse
 from flask_restx.reqparse import request
 from werkzeug.datastructures import FileStorage
 
-from src.application.company.avatar_uc import GetAllAvatars
 from src.application.company.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
     GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, GetAllProducts
 from src.domain.entities.common_entity import JwtEntity, InputPaginationEntity

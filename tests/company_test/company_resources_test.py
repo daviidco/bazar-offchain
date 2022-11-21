@@ -9,17 +9,17 @@
 # All Rights Reserved.
 #
 
-from abc import ABC, abstractmethod
-
-from src.domain.entities.basic_product_entity import ProductsBaseList
-
+import unittest
 
 #
-# This interface or port lets define the methods to implement by basic_product_repository.
+# This file contains unit-tests. It is an independent logic to the application
 # @author David Córdoba
 #
-class IBasicProductRepository(ABC):
 
-    @abstractmethod
-    def get_all_basic_products(self) -> ProductsBaseList:
-        raise Exception('Not implemented method')
+
+class TestCompanyResource(unittest.TestCase):
+    def test_get_company(self):
+        self.assertTrue(True)
+
+    def test_get_companies(self):
+        self.assertTrue(True)

@@ -28,7 +28,6 @@ class IStorage(ABC):
 
     @abstractmethod
     def key_existing_size__list(self, key):
-        """return the key's size if it exist, else None"""
         raise Exception('Not implemented method')
 
     @abstractmethod

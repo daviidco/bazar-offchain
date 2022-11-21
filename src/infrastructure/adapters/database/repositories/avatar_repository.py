@@ -24,7 +24,8 @@ from src.infrastructure.adapters.database.models.company import ProfileImage
 
 class AvatarRepository(IAvatarRepository):
 
-    def __init__(self, adapter_db):
+    def __init__(self, logger, adapter_db):
+        self.logger = logger
         self.engine = adapter_db.engine
         self.session = Session(adapter_db.engine)
 

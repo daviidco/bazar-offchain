@@ -15,7 +15,7 @@ from uuid import UUID
 from pydantic import BaseModel, AnyHttpUrl
 from pydantic.types import date
 
-from src.domain.entities.common_entity import UuidEntity
+from src.domain.entities.common_entity import UuidEntity, PaginationEntity
 
 
 #
@@ -57,5 +57,5 @@ class ProductsListEntity(BaseModel):
     results: List[ProductEntity]
 
 
-class ProductsPaginationEntity(BaseModel):
+class ProductsPaginationEntity(PaginationEntity):
     results: List[ProductBaseEntity]

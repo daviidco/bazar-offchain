@@ -30,12 +30,12 @@ from src.infrastructure.adapters.storage.s3_service import S3Repository
 #
 
 
-def configure_inject(application: Flask) -> None:
+def configure_inject(logger) -> None:
     def config(binder: inject.Binder) -> None:
         psql_adapter = PostgresAdapter()
         binder.bind(IUserRepository, UserRepository(psql_adapter))
-        binder.bind(ICompanyRepository, CompanyRepository(psql_adapter, S3Repository()))
-        binder.bind(IAvatarRepository, AvatarRepository(psql_adapter))
-        binder.bind(IProductRepository, ProductRepository(psql_adapter, S3Repository()))
+        binder.bind(ICompanyRepository, CompanyRepository(logger, psql_adapter, S3Repository(logger)))
+        binder.bind(IAvatarRepository, AvatarRepository(logger, psql_adapter))
+        binder.bind(IProductRepository, ProductRepository(logger, psql_adapter, S3Repository(logger)))
 
     inject.configure(config)

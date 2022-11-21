@@ -33,7 +33,7 @@ configure_logging(application)
 application.logger.info(f'Environment: {config_env}')
 application.logger.info(f'Environment configuration file: {path_config_file}')
 
-configure_inject(application)
+configure_inject(application.logger)
 
 # Disable strict mode when URL ends with /
 application.url_map.strict_slashes = False
@@ -61,6 +61,7 @@ application.register_blueprint(src.infrastructure.adapters.swagger.swagger_servi
 
 # Catch errors 404
 api = Api(application, catch_all_404s=True)
+
 
 @api.route(f'{prefix}/help', methods=['GET'])
 class Help(Resource):

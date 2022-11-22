@@ -16,6 +16,8 @@ from pydantic import BaseModel, AnyHttpUrl
 from pydantic.types import date
 
 from src.domain.entities.common_entity import UuidEntity, PaginationEntity
+from src.domain.entities.incoterm_entity import IncotermEntity
+from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationEntity
 
 
 #
@@ -37,20 +39,22 @@ class ProductBaseEntity(BaseModel):
     assistance_logistic: bool
     additional_description: str
 
-    incoterms_uuid: List[UUID] = None
-    sustainability_certifications_uuid: List[UUID] = None
-
     class Config:
         orm_mode = True
 
 
 class ProductNewEntity(ProductBaseEntity):
     uuid_user: UUID
+    incoterms_uuid: List[UUID] = None
+    sustainability_certifications_uuid: List[UUID] = None
 
 
 class ProductEntity(ProductBaseEntity, UuidEntity):
     url_images: List[AnyHttpUrl] = None
     url_files: List[AnyHttpUrl] = None
+    status: str
+    incoterms: List[IncotermEntity] = None
+    sustainability_certifications: List[SustainabilityCertificationEntity] = None
 
 
 class ProductsListEntity(BaseModel):

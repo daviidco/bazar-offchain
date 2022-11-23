@@ -12,6 +12,7 @@
 import inject
 
 from src.domain.entities.user_entity import UserNewEntity, UsersPaginationEntity, UserEntity
+from src.domain.entities.user_manage_entity import UserManageEntity
 from src.domain.ports.user_interface import IUserRepository
 
 
@@ -46,3 +47,12 @@ class GetAllUsers:
 
     def execute(self, limit: int, offset: int, jwt: str) -> UsersPaginationEntity:
         return self.__user_repository.get_all_users(limit, offset, jwt)
+
+
+class PutStatesApproval:
+    @inject.autoparams('user_repository')
+    def __init__(self, user_repository: IUserRepository):
+        self.__user_repository = user_repository
+
+    def execute(self, user_manage: UserManageEntity) -> UserManageEntity:
+        return self.__user_repository.put_states_approval(user_manage)

@@ -25,12 +25,40 @@ from src.infrastructure.config.default_infra import UTC_TIME_ZONE
 # These models are related with company model  they are defined to create database table.
 # @author David Córdoba
 #
+
+class CommentApproval(base):
+    # Don't forget import model in __all_models.py
+    __tablename__ = 'comments_approval'
+    id = Column(Integer, primary_key=True)
+    uuid = Column(UUIDType, nullable=False, unique=True, default=uuid.uuid4)
+    comment = Column(String(350), nullable=False)
+    company_id = Column(ForeignKey("companies.id"), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), default=datetime.now(UTC_TIME_ZONE), nullable=False)
+
+    def __init__(self, comment, company_id):
+        self.comment = comment
+        self.company_id = company_id
+
+    def __repr__(self):
+        return f'<Comment Approval ID: {self.id}, UUID: {self.uuid}>'
+
+    def __str__(self):
+        return f'{self.id}: {self.comment}'
+
+
 class StatusFile(base):
+    # Don't forget import model in __all_models.py
     __tablename__ = 'status_file'
     id = Column(Integer, primary_key=True)
     uuid = Column(UUIDType, nullable=False, unique=True, default=uuid.uuid4)
     status_user = Column(String(50), nullable=False, unique=True)
     description = Column(String(250))
+
+    def __repr__(self):
+        return f'<Satus File {self.id}>'
+
+    def __str__(self):
+        return f'{self.status_user}: {self.description}'
 
 
 class ProfileImage(base):
@@ -50,6 +78,7 @@ class ProfileImage(base):
 
 
 class FilesCompany(base):
+    # Don't forget import model in __all_models.py
     __tablename__ = "files_company"
     company_id = Column(ForeignKey("companies.id"), primary_key=True)
     file_id = Column(ForeignKey("files.id"), primary_key=True)
@@ -88,6 +117,7 @@ class Company(base):
     user_r = relationship("User", backref="company")
     image_profile_r = relationship("ProfileImage", backref="companies")
     files = relationship("File", secondary='files_company')
+    comments = relationship("CommentApproval", backref="company")
 
     # Association Proxy
     profile_image_url = association_proxy("image_profile_r", "image_url")

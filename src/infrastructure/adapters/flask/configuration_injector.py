@@ -22,6 +22,7 @@ from src.infrastructure.adapters.database.repositories.avatar_repository import 
 from src.infrastructure.adapters.database.repositories.company_repository import CompanyRepository
 from src.infrastructure.adapters.database.repositories.product_repository import ProductRepository
 from src.infrastructure.adapters.database.repositories.user_repository import UserRepository
+from src.infrastructure.adapters.database.repositories.utils import UtilsDatabase
 from src.infrastructure.adapters.storage.s3_service import S3Repository
 
 #
@@ -33,9 +34,10 @@ from src.infrastructure.adapters.storage.s3_service import S3Repository
 def configure_inject(logger) -> None:
     def config(binder: inject.Binder) -> None:
         psql_adapter = PostgresAdapter()
-        binder.bind(IUserRepository, UserRepository(psql_adapter))
+        utils_db = UtilsDatabase(logger, psql_adapter)
+        binder.bind(IUserRepository, UserRepository(logger, psql_adapter, utils_db))
         binder.bind(ICompanyRepository, CompanyRepository(logger, psql_adapter, S3Repository(logger)))
         binder.bind(IAvatarRepository, AvatarRepository(logger, psql_adapter))
-        binder.bind(IProductRepository, ProductRepository(logger, psql_adapter, S3Repository(logger)))
+        binder.bind(IProductRepository, ProductRepository(logger, psql_adapter, S3Repository(logger), utils_db))
 
     inject.configure(config)

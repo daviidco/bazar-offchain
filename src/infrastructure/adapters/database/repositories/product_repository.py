@@ -38,10 +38,11 @@ from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 class ProductRepository(IProductRepository):
 
-    def __init__(self, logger, adapter_db, storage_repository):
+    def __init__(self, logger, adapter_db, storage_repository, utils_db):
         self.logger = logger
         self.engine = adapter_db.engine
         self.session = Session(adapter_db.engine)
+        self.utils_db = utils_db
         self.__storage_repository = storage_repository
 
     def get_basic_product_by_uuid(self, uuid: str) -> BasicProductEntity:
@@ -172,6 +173,7 @@ class ProductRepository(IProductRepository):
             description = e.error.get('description', 'Not description')
             self.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
+
         object_to_save = Product(
             basic_product_id=basic_product_id,
             product_type_id=product_type_id,
@@ -184,6 +186,7 @@ class ProductRepository(IProductRepository):
             expected_price_per_kg=product_entity.expected_price_per_kg,
             assistance_logistic=product_entity.assistance_logistic,
             additional_description=product_entity.additional_description,
+            company_id=self.utils_db.get_company_by_uuid_user(product_entity.uuid_user).id
         )
 
         with Session(self.engine) as session_trans:
@@ -204,6 +207,10 @@ class ProductRepository(IProductRepository):
                         certification = session_trans.query(SustainabilityCertification).filter_by(
                             uuid=uuid_certification
                         ).first()
+                        if certification is None:
+                            e = api_error('CompanySavingErrorByCertification')
+                            abort(code=e.status_code, message=e.message, error=e.error)
+
 
                         file_to_save = ProductFile(name=o.filename, url=key)
                         session_trans.add(file_to_save)
@@ -243,13 +250,9 @@ class ProductRepository(IProductRepository):
                 abort(code=e.code, message=None, error=e.data['error'])
             else:
                 session_trans.commit()
-                incoterms_uuid = [x.uuid for x in object_to_save.incoterms]
-                sustainability_certifications_uuid = [x.uuid for x in object_to_save.sustainability_certifications]
                 url_images = [x.url for x in object_to_save.product_images]
                 url_files = [x.files.url for x in object_to_save.product_sustainability_certifications]
                 res_product = ProductEntity.from_orm(object_to_save)
-                res_product.incoterms_uuid = incoterms_uuid
-                res_product.sustainability_certifications_uuid = sustainability_certifications_uuid
                 res_product.url_images = url_images
                 res_product.url_files = url_files
                 self.logger.info(f"{object_to_save} saved")
@@ -274,6 +277,11 @@ class ProductRepository(IProductRepository):
     def get_all_basic_products(self) -> BasicProductsListEntity:
         list_objects = self.session.query(BasicProduct).all()
         return BasicProductsListEntity(results=list_objects)
+
+    def get_products_by_user(self, uuid: str) -> ProductsListEntity:
+        company_id = self.utils_db.get_company_by_uuid_user(uuid).id
+        list_objects = self.session.query(Product).filter_by(company_id=company_id).all()
+        return ProductsListEntity(results=list_objects)
 
     def get_products_type_by_uuid_basic_product(self, uuid: str) -> ProductTypesListEntity:
         basic_product = self.get_basic_product_by_uuid(uuid)

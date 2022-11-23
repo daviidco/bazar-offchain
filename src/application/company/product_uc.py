@@ -46,8 +46,17 @@ class GetAllProducts:
 
     def execute(self, limit: int, offset: int) -> ProductsPaginationEntity:
         return self.__product_repository.get_all_products(limit, offset)
-    
-    
+
+
+class GetProductsByUser:
+    @inject.autoparams('product_repository')
+    def __init__(self, product_repository: IProductRepository):
+        self.__product_repository = product_repository
+
+    def execute(self, uuid: str) -> ProductsPaginationEntity:
+        return self.__product_repository.get_products_by_user(uuid)
+
+
 class GetAllBasicProducts:
     @inject.autoparams('product_repository')
     def __init__(self, product_repository: IProductRepository):

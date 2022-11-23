@@ -25,14 +25,6 @@ from src.infrastructure.config.default_infra import UTC_TIME_ZONE
 # @author David Córdoba
 #
 
-class CompanyProduct(base):
-    __tablename__ = "company_products"
-    company_id = Column(ForeignKey("companies.id"), primary_key=True)
-    product_id = Column(ForeignKey("products.id"), primary_key=True)
-    product = relationship("Product", backref='company_products')
-    company = relationship("Company", backref='company_products')
-
-
 class BasicProduct(base):
     __tablename__ = 'basic_products'
     id = Column(Integer, primary_key=True)
@@ -182,6 +174,7 @@ class Product(base):
     additional_description = Column(Text)
 
     created_at = Column(TIMESTAMP(timezone=True), default=datetime.now(UTC_TIME_ZONE), nullable=False)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
 
     # Relationship
     status_product = relationship("StatusProduct", backref="products")
@@ -207,7 +200,7 @@ class Product(base):
 
     def __init__(self, basic_product_id, product_type_id, variety_id, capacity_per_year, date_in_port,
                  guild_or_association, available_for_sale, minimum_order_id, expected_price_per_kg,
-                 assistance_logistic, additional_description):
+                 assistance_logistic, additional_description, company_id):
 
         self.basic_product_id = basic_product_id
         self.product_type_id = product_type_id
@@ -220,6 +213,7 @@ class Product(base):
         self.expected_price_per_kg = expected_price_per_kg
         self.assistance_logistic = assistance_logistic
         self.additional_description = additional_description
+        self.company_id = company_id
 
     def __repr__(self):
         return f'<Product {self.id}>'

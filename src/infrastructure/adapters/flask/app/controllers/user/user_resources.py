@@ -80,8 +80,6 @@ class UserResource(Resource):
 
 @api.route("/user-approval")
 class UsersResource(Resource):
-    schema_p = ProductManageEntity.schema()
-    model_p = api.schema_model("ProductManageEntity", schema_p)
     # Swagger params pagination
     schema = UserManageEntity.schema()
     schema['properties']['products']['items'] = model_p

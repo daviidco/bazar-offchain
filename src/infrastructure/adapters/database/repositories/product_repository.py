@@ -15,6 +15,7 @@ from flask_restx import abort
 from sqlalchemy.orm import Session
 
 from src.domain.entities.basic_product_entity import BasicProductsListEntity, BasicProductEntity
+from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.company_entity import CompanyEntity, CompanyNewEntity, CompaniesPaginationEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity, IncotermEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
@@ -26,7 +27,8 @@ from src.domain.entities.sustainability_certifications_entity import Sustainabil
 from src.domain.entities.variety_entity import VarietiesListEntity, VarietyEntity
 from src.domain.ports.product_interface import IProductRepository
 from src.infrastructure.adapters.database.models.product import Product, BasicProduct, ProductType, Variety, \
-    MinimumOrder, Incoterm, SustainabilityCertification, ProductFile, ProductSustainabilityCertification, ProductImage
+    MinimumOrder, Incoterm, SustainabilityCertification, ProductFile, ProductSustainabilityCertification, ProductImage, \
+    StatusProduct
 from src.infrastructure.adapters.database.models.company import Company, ProfileImage, FilesCompany, File
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
@@ -211,7 +213,6 @@ class ProductRepository(IProductRepository):
                             e = api_error('CompanySavingErrorByCertification')
                             abort(code=e.status_code, message=e.message, error=e.error)
 
-
                         file_to_save = ProductFile(name=o.filename, url=key)
                         session_trans.add(file_to_save)
                         session_trans.flush()
@@ -304,3 +305,8 @@ class ProductRepository(IProductRepository):
     def get_all_minimum_order(self) -> MinimumOrderListEntity:
         list_objects = self.session.query(MinimumOrder).all()
         return MinimumOrderListEntity(results=list_objects)
+
+    def product_states(self) -> BasicEntity:
+        product_states = self.session.query(StatusProduct.uuid, StatusProduct.status_product.label('tag')).all()
+        response = BasicEntity(results=product_states)
+        return response

@@ -13,6 +13,7 @@ from flask_restx import abort
 from sqlalchemy.orm import Session
 from werkzeug.exceptions import UnprocessableEntity
 
+from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.user_manage_entity import UserManageEntity
 from src.domain.ports.user_interface import IUserRepository
 from src.domain.entities.user_entity import UserNewEntity, UserEntity, UsersPaginationEntity
@@ -80,6 +81,11 @@ class UserRepository(IUserRepository):
                 except Exception as e:
                     continue
 
+        return response
+
+    def user_states(self) -> BasicEntity:
+        user_states = self.session.query(StatusUser.uuid, StatusUser.status_user.label('tag')).all()
+        response = BasicEntity(results=user_states)
         return response
 
     def put_states_approval(self, user_manage: UserManageEntity) -> UserManageEntity:

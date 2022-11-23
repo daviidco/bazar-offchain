@@ -12,6 +12,7 @@
 from abc import ABC, abstractmethod
 
 from src.domain.entities.basic_product_entity import BasicProductsListEntity, BasicProductEntity
+from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductNewEntity, ProductEntity, ProductsPaginationEntity
@@ -89,4 +90,8 @@ class IProductRepository(ABC):
 
     @abstractmethod
     def get_minimum_order_by_uuid(self, uuid: str) -> MinimumOrderEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def product_states(self) -> BasicEntity:
         raise Exception('Not implemented method')

@@ -16,7 +16,7 @@ from flask_cors import cross_origin
 from flask_restx import Resource, Namespace
 from flask_restx.reqparse import request
 
-from src.application.user.user_uc import GetUser, GetAllUsers, CreateUser, PutStatesApproval
+from src.application.user.user_uc import GetUser, GetAllUsers, CreateUser, PutStatesApproval, GetUserStates
 from src.domain.entities.common_entity import InputPaginationEntity, JwtEntity
 from src.domain.entities.user_entity import UserNewEntity
 from src.domain.entities.user_manage_entity import UserManageEntity, ProductManageEntity
@@ -78,6 +78,22 @@ class UserResource(Resource):
         return json.loads(result.json()), 200
 
 
+@api.route("/user-states")
+class UserResource(Resource):
+
+    @inject.autoparams('get_user_states')
+    def __init__(self, api: None, get_user_states: GetUserStates):
+        self.api = api
+        self.get_user_states = get_user_states
+
+    @api.doc(security='Private JWT')
+    @cross_origin(headers=["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, *args, **kwargs):
+        result = self.get_user_states.execute()
+        return json.loads(result.json()), 200
+
+
 @api.route("/user-approval")
 class UsersResource(Resource):
 
@@ -87,8 +103,6 @@ class UsersResource(Resource):
 
     schema = UserManageEntity.schema()
     model = api.schema_model("UserManageEntity", schema)
-
-    print('hola')
 
     @inject.autoparams('put_states_approval')
     def __init__(self, api: None, put_states_approval: PutStatesApproval):

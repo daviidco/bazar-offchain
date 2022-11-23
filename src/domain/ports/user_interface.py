@@ -11,6 +11,7 @@
 
 from abc import ABC, abstractmethod
 
+from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.user_entity import UserEntity, UserNewEntity, UsersPaginationEntity
 from src.domain.entities.user_manage_entity import UserManageEntity
 
@@ -35,6 +36,9 @@ class IUserRepository(ABC):
 
     @abstractmethod
     def get_all_users(self, limit: int, offset: int, jwt: str) -> UsersPaginationEntity:
+        raise Exception('Not implemented method')
+
+    def user_states(self) -> BasicEntity:
         raise Exception('Not implemented method')
 
     @abstractmethod

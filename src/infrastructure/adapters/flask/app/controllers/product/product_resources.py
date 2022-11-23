@@ -18,7 +18,8 @@ from flask_restx.reqparse import request
 from werkzeug.datastructures import FileStorage
 
 from src.application.company.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
-    GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, GetAllProducts, GetProductsByUser
+    GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, GetAllProducts, GetProductsByUser, \
+    GetProductStates
 from src.domain.entities.common_entity import JwtEntity, InputPaginationEntity
 from src.domain.entities.product_entity import ProductNewEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
@@ -182,4 +183,20 @@ class BasicProductsResource(Resource):
     @requires_auth
     def get(self, *args, **kwargs):
         result = self.get_all_minimum_orders.execute()
+        return json.loads(result.json()), 200
+
+
+@api.route("/products-states")
+class UserResource(Resource):
+
+    @inject.autoparams('get_product_states')
+    def __init__(self, api: None, get_product_states: GetProductStates):
+        self.api = api
+        self.get_product_states = get_product_states
+
+    @api.doc(security='Private JWT')
+    @cross_origin(headers=["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, *args, **kwargs):
+        result = self.get_product_states.execute()
         return json.loads(result.json()), 200

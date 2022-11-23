@@ -82,7 +82,6 @@ class UserResource(Resource):
 class UsersResource(Resource):
     # Swagger params pagination
     schema = UserManageEntity.schema()
-    schema['properties']['products']['items'] = model_p
     model = api.schema_model("UserManageEntity", schema)
     print(model)
 

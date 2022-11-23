@@ -16,8 +16,10 @@ from flask_cors import cross_origin
 from flask_restx import Resource, Namespace
 from flask_restx.reqparse import request
 
-from src.application.user.user_uc import GetUser, GetAllUsers, CreateUser
+from src.application.user.user_uc import GetUser, GetAllUsers, CreateUser, PutStatesApproval, GetUserStates
+from src.domain.entities.common_entity import InputPaginationEntity, JwtEntity
 from src.domain.entities.user_entity import UserNewEntity
+from src.domain.entities.user_manage_entity import UserManageEntity, ProductManageEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
 
 #
@@ -30,20 +32,26 @@ api = Namespace(name='users', description="User controller", path='/api/v1/users
 
 @api.route("/")
 class UsersResource(Resource):
+
+    # Swagger params pagination
+    schema = InputPaginationEntity.schema()
+    model = api.schema_model("InputPaginationEntity", schema)
+
     @inject.autoparams('get_all_users', 'create_user')
     def __init__(self, api: None, get_all_users: GetAllUsers, create_user: CreateUser):
         self.api = api
         self.get_all_users = get_all_users
         self.create_user = create_user
 
-    @api.doc(security='Private JWT')
+    @api.doc(params=schema['properties'], security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
-        limit = request.json['limit']
-        offset = request.json['offset']
-        result = self.get_all_users.execute(limit, offset)
-        return json.loads(result.json()), 201
+        jwt = dict(request.headers).get('Authorization', None)
+        limit = request.args.get('limit', 10)
+        offset = request.args.get('offset', 0)
+        result = self.get_all_users.execute(limit, offset, jwt)
+        return json.loads(result.json()), 200
 
     @api.doc(security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
@@ -67,4 +75,45 @@ class UserResource(Resource):
     @requires_auth
     def get(self, user_uuid, *args, **kwargs):
         result = self.get_user.execute(user_uuid)
+        return json.loads(result.json()), 200
+
+
+@api.route("/user-states")
+class UserResource(Resource):
+
+    @inject.autoparams('get_user_states')
+    def __init__(self, api: None, get_user_states: GetUserStates):
+        self.api = api
+        self.get_user_states = get_user_states
+
+    @api.doc(security='Private JWT')
+    @cross_origin(headers=["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, *args, **kwargs):
+        result = self.get_user_states.execute()
+        return json.loads(result.json()), 200
+
+
+@api.route("/user-approval")
+class UsersResource(Resource):
+
+    # Swagger
+    product_schema = ProductManageEntity.schema()
+    product_model = api.schema_model("ProductManageEntity", product_schema)
+
+    schema = UserManageEntity.schema()
+    model = api.schema_model("UserManageEntity", schema)
+
+    @inject.autoparams('put_states_approval')
+    def __init__(self, api: None, put_states_approval: PutStatesApproval):
+        self.api = api
+        self.put_states_approval = put_states_approval
+
+    @api.doc(security='Private JWT')
+    @api.expect(product_model, model)
+    @cross_origin(headers=["Content-Type", "Authorization"])
+    @requires_auth
+    def put(self, *args, **kwargs):
+        entity = UserManageEntity.parse_obj(request.json)
+        result = self.put_states_approval.execute(entity)
         return json.loads(result.json()), 200

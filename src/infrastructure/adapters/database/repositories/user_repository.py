@@ -11,10 +11,15 @@
 
 from flask_restx import abort
 from sqlalchemy.orm import Session
+from werkzeug.exceptions import UnprocessableEntity
 
+from src.domain.entities.common_entity import BasicEntity
+from src.domain.entities.user_manage_entity import UserManageEntity
 from src.domain.ports.user_interface import IUserRepository
 from src.domain.entities.user_entity import UserNewEntity, UserEntity, UsersPaginationEntity
-from src.infrastructure.adapters.database.models.user import User
+from src.infrastructure.adapters.database.models import Product, CommentApproval, StatusProduct
+from src.infrastructure.adapters.database.models.user import User, StatusUser
+from src.infrastructure.adapters.database.repositories.utils import get_user_names
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
@@ -24,9 +29,11 @@ from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 #
 class UserRepository(IUserRepository):
 
-    def __init__(self, adapter_db):
+    def __init__(self, logger, adapter_db, utils_db):
+        self.logger = logger
         self.engine = adapter_db.engine
         self.session = Session(adapter_db.engine)
+        self.utils_db = utils_db
 
     def new_user(self, user_entity: UserNewEntity) -> UserEntity:
         user_exist = self.get_user_by_uuid(user_entity.uuid)
@@ -56,7 +63,83 @@ class UserRepository(IUserRepository):
         count = count if count is not None else 0
         return count
 
-    def get_all_users(self, limit: int, offset: int) -> UsersPaginationEntity:
+    def get_all_users(self, limit: int, offset: int, jwt: str) -> UsersPaginationEntity:
         total = self.get_users_count()
         list_objects = self.session.query(User).offset(offset).limit(limit).all()
-        return UsersPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
+        response = UsersPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
+
+        for idx_r, x in enumerate(response.results):
+            # Call endpoint to get user_name microservice auth
+            first_name, last_name = get_user_names(jwt, response.results[idx_r].uuid)
+            response.results[idx_r].first_name = first_name
+            response.results[idx_r].last_name = last_name
+            for idx_c, y in enumerate(x.company):
+                try:
+                    # Exclude profile_images
+                    response.results[idx_r].company[0] = y.dict(exclude={'profile_images'})
+
+                except Exception as e:
+                    continue
+
+        return response
+
+    def user_states(self) -> BasicEntity:
+        user_states = self.session.query(StatusUser.uuid, StatusUser.status_user.label('tag')).all()
+        response = BasicEntity(results=user_states)
+        return response
+
+    def put_states_approval(self, user_manage: UserManageEntity) -> UserManageEntity:
+
+        with Session(self.engine) as session_trans:
+            session_trans.begin()
+            try:
+                company_id = self.utils_db.get_company_by_uuid_user(user_manage.uuid_user).id
+
+                # Add comment
+                if len(user_manage.comment_approval):
+                    comment = CommentApproval(comment=user_manage.comment_approval, company_id=company_id)
+                    session_trans.add(comment)
+
+                # Modify user state
+                user = session_trans.query(User).filter_by(uuid=user_manage.uuid_user).first()
+                status_id = session_trans.query(StatusUser).filter_by(uuid=user_manage.uuid_user_status).first().id
+                user.status_id = status_id
+
+                # Modify product state
+                if user_manage.products is not None:
+                    uuids_products = [p.uuid_product for p in user_manage.products]
+                    products_from_db = session_trans.query(Product).filter(Product.uuid.in_(uuids_products)).all()
+
+                    # Determinate uuid products not found
+                    uuid_db = [p.uuid for p in products_from_db]
+                    set1 = set(uuids_products)
+                    set2 = set(uuid_db)
+                    missing = list(sorted(set1 - set2))
+
+                    if len(user_manage.products) == len(products_from_db):
+                        for u_m_entity in user_manage.products:
+                            for p in products_from_db:
+                                if u_m_entity.uuid_product == p.uuid:
+                                    status_product = session_trans.query(StatusProduct).filter_by(
+                                        uuid=u_m_entity.uuid_product_status).first()
+                                    if status_product is None:
+                                        e = api_error('ObjectNotFound')
+                                        e.error['description'] = e.error['description'] + ' <uuid_product_status>'
+                                        abort(code=e.status_code, message=e.message, error=e.error)
+                                    p.status_id = status_product.id
+                    else:
+                        e = api_error('ObjectNotFound')
+                        e.error['description'] = e.error['description'] + f' <uuid_product> {missing}'
+                        abort(code=e.status_code, message=e.message, error=e.error)
+
+            except Exception as e:
+                session_trans.rollback()
+                if isinstance(e, UnprocessableEntity):
+                    abort(code=e.code, message=None, error=e.data['error'])
+                else:
+                    self.logger.error(f"Error undefended saving states approval: {str(e)}")
+
+            else:
+                session_trans.commit()
+                return user_manage
+

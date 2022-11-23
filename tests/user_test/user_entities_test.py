@@ -38,14 +38,41 @@ class TestUserEntity:
     data_new_user = {'uuid': generated_uuid,
                      'rol': 'buyer'}
 
-    data_user_entity_v1 = {'uuid': generated_uuid,
-                           'rol': 'seller',
-                           'status': 'active'}
+    data_user_entity_v1 = {
+        "company": [
+            {
+                "address": "Cali col",
+                "chamber_commerce": "software",
+                "city": "Cali",
+                "company_name": "Cafeto105",
+                "country": "Colombia",
+                "legal_representative": "Luis",
+                "operative_years": 7,
+                "profile_image_url": "https://s3-offchain-test.s3.us-east-2.amazonaws.com/profile_images/astronaut-b.png",
+                "uuid": "dc26d103-848a-406f-b5ea-6af44aa7cd03"
+            }
+        ],
+        'uuid': generated_uuid,
+        'rol': 'seller',
+        'status': 'active'}
 
-    data_user_entity_v2 = {'uuid': generated_uuid,
-                           'rol': 'buyer',
-                           'status': 'inactive',
-                           'created_at': date(2017, 11, 17)}
+    data_user_entity_v2 = {
+        "company": [
+            {
+                "address": "Cali col",
+                "chamber_commerce": "software",
+                "city": "Cali",
+                "company_name": "Cafeto105",
+                "country": "Colombia",
+                "legal_representative": "Luis",
+                "operative_years": 7,
+                "profile_image_url": "https://s3-offchain-test.s3.us-east-2.amazonaws.com/profile_images/astronaut-b.png",
+                "uuid": "dc26d103-848a-406f-b5ea-6af44aa7cd03"
+            }
+        ], 'uuid': generated_uuid,
+        'rol': 'buyer',
+        'status': 'inactive',
+        'created_at': date(2017, 11, 17)}
 
     data_user_pagination = {'limit': 10,
                             'offset': 1,

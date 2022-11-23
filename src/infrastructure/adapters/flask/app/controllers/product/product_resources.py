@@ -12,14 +12,14 @@
 import json
 
 import inject
-from flask import _request_ctx_stack
 from flask_cors import cross_origin
 from flask_restx import Resource, Namespace, reqparse
 from flask_restx.reqparse import request
 from werkzeug.datastructures import FileStorage
 
 from src.application.company.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
-    GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, GetAllProducts
+    GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, GetAllProducts, GetProductsByUser, \
+    GetProductStates
 from src.domain.entities.common_entity import JwtEntity, InputPaginationEntity
 from src.domain.entities.product_entity import ProductNewEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
@@ -78,6 +78,22 @@ class ProductResource(Resource):
         images = request.files.getlist('images[]')
         result = self.create_product.execute(role, entity, files, images)
         return json.loads(result.json()), 201
+
+
+@api.route("/products-user/<string:user_uuid>")
+class UserResource(Resource):
+
+    @inject.autoparams('get_products')
+    def __init__(self, api: None, get_products: GetProductsByUser):
+        self.api = api
+        self.get_products = get_products
+
+    @api.doc(security='Private JWT')
+    @cross_origin(headers=["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, user_uuid, *args, **kwargs):
+        result = self.get_products.execute(user_uuid)
+        return json.loads(result.json()), 200
 
 
 @api.route("/basic-products")
@@ -167,4 +183,20 @@ class BasicProductsResource(Resource):
     @requires_auth
     def get(self, *args, **kwargs):
         result = self.get_all_minimum_orders.execute()
+        return json.loads(result.json()), 200
+
+
+@api.route("/products-states")
+class UserResource(Resource):
+
+    @inject.autoparams('get_product_states')
+    def __init__(self, api: None, get_product_states: GetProductStates):
+        self.api = api
+        self.get_product_states = get_product_states
+
+    @api.doc(security='Private JWT')
+    @cross_origin(headers=["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, *args, **kwargs):
+        result = self.get_product_states.execute()
         return json.loads(result.json()), 200

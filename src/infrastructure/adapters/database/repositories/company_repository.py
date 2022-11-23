@@ -139,13 +139,15 @@ class CompanyRepository(ICompanyRepository):
             raise Exception(f'Error: {str(e)}')
 
     def get_companies_count(self) -> int:
-        self.logger.error(f"Get total number companies")
         count = self.session.query(Company).count()
         count = count if count is not None else 0
+        self.logger.info(f"OK - Get total number companies")
         return count
 
     def get_all_companies(self, limit: int, offset: int) -> CompaniesPaginationEntity:
-        self.logger.error(f"Get all companies")
         total = self.get_companies_count()
         list_objects = self.session.query(Company).offset(offset).limit(limit).all()
-        return CompaniesPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
+        response = CompaniesPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
+        response.results = [x.dict(exclude={'profile_images'}) for x in response.results]
+        self.logger.info(f"OK - Get all companies")
+        return response

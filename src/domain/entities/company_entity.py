@@ -43,7 +43,7 @@ class CompanyNewEntity(CompanyBaseEntity):
 
 
 class CompanyEntity(CompanyBaseEntity, UuidEntity):
-    pass
+    profile_image_url: AnyHttpUrl = None
 
 
 class CompaniesPaginationEntity(PaginationEntity):

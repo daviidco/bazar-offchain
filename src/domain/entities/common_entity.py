@@ -24,6 +24,17 @@ class UuidEntity(BaseModel):
     uuid: UUID
 
 
+class StatesEntity(UuidEntity):
+    tag: str = None
+
+    class Config:
+        orm_mode = True
+
+
+class BasicEntity(BaseModel):
+    results: List[StatesEntity]
+
+
 class PaginationEntity(BaseModel):
     limit: int
     offset: int

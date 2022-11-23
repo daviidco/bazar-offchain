@@ -68,19 +68,24 @@ APIErrors = {
     'CompanyExistingError': {"error": {"code": "E2200",
                                        "message": "Existing Company",
                                        "description": "Existing Company related with user.",
-                                       "status_code": 401}},
+                                       "status_code": 422}},
 
     'CompanySavingError': {"error": {"code": "E2201",
                                      "message": "Error saving company",
                                      "description": "Please check the documents and json body.",
-                                     "status_code": 401}},
+                                     "status_code": 422}},
+
+    'CompanySavingErrorByCertification': {"error": {"code": "E2202",
+                                                    "message": "Error saving company",
+                                                    "description": "Please check the uuid certification.",
+                                                    "status_code": 422}},
 
     # User
 
     'UserExistingError': {"error": {"code": "E2202",
                                     "message": "Existing User",
                                     "description": "Existing user in system off-chain.",
-                                    "status_code": 401}},
+                                    "status_code": 422}},
 
     'RoleNotFound': {"error": {"code": "E2203",
                                "message": "Role not found",

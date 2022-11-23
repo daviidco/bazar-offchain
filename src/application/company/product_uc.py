@@ -11,6 +11,7 @@
 
 import inject
 
+from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.product_entity import ProductNewEntity, ProductEntity, ProductsPaginationEntity
 from src.domain.ports.product_interface import IProductRepository
 
@@ -46,8 +47,17 @@ class GetAllProducts:
 
     def execute(self, limit: int, offset: int) -> ProductsPaginationEntity:
         return self.__product_repository.get_all_products(limit, offset)
-    
-    
+
+
+class GetProductsByUser:
+    @inject.autoparams('product_repository')
+    def __init__(self, product_repository: IProductRepository):
+        self.__product_repository = product_repository
+
+    def execute(self, uuid: str) -> ProductsPaginationEntity:
+        return self.__product_repository.get_products_by_user(uuid)
+
+
 class GetAllBasicProducts:
     @inject.autoparams('product_repository')
     def __init__(self, product_repository: IProductRepository):
@@ -100,4 +110,12 @@ class GetMinimumOrders:
     def execute(self) -> ProductEntity:
         return self.__product_repository.get_all_minimum_order()
 
+
+class GetProductStates:
+    @inject.autoparams('product_repository')
+    def __init__(self, product_repository: IProductRepository):
+        self.__product_repository = product_repository
+
+    def execute(self) -> BasicEntity:
+        return self.__product_repository.product_states()
 

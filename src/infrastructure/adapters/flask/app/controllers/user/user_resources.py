@@ -83,7 +83,6 @@ class UsersResource(Resource):
     # Swagger params pagination
     schema = UserManageEntity.schema()
     model = api.schema_model("UserManageEntity", schema)
-    print(model)
 
     @inject.autoparams('put_states_approval')
     def __init__(self, api: None, put_states_approval: PutStatesApproval):

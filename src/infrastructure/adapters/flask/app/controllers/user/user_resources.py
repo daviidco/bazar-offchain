@@ -80,18 +80,25 @@ class UserResource(Resource):
 
 @api.route("/user-approval")
 class UsersResource(Resource):
-    # Swagger params pagination
+
+    # Swagger
+    product_schema = ProductManageEntity.schema()
+    product_model = api.schema_model("ProductManageEntity", product_schema)
+
     schema = UserManageEntity.schema()
     model = api.schema_model("UserManageEntity", schema)
+
+    print('hola')
 
     @inject.autoparams('put_states_approval')
     def __init__(self, api: None, put_states_approval: PutStatesApproval):
         self.api = api
         self.put_states_approval = put_states_approval
 
-    @api.doc(body=model, security='Private JWT')
+    @api.doc(security='Private JWT')
+    @api.expect(product_model, model)
     @cross_origin(headers=["Content-Type", "Authorization"])
-    # @requires_auth
+    @requires_auth
     def put(self, *args, **kwargs):
         entity = UserManageEntity.parse_obj(request.json)
         result = self.put_states_approval.execute(entity)

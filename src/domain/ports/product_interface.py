@@ -29,7 +29,7 @@ from src.domain.entities.variety_entity import VarietiesListEntity, VarietyEntit
 class IProductRepository(ABC):
 
     @abstractmethod
-    def new_product(self, role: str, product_entity: ProductNewEntity,
+    def new_product(self, jwt: str, role: str, product_entity: ProductNewEntity,
                     objects_cloud: list, images: list) -> ProductEntity:
         raise Exception('Not implemented method')
 

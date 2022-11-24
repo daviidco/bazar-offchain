@@ -128,6 +128,11 @@ APIErrors = {
                                  "description": "Object not found, please verify uuid.",
                                  "status_code": 422}},
 
+    'EmailError': {"error": {"code": "E2217",
+                                     "message": "Email not sent",
+                                     "description": "Email not sent",
+                                     "status_code": 500}},
+
     # Errors Flask E2200 - E2300
 
     # Errors AWS E2300 - ...

@@ -16,7 +16,6 @@ from sqlalchemy.orm import Session
 
 from src.domain.entities.basic_product_entity import BasicProductsListEntity, BasicProductEntity
 from src.domain.entities.common_entity import BasicEntity
-from src.domain.entities.company_entity import CompanyEntity, CompanyNewEntity, CompaniesPaginationEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity, IncotermEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductEntity, ProductsPaginationEntity, ProductNewEntity, \
@@ -26,11 +25,14 @@ from src.domain.entities.sustainability_certifications_entity import Sustainabil
     SustainabilityCertificationEntity
 from src.domain.entities.variety_entity import VarietiesListEntity, VarietyEntity
 from src.domain.ports.product_interface import IProductRepository
+from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.product import Product, BasicProduct, ProductType, Variety, \
     MinimumOrder, Incoterm, SustainabilityCertification, ProductFile, ProductSustainabilityCertification, ProductImage, \
     StatusProduct
-from src.infrastructure.adapters.database.models.company import Company, ProfileImage, FilesCompany, File
+from src.infrastructure.adapters.database.repositories.utils import get_email, send_email, get_user_names
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
+from src.infrastructure.config.default_infra import AWS_REGION, AWS_BUCKET_NAME
+from src.infrastructure.templates_email import TemplateAdminProduct
 
 
 #
@@ -159,10 +161,16 @@ class ProductRepository(IProductRepository):
             e = api_error('IncotermNotExists')
             abort(code=e.status_code, message=e.message, error=e.error)
 
-    def new_product(self, role: str, product_entity: ProductNewEntity,
+    def new_product(self, jwt: str, role: str, product_entity: ProductNewEntity,
                     objects_cloud: list, images: list) -> ProductEntity:
 
-        basic_product_id = self.get_basic_product_id_by_uuid(product_entity.basic_product_uuid)
+        global user
+        global prefix
+        prefix = None
+        company = self.utils_db.get_company_by_uuid_user(product_entity.uuid_user)
+        user = self.session.query(User).filter_by(uuid=product_entity.uuid_user).first()
+
+        basic_product = self.get_basic_product_by_uuid(product_entity.basic_product_uuid)
         product_type_id = self.get_product_type_id_by_uuid(product_entity.product_type_uuid)
         variety_id = self.get_variety_id_by_uuid(product_entity.variety_uuid)
         minimum_order_id = self.get_minimum_order_id_by_uuid(product_entity.minimum_order_uuid)
@@ -177,7 +185,7 @@ class ProductRepository(IProductRepository):
             abort(code=e.status_code, message=e.message, error=e.error)
 
         object_to_save = Product(
-            basic_product_id=basic_product_id,
+            basic_product_id=basic_product.id,
             product_type_id=product_type_id,
             variety_id=variety_id,
             capacity_per_year=product_entity.capacity_per_year,
@@ -188,7 +196,7 @@ class ProductRepository(IProductRepository):
             expected_price_per_kg=product_entity.expected_price_per_kg,
             assistance_logistic=product_entity.assistance_logistic,
             additional_description=product_entity.additional_description,
-            company_id=self.utils_db.get_company_by_uuid_user(product_entity.uuid_user).id
+            company_id=company.id
         )
 
         with Session(self.engine) as session_trans:
@@ -258,6 +266,23 @@ class ProductRepository(IProductRepository):
                 res_product.url_files = url_files
                 self.logger.info(f"{object_to_save} saved")
                 session_trans.close()
+
+                if prefix is not None:
+                    # Build html to send email
+                    first_name, last_name = get_user_names(jwt, user.uuid)
+                    user_name = f"{first_name.title()} {last_name.title()}"
+                    user_email = get_email(jwt, user.uuid)
+                    url_s3 = f"https://s3.console.aws.amazon.com/s3/buckets/{AWS_BUCKET_NAME}?" \
+                             f"region={AWS_REGION}&prefix={prefix}/&showversions=false"
+                    data_email = TemplateAdminProduct.html.format(product_name=basic_product.basic_product,
+                                                                  user_name=user_name,
+                                                                  company_name=company.company_name,
+                                                                  link=url_s3)
+
+                    send_email(subject="Review Documents - Product",
+                               data=data_email,
+                               destination=[user_email],
+                               is_html=True)
 
                 return res_product
 

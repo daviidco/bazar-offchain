@@ -68,7 +68,7 @@ class CompaniesResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
-        # jwt_entity = JwtEntity.parse_obj(_request_ctx_stack.top.current_user)
+        jwt = dict(request.headers).get('Authorization', None)
         role = kwargs.get('role', None)
         if role is None:
             e = api_error('RoleNotFound')
@@ -76,7 +76,7 @@ class CompaniesResource(Resource):
 
         entity = CompanyNewEntity.parse_obj(json.loads(request.form['body']))
         files = request.files.getlist('files[]')
-        result = self.create_company.execute(role, entity, files)
+        result = self.create_company.execute(jwt, role, entity, files)
         return json.loads(result.json()), 201
 
 

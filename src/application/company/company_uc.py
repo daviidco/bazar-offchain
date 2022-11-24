@@ -27,9 +27,9 @@ class CreateCompany:
     def __init__(self, company_repository: ICompanyRepository):
         self.__company_repository = company_repository
 
-    def execute(self, role: str, company_entity: CompanyNewEntity,
+    def execute(self, jwt: str, role: str, company_entity: CompanyNewEntity,
                 objects_cloud: list) -> CompanyEntity:
-        return self.__company_repository.new_company(role, company_entity, objects_cloud)
+        return self.__company_repository.new_company(jwt, role, company_entity, objects_cloud)
 
 
 class GetCompany:

@@ -50,6 +50,7 @@ SQLALCHEMY_DATABASE_URI = fr"{DB_ENGINE}://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB
 AWS_ACCESS_KEY_ID = _get_env_variable(f"{ENV}_AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = _get_env_variable(f"{ENV}_AWS_SECRET_ACCESS_KEY")
 AWS_BUCKET_NAME = _get_env_variable(f"{ENV}_AWS_BUCKET_NAME")
+AWS_REGION = _get_env_variable(f"AWS_DEFAULT_REGION")
 
 # Auth0
 AUTH0_DOMAIN = _get_env_variable(f"AUTH0_DOMAIN")

@@ -27,8 +27,9 @@ class CreateProduct:
     def __init__(self, product_repository: IProductRepository):
         self.__product_repository = product_repository
 
-    def execute(self, role: str, product_entity: ProductNewEntity, objects_cloud: list, images: list) -> ProductEntity:
-        return self.__product_repository.new_product(role, product_entity, objects_cloud, images)
+    def execute(self, jwt: str, role: str, product_entity: ProductNewEntity,
+                objects_cloud: list, images: list) -> ProductEntity:
+        return self.__product_repository.new_product(jwt, role, product_entity, objects_cloud, images)
 
 
 class GetProduct:

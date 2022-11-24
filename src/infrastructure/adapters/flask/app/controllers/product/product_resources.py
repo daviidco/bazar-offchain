@@ -72,11 +72,12 @@ class ProductResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
-        role = kwargs['role']
+        jwt = dict(request.headers).get('Authorization', None)
+        role = kwargs.get('role', None)
         entity = ProductNewEntity.parse_obj(json.loads(request.form['body']))
         files = request.files.getlist('files[]')
         images = request.files.getlist('images[]')
-        result = self.create_product.execute(role, entity, files, images)
+        result = self.create_product.execute(jwt, role, entity, files, images)
         return json.loads(result.json()), 201
 
 

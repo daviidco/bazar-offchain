@@ -19,7 +19,7 @@ from werkzeug.datastructures import FileStorage
 
 from src.application.company.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
     GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, GetAllProducts, GetProductsByUser, \
-    GetProductStates#, GetProductsBySeller
+    GetProductStates
 from src.domain.entities.common_entity import JwtEntity, InputPaginationEntity
 from src.domain.entities.product_entity import ProductNewEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
@@ -201,18 +201,3 @@ class ProductStatesResource(Resource):
     def get(self, *args, **kwargs):
         result = self.get_product_states.execute()
         return json.loads(result.json()), 200
-
-
-# @api.route("/products-seller/<string:uuid_seller>")
-# class ProductsSellerResource(Resource):
-#     @inject.autoparams('get_products_by_seller')
-#     def __init__(self, api: None, get_products_by_seller: GetProductsBySeller):
-#         self.api = api
-#         self.get_products_by_seller = get_products_by_seller
-#
-#     @api.doc(security='Private JWT')
-#     @cross_origin(headers=["Content-Type", "Authorization"])
-#     @requires_auth
-#     def get(self, uuid_basic_product, *args, **kwargs):
-#         result = self.get_products_by_seller.execute(uuid_basic_product)
-#         return json.loads(result.json()), 200

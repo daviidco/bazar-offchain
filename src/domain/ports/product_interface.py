@@ -95,7 +95,3 @@ class IProductRepository(ABC):
     @abstractmethod
     def product_states(self) -> BasicEntity:
         raise Exception('Not implemented method')
-
-    # @abstractmethod
-    # def products_by_seller(self) -> BasicEntity:
-    #     raise Exception('Not implemented method')

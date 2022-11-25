@@ -128,11 +128,3 @@ class GetProductStates:
         return self.__product_repository.product_states()
 
 
-# class GetProductsBySeller:
-#     @inject.autoparams('product_repository')
-#     def __init__(self, product_repository: IProductRepository):
-#         self.__product_repository = product_repository
-#
-#     def execute(self) -> BasicEntity:
-#         return self.__product_repository.get_products_by_seller()
-

@@ -120,7 +120,7 @@ class CompanyRepository(ICompanyRepository):
 
                 else:
                     session_trans.commit()
-                    self.logger.info(f"Company {object_to_save.uuid} saved")
+                    self.logger.info(f"Company {object_to_save} saved")
                     res_company = CompanyEntity.from_orm(object_to_save)
                     res_company.profile_images = list_profile_images
                     session_trans.close()

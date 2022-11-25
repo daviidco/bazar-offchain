@@ -126,7 +126,6 @@ class CompanyRepository(ICompanyRepository):
 
                     if prefix is not None:
                         # Build html to send email
-                        user_email = get_email(jwt, user.uuid)
                         url_s3 = f"https://s3.console.aws.amazon.com/s3/buckets/{AWS_BUCKET_NAME}?" \
                                  f"region={AWS_REGION}&prefix={prefix}/&showversions=false"
                         data_email = TemplateAdminReview.html.format(company_name=object_to_save.company_name,

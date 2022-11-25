@@ -10,12 +10,15 @@ from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 import json
 
+from src.infrastructure.config.default import URL_MS_BAZAR_AUTH, URL_EMAIL_LAMBDA
+
+
 def default_prefix_cloud():
     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
 
 
 def request_to_ms_auth(jwt, uuid_user, get_person=False):
-    base_url = "https://meerkat-auth.herokuapp.com/api/v1/user"
+    base_url = URL_MS_BAZAR_AUTH
     headers = {
         'accept': '*/*',
         'Authorization': f'{jwt}'
@@ -55,7 +58,7 @@ def get_email(jwt, uuid_user) -> str:
 def send_email(subject: str, data: str, destination: list, is_html: bool = False) -> bool:
     try:
         type_content = "Html" if is_html else "Text"
-        url = "https://30mtgv2761.execute-api.us-east-2.amazonaws.com/dev/create"
+        url = URL_EMAIL_LAMBDA
 
         payload = json.dumps({
             "user_id": "123456",

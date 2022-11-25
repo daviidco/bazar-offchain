@@ -31,6 +31,7 @@ from src.infrastructure.adapters.database.models.product import Product, BasicPr
     StatusProduct
 from src.infrastructure.adapters.database.repositories.utils import get_email, send_email, get_user_names
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
+from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
 from src.infrastructure.config.default_infra import AWS_REGION, AWS_BUCKET_NAME
 from src.infrastructure.templates_email import TemplateAdminProduct
 
@@ -281,7 +282,7 @@ class ProductRepository(IProductRepository):
 
                     send_email(subject="Review Documents - Product",
                                data=data_email,
-                               destination=[user_email],
+                               destination=[EMAIL_BAZAR_ADMIN],
                                is_html=True)
 
                 return res_product

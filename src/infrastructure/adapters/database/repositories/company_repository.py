@@ -20,6 +20,7 @@ from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.company import Company, ProfileImage, File
 from src.infrastructure.adapters.database.repositories.utils import send_email, get_email
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
+from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
 from src.infrastructure.config.default_infra import AWS_BUCKET_NAME, AWS_REGION
 from src.infrastructure.templates_email import TemplateAdminReview
 
@@ -134,7 +135,7 @@ class CompanyRepository(ICompanyRepository):
 
                         send_email(subject="Review Documents",
                                    data=data_email,
-                                   destination=[user_email],
+                                   destination=[EMAIL_BAZAR_ADMIN],
                                    is_html=True)
                     return res_company
 

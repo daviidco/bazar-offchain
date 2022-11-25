@@ -14,6 +14,8 @@ from os import environ
 import pytz
 from dotenv import load_dotenv
 
+from src.infrastructure.config.default import _get_env_variable
+
 load_dotenv()
 
 
@@ -21,15 +23,6 @@ load_dotenv()
 # This file contains basic default configuration to infrastructure adapters
 # @author David Córdoba
 #
-
-
-def _get_env_variable(name):
-    try:
-        return environ[name]
-    except KeyError:
-        message = "Expected environment variable '{}' not set.".format(name)
-        raise Exception(message)
-
 
 ENV = _get_env_variable("ENV").upper()
 

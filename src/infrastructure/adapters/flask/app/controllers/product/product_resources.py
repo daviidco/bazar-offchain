@@ -19,7 +19,7 @@ from werkzeug.datastructures import FileStorage
 
 from src.application.company.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
     GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, GetAllProducts, GetProductsByUser, \
-    GetProductStates
+    GetProductStates#, GetProductsBySeller
 from src.domain.entities.common_entity import JwtEntity, InputPaginationEntity
 from src.domain.entities.product_entity import ProductNewEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
@@ -113,7 +113,7 @@ class BasicProductsResource(Resource):
 
 
 @api.route("/product-types/<string:uuid_basic_product>")
-class BasicProductsResource(Resource):
+class ProductTypesResource(Resource):
     @inject.autoparams('get_products_type_by_uuid_basic_product')
     def __init__(self, api: None, get_products_type_by_uuid_basic_product: GetProductTypes):
         self.api = api
@@ -128,7 +128,7 @@ class BasicProductsResource(Resource):
 
 
 @api.route("/varieties/<string:uuid_basic_product>")
-class BasicProductsResource(Resource):
+class VarietiesResource(Resource):
     @inject.autoparams('get_varieties_by_uuid_basic_product')
     def __init__(self, api: None, get_varieties_by_uuid_basic_product: GetVarieties):
         self.api = api
@@ -143,7 +143,7 @@ class BasicProductsResource(Resource):
 
 
 @api.route("/sustainability-certifications")
-class BasicProductsResource(Resource):
+class SustainabilityCertificationsResource(Resource):
     @inject.autoparams('get_all_sustainability_certifications')
     def __init__(self, api: None, get_all_sustainability_certifications: GetSustainabilityCertifications, *args, **kwargs):
         self.api = api
@@ -158,7 +158,7 @@ class BasicProductsResource(Resource):
 
 
 @api.route("/incoterms")
-class BasicProductsResource(Resource):
+class IncotermsResource(Resource):
     @inject.autoparams('get_all_incoterms')
     def __init__(self, api: None, get_all_incoterms: GetInconterms):
         self.api = api
@@ -173,7 +173,7 @@ class BasicProductsResource(Resource):
 
 
 @api.route("/minimum-orders")
-class BasicProductsResource(Resource):
+class MinimumOrdersResource(Resource):
     @inject.autoparams('get_all_minimum_orders')
     def __init__(self, api: None, get_all_minimum_orders: GetMinimumOrders):
         self.api = api
@@ -188,7 +188,7 @@ class BasicProductsResource(Resource):
 
 
 @api.route("/products-states")
-class UserResource(Resource):
+class ProductStatesResource(Resource):
 
     @inject.autoparams('get_product_states')
     def __init__(self, api: None, get_product_states: GetProductStates):
@@ -201,3 +201,18 @@ class UserResource(Resource):
     def get(self, *args, **kwargs):
         result = self.get_product_states.execute()
         return json.loads(result.json()), 200
+
+
+# @api.route("/products-seller/<string:uuid_seller>")
+# class ProductsSellerResource(Resource):
+#     @inject.autoparams('get_products_by_seller')
+#     def __init__(self, api: None, get_products_by_seller: GetProductsBySeller):
+#         self.api = api
+#         self.get_products_by_seller = get_products_by_seller
+#
+#     @api.doc(security='Private JWT')
+#     @cross_origin(headers=["Content-Type", "Authorization"])
+#     @requires_auth
+#     def get(self, uuid_basic_product, *args, **kwargs):
+#         result = self.get_products_by_seller.execute(uuid_basic_product)
+#         return json.loads(result.json()), 200

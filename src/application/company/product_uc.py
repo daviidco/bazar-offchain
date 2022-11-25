@@ -11,8 +11,14 @@
 
 import inject
 
+from src.domain.entities.basic_product_entity import BasicProductsListEntity
 from src.domain.entities.common_entity import BasicEntity
+from src.domain.entities.incoterm_entity import IncotermsListEntity
+from src.domain.entities.minimum_order_entity import MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductNewEntity, ProductEntity, ProductsPaginationEntity
+from src.domain.entities.product_type_entity import ProductTypesListEntity
+from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity
+from src.domain.entities.variety_entity import VarietiesListEntity
 from src.domain.ports.product_interface import IProductRepository
 
 
@@ -64,7 +70,7 @@ class GetAllBasicProducts:
     def __init__(self, product_repository: IProductRepository):
         self.__product_repository = product_repository
 
-    def execute(self) -> ProductEntity:
+    def execute(self) -> BasicProductsListEntity:
         return self.__product_repository.get_all_basic_products()
 
 
@@ -73,15 +79,16 @@ class GetProductTypes:
     def __init__(self, product_repository: IProductRepository):
         self.__product_repository = product_repository
 
-    def execute(self, uuid: str) -> ProductEntity:
+    def execute(self, uuid: str) -> ProductTypesListEntity:
         return self.__product_repository.get_products_type_by_uuid_basic_product(uuid)
+
 
 class GetVarieties:
     @inject.autoparams('product_repository')
     def __init__(self, product_repository: IProductRepository):
         self.__product_repository = product_repository
 
-    def execute(self, uuid: str) -> ProductEntity:
+    def execute(self, uuid: str) -> VarietiesListEntity:
         return self.__product_repository.get_varieties_by_uuid_basic_product(uuid)
 
 
@@ -90,7 +97,7 @@ class GetSustainabilityCertifications:
     def __init__(self, product_repository: IProductRepository):
         self.__product_repository = product_repository
 
-    def execute(self) -> ProductEntity:
+    def execute(self) -> SustainabilityCertificationsListEntity:
         return self.__product_repository.get_all_sustainability_certifications()
 
 
@@ -99,7 +106,7 @@ class GetInconterms:
     def __init__(self, product_repository: IProductRepository):
         self.__product_repository = product_repository
 
-    def execute(self) -> ProductEntity:
+    def execute(self) -> IncotermsListEntity:
         return self.__product_repository.get_all_incoterms()
 
 
@@ -108,7 +115,7 @@ class GetMinimumOrders:
     def __init__(self, product_repository: IProductRepository):
         self.__product_repository = product_repository
 
-    def execute(self) -> ProductEntity:
+    def execute(self) -> MinimumOrderListEntity:
         return self.__product_repository.get_all_minimum_order()
 
 
@@ -119,4 +126,13 @@ class GetProductStates:
 
     def execute(self) -> BasicEntity:
         return self.__product_repository.product_states()
+
+
+# class GetProductsBySeller:
+#     @inject.autoparams('product_repository')
+#     def __init__(self, product_repository: IProductRepository):
+#         self.__product_repository = product_repository
+#
+#     def execute(self) -> BasicEntity:
+#         return self.__product_repository.get_products_by_seller()
 

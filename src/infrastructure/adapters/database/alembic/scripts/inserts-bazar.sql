@@ -10,8 +10,9 @@ INSERT INTO status_file (uuid, status_user, description) VALUES (gen_random_uuid
 
 -- Populate status_product
 INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Pending review','Product is being checking');
-INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Approved','Product is approved');
+INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Approved','Product is approved and visible to buyers');
 INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Rejected','Product is rejected');
+INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Hide','Product is hidden to buyers and was previously approved');
 
 -- Populate profile_images
 INSERT INTO profile_images (uuid, image_name, format, image_url) VALUES(gen_random_uuid(), 'astronaut-s', 'png', 'https://s3-offchain-test.s3.us-east-2.amazonaws.com/profile_images/astronaut-s.png');

@@ -138,7 +138,7 @@ class Company(base):
         return f'<Company {self.id}>'
 
     def __str__(self):
-        return f'{self.company_name}: {self.chamber_commerce}'
+        return f'<Company uud: {self.uuid}, id:{self.id}>'
 
 
 class File(base):

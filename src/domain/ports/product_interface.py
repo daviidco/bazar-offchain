@@ -51,7 +51,7 @@ class IProductRepository(ABC):
         raise Exception('Not implemented method')
 
     @abstractmethod
-    def get_products_by_user(self, uuid: str) -> BasicProductsListEntity:
+    def get_products_by_user(self, uuid: str) -> ProductsPaginationEntity:
         raise Exception('Not implemented method')
 
     @abstractmethod

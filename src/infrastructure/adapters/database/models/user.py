@@ -54,7 +54,7 @@ class User(base):
         self.rol = rol
 
     def __repr__(self):
-        return f'<User {self.id}>'
+        return f'<User uuid: {self.uuid}, id:{self.id}, rol:{self.rol}, state:{self.status_user}>'
 
     def __str__(self):
-        return f'{self.id}: {self.rol}'
+        return f'<User uuid: {self.uuid}, id:{self.id}, rol:{self.rol}, state:{self.status_user}>'

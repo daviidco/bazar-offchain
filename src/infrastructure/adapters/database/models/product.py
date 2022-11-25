@@ -177,6 +177,7 @@ class Product(base):
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
 
     # Relationship
+    company = relationship("Company", backref="products")
     status_product = relationship("StatusProduct", backref="products")
     basic_product_r = relationship("BasicProduct", backref="products")
     product_type_r = relationship("ProductType", backref="products")
@@ -197,6 +198,7 @@ class Product(base):
     variety_uuid = association_proxy("variety_r", "uuid")
     minimum_order = association_proxy("minimum_order_r", "minimum_order")
     minimum_order_uuid = association_proxy("minimum_order_r", "uuid")
+    url_avatar = association_proxy("company", "profile_image_url")
 
     def __init__(self, basic_product_id, product_type_id, variety_id, capacity_per_year, date_in_port,
                  guild_or_association, available_for_sale, minimum_order_id, expected_price_per_kg,

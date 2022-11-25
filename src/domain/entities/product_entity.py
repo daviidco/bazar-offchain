@@ -50,11 +50,17 @@ class ProductNewEntity(ProductBaseEntity):
 
 
 class ProductEntity(ProductBaseEntity, UuidEntity):
+    status: str
+    basic_product: str
+    minimum_order: str
+    product_type: str
+    variety: str
+    status: str
     url_images: List[AnyHttpUrl] = None
     url_files: List[AnyHttpUrl] = None
-    status: str
     incoterms: List[IncotermEntity] = None
     sustainability_certifications: List[SustainabilityCertificationEntity] = None
+    url_avatar: AnyHttpUrl
 
 
 class ProductsListEntity(BaseModel):
@@ -62,4 +68,4 @@ class ProductsListEntity(BaseModel):
 
 
 class ProductsPaginationEntity(PaginationEntity):
-    results: List[ProductBaseEntity]
+    results: List[ProductEntity]

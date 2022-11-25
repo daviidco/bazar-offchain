@@ -54,7 +54,7 @@ class CompanyRepository(ICompanyRepository):
 
     def new_company(self, jwt: str, role: str, company_entity: CompanyNewEntity, objects_cloud: list) -> CompanyEntity:
         self.logger.info(f"Creating new company: {company_entity.company_name}")
-        global user
+        global user_rol
         global prefix
         prefix = None
         user = self.session.query(User).filter_by(uuid=company_entity.uuid_user).first()
@@ -65,9 +65,10 @@ class CompanyRepository(ICompanyRepository):
             )
             self.session.add(user_to_save)
             self.session.commit()
-            self.logger.info(f"User {user_to_save.uuid} saved")
+            self.logger.info(f"User {user_to_save} saved")
 
         user_id = user.id if user is not None else user_to_save.id
+        user_rol = user.rol if user is not None else user_to_save.rol
         company = self.session.query(Company).filter_by(user_id=user_id).first()
 
         if company is None:
@@ -129,7 +130,7 @@ class CompanyRepository(ICompanyRepository):
                         url_s3 = f"https://s3.console.aws.amazon.com/s3/buckets/{AWS_BUCKET_NAME}?" \
                                  f"region={AWS_REGION}&prefix={prefix}/&showversions=false"
                         data_email = TemplateAdminReview.html.format(company_name=object_to_save.company_name,
-                                                                     rol=user.rol.title(),
+                                                                     rol=user_rol.title(),
                                                                      link=url_s3)
 
                         send_email(subject="Review Documents",

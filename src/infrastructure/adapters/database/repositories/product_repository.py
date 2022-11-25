@@ -272,7 +272,6 @@ class ProductRepository(IProductRepository):
                     # Build html to send email
                     first_name, last_name = get_user_names(jwt, user.uuid)
                     user_name = f"{first_name.title()} {last_name.title()}"
-                    user_email = get_email(jwt, user.uuid)
                     url_s3 = f"https://s3.console.aws.amazon.com/s3/buckets/{AWS_BUCKET_NAME}?" \
                              f"region={AWS_REGION}&prefix={prefix}/&showversions=false"
                     data_email = TemplateAdminProduct.html.format(product_name=basic_product.basic_product,

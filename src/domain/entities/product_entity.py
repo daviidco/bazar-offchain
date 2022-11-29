@@ -60,7 +60,7 @@ class ProductEntity(ProductBaseEntity, UuidEntity):
     url_files: List[AnyHttpUrl] = None
     incoterms: List[IncotermEntity] = None
     sustainability_certifications: List[SustainabilityCertificationEntity] = None
-    url_avatar: AnyHttpUrl
+    url_avatar: AnyHttpUrl = None
 
 
 class ProductsListEntity(BaseModel):

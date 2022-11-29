@@ -14,8 +14,6 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from src.domain.entities.common_entity import UuidEntity
-
 
 #
 # These classes lets define the user entities of domain.

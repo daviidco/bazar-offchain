@@ -11,8 +11,11 @@
 
 import uuid
 from datetime import date
+from typing import List
 
 from src.domain.entities.user_entity import UserEntity, UserBaseEntity, UsersPaginationEntity, UserNewEntity
+from src.domain.entities.user_manage_entity import ProductManageEntity, UserManageEntity
+
 
 #
 # This file contains unit-tests. It is an independent logic to the application
@@ -79,6 +82,17 @@ class TestUserEntity:
                             'total': 100,
                             'results': [data_user_entity_v1, data_user_entity_v2]}
 
+    data_product_manage_entity_v1 = {'uuid_product_status': generated_uuid,
+                                     'uuid_product': generated_uuid}
+
+    data_product_manage_entity_v2 = {'uuid_product_status': generated_uuid,
+                                     'uuid_product': generated_uuid}
+
+    data_user_manage_entity = {'uuid_user': generated_uuid,
+                               'uuid_user_status': generated_uuid,
+                               'products': [data_product_manage_entity_v1, data_product_manage_entity_v2],
+                               'comment_approval': 'comment to approval'}
+
     def validate_data_users(self, users):
         for u in users:
             assert u.uuid == self.generated_uuid
@@ -109,3 +123,27 @@ class TestUserEntity:
         assert user_pagination.offset == 1
         self.validate_data_users(user_pagination.results)
         validate_instance_users(user_pagination.results)
+
+    def test_product_manage(self):
+        product_manage_v1 = ProductManageEntity.parse_obj(self.data_product_manage_entity_v1)
+        product_manage_v2 = ProductManageEntity.parse_obj(self.data_product_manage_entity_v2)
+
+        # Validate data and instance
+        for pm in [product_manage_v1, product_manage_v2]:
+            for key in ProductManageEntity.schema()['properties'].keys():
+                for data in [self.data_product_manage_entity_v1, self.data_product_manage_entity_v2]:
+                    assert getattr(pm, key) == data[key]
+            assert isinstance(pm.uuid_product_status, uuid.UUID)
+            assert isinstance(pm.uuid_product, uuid.UUID)
+
+    def test_user_manage(self):
+        user_manage = UserManageEntity.parse_obj(self.data_user_manage_entity)
+
+        # Validate data and instance
+        for um in [user_manage]:
+            for key in UserManageEntity.schema()['properties'].keys():
+                assert getattr(um, key) == self.data_user_manage_entity[key]
+            assert isinstance(um.uuid_user, uuid.UUID)
+            assert isinstance(um.uuid_user_status, uuid.UUID)
+            assert isinstance(um.products, List)
+            assert isinstance(um.comment_approval, str)

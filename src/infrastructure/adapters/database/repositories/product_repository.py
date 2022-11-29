@@ -164,7 +164,7 @@ class ProductRepository(IProductRepository):
 
     def new_product(self, jwt: str, role: str, product_entity: ProductNewEntity,
                     objects_cloud: list, images: list) -> ProductEntity:
-
+        self.logger.info(f"Creating new product of user: {product_entity.uuid_user}")
         global user
         global prefix
         prefix = None
@@ -209,6 +209,7 @@ class ProductRepository(IProductRepository):
                 session_trans.add(object_to_save)
                 # Save files in cloud and urls in database
                 if objects_cloud:
+                    self.logger.info(f"Uploading files to cloud")
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
                     prefix = f"{role}/{product_entity.uuid_user}/documents_product/{path_datetime}"
                     for idx, o in enumerate(objects_cloud):
@@ -235,6 +236,7 @@ class ProductRepository(IProductRepository):
                 # Save images in cloud and urls in database
                 session_trans.flush()
                 if images:
+                    self.logger.info(f"Uploading images to cloud")
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
                     prefix_images = f"{role}/{product_entity.uuid_user}/{object_to_save.uuid}" \
                                     f"/product_images/{path_datetime}"

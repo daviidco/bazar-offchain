@@ -38,8 +38,6 @@ def validate_instance_products(products):
         assert isinstance(p.expected_price_per_kg, float)
         assert isinstance(p.assistance_logistic, bool)
         assert isinstance(p.additional_description, str)
-        # assert isinstance(p.incoterms_uuid, List)
-        # assert isinstance(p.sustainability_certifications_uuid, List)
 
 
 class TestProductEntity:
@@ -66,6 +64,10 @@ class TestProductEntity:
     data_new_product = dict(data_base_product, **data_new_product_aux)
 
     data_product_entity_aux = {'uuid': generated_uuid,
+                               'basic_product': 'Coffee',
+                               'minimum_order': 'A Continer',
+                               'product_type': 'Beans',
+                               'variety': 'Criollo',
                                'url_images': [
                                    "https://s3-offchain-test.s3.us-east-2.amazonaws.com/buyer/"
                                    "6ebb797c-b204-46f0-8086-f3ca298f1b5a/product_images/"
@@ -110,8 +112,6 @@ class TestProductEntity:
             assert p.expected_price_per_kg == self.data_base_product['expected_price_per_kg']
             assert p.assistance_logistic == self.data_base_product['assistance_logistic']
             assert p.additional_description == self.data_base_product['additional_description']
-            # assert p.incoterms_uuid == self.data_base_product['incoterms_uuid']
-            # assert p.sustainability_certifications_uuid == self.data_base_product['sustainability_certifications_uuid']
 
     def test_base_product_entity(self):
         product_1 = ProductBaseEntity.parse_obj(self.data_base_product)

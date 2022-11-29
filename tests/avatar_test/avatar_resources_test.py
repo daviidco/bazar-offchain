@@ -11,16 +11,12 @@
 
 import unittest
 
-
 #
 # This file contains unit-tests. It is an independent logic to the application
 # @author David Córdoba
 #
 
 
-class TestCompanyResource(unittest.TestCase):
-    def test_get_company(self):
-        self.assertTrue(True)
-
-    def test_get_companies(self):
+class TestAvatarResource(unittest.TestCase):
+    def test_get_all_avatars(self):
         self.assertTrue(True)

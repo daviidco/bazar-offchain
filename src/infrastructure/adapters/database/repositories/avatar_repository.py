@@ -17,6 +17,7 @@ from src.domain.entities.avatar_entity import AvatarsPaginationEntity, AvatarEnt
 from src.domain.ports.avatar_interface import IAvatarRepository
 from src.infrastructure.adapters.database.models.company import ProfileImage
 
+
 #
 # This repository contains logic main related with avatar.
 # @author David Córdoba

@@ -112,5 +112,6 @@ class UtilsDatabase:
         company = self.session.query(Company).filter_by(user_id=user.id).first()
         if company is None:
             e = api_error('ObjectNotFound')
+            e.error['description'] = e.error['description'] + ' <company>'
             abort(code=e.status_code, message=e.message, error=e.error)
         return company

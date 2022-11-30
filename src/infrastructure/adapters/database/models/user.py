@@ -49,8 +49,8 @@ class User(base):
     # Association Proxy
     status = association_proxy("status_user", "status_user")
 
-    def __init__(self, uuid, rol):
-        self.uuid = uuid
+    def __init__(self, uuid_user, rol):
+        self.uuid = uuid_user
         self.rol = rol
 
     def __repr__(self):

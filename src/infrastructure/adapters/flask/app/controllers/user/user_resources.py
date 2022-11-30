@@ -63,7 +63,7 @@ class UsersResource(Resource):
 
 
 @api.route("/<string:user_uuid>")
-class UserResource(Resource):
+class UserByUuidResource(Resource):
 
     @inject.autoparams('get_user')
     def __init__(self, api: None, get_user: GetUser):
@@ -95,7 +95,7 @@ class UserResource(Resource):
 
 
 @api.route("/user-approval")
-class UsersResource(Resource):
+class UserApprovalResource(Resource):
 
     # Swagger
     product_schema = ProductManageEntity.schema()

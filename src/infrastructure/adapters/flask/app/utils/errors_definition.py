@@ -89,7 +89,7 @@ APIErrors = {
 
     'RoleNotFound': {"error": {"code": "E2203",
                                "message": "Role not found",
-                               "description": "Role not found at access_token please verify your token.",
+                               "description": "Role not defined.",
                                "status_code": 422}},
     # Product
 

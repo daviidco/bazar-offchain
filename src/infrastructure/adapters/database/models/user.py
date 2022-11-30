@@ -34,7 +34,7 @@ class StatusUser(base):
 
 
 class User(base):
-    # Don't forget import model in __all_models.py
+    # Don't forget import model in __init__.py to alembic works
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)

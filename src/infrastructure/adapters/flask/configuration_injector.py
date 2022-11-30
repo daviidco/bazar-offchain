@@ -17,12 +17,14 @@ from src.domain.ports.avatar_interface import IAvatarRepository
 from src.domain.ports.company_interface import ICompanyRepository
 from src.domain.ports.product_interface import IProductRepository
 from src.domain.ports.user_interface import IUserRepository
+from src.domain.ports.wishlist_interface import IWishListRepository
 from src.infrastructure.adapters.database.adapter_postgresql import PostgresAdapter
 from src.infrastructure.adapters.database.repositories.avatar_repository import AvatarRepository
 from src.infrastructure.adapters.database.repositories.company_repository import CompanyRepository
 from src.infrastructure.adapters.database.repositories.product_repository import ProductRepository
 from src.infrastructure.adapters.database.repositories.user_repository import UserRepository
 from src.infrastructure.adapters.database.repositories.utils import UtilsDatabase
+from src.infrastructure.adapters.database.repositories.wishlist_repository import WishListRepository
 from src.infrastructure.adapters.storage.s3_service import S3Repository
 
 #
@@ -39,5 +41,6 @@ def configure_inject(logger) -> None:
         binder.bind(ICompanyRepository, CompanyRepository(logger, psql_adapter, S3Repository(logger)))
         binder.bind(IAvatarRepository, AvatarRepository(logger, psql_adapter))
         binder.bind(IProductRepository, ProductRepository(logger, psql_adapter, S3Repository(logger), utils_db))
+        binder.bind(IWishListRepository, WishListRepository(logger, psql_adapter, utils_db))
 
     inject.configure(config)

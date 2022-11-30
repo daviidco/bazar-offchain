@@ -4,7 +4,7 @@ import requests
 from flask_restx import abort
 from sqlalchemy.orm import Session
 
-from src.infrastructure.adapters.database.models import User, Company
+from src.infrastructure.adapters.database.models import User, Company, Product
 from flask import current_app
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
@@ -119,3 +119,12 @@ class UtilsDatabase:
             current_app.logger.error(e.error['description'])
             abort(code=e.status_code, message=e.message, error=e.error)
         return company
+
+    def get_product_by_uuid_product(self, uuid_product):
+        product = self.session.query(Product).filter_by(uuid=uuid_product).first()
+        if product is None:
+            e = api_error('ObjectNotFound')
+            e.error['description'] = e.error['description'] + f' <product uuid_product: {uuid_product}>'
+            current_app.logger.error(e.error['description'])
+            abort(code=e.status_code, message=e.message, error=e.error)
+        return product

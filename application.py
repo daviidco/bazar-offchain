@@ -13,10 +13,12 @@ import os
 from flask import Flask, jsonify
 from flask_restx import Api, Resource
 
-from src.infrastructure.adapters.flask.app.controllers.user.blueprints.user_blueprint_v1 import users_v1_01_bp
-from src.infrastructure.adapters.flask.app.controllers.company.blueprints.company_bp_v1_0_1 import companies_v1_01_bp
+import src.infrastructure.adapters.swagger.swagger_service
 from src.infrastructure.adapters.flask.app.controllers.avatar.blueprints.avatar_bp_v1_0_1 import avatars_v1_01_bp
+from src.infrastructure.adapters.flask.app.controllers.company.blueprints.company_bp_v1_0_1 import companies_v1_01_bp
 from src.infrastructure.adapters.flask.app.controllers.product.blueprints.product_bp_v1_0_1 import products_v1_01_bp
+from src.infrastructure.adapters.flask.app.controllers.user.blueprints.user_blueprint_v1 import users_v1_01_bp
+from src.infrastructure.adapters.flask.app.controllers.wishlist.blueprints.wishlist_bp_v1_0_1 import wish_lists_v1_01_bp
 from src.infrastructure.adapters.flask.app.utils.logger import configure_logging
 from src.infrastructure.adapters.flask.configuration_injector import configure_inject
 
@@ -52,11 +54,10 @@ application.register_blueprint(users_v1_01_bp, url_prefix=f'{prefix}')
 application.register_blueprint(companies_v1_01_bp, url_prefix=f'{prefix}')
 application.register_blueprint(avatars_v1_01_bp, url_prefix=f'{prefix}')
 application.register_blueprint(products_v1_01_bp, url_prefix=f'{prefix}')
+application.register_blueprint(wish_lists_v1_01_bp, url_prefix=f'{prefix}')
 application.logger.info('Blueprints Registered')
 
 # Initialize swagger
-import src.infrastructure.adapters.swagger.swagger_service
-
 application.register_blueprint(src.infrastructure.adapters.swagger.swagger_service.service_swagger)
 
 # Catch errors 404
@@ -67,6 +68,7 @@ api = Api(application, catch_all_404s=True)
 class Help(Resource):
     def get(self):
         """Print available functions."""
+        # print(application.config["DEBUG"])
         routes = {}
         rules = application.url_map.iter_rules()
         for r in rules:

@@ -61,3 +61,8 @@ class JwtEntity(BaseModel):
     azp: str
     scope: str
     gty: str
+
+
+class DeleteEntity(BaseModel):
+    status: str = 'Deleted'
+    description: str

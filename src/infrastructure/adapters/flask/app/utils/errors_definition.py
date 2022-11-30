@@ -91,6 +91,11 @@ APIErrors = {
                                "message": "Role not found",
                                "description": "Role not defined.",
                                "status_code": 422}},
+
+    'RoleWithoutPermission': {"error": {"code": "E2204",
+                                        "message": "Role hasn't permission",
+                                        "description": "Role hasn't permission.",
+                                        "status_code": 422}},
     # Product
 
     'BasicProductNotExists': {"error": {"code": "E2210",
@@ -129,9 +134,11 @@ APIErrors = {
                                  "status_code": 422}},
 
     'EmailError': {"error": {"code": "E2217",
-                                     "message": "Email not sent",
-                                     "description": "Email not sent",
-                                     "status_code": 500}},
+                             "message": "Email not sent",
+                             "description": "Email not sent",
+                             "status_code": 500}},
+
+
 
     # Errors Flask E2200 - E2300
 
@@ -140,5 +147,10 @@ APIErrors = {
                           "message": "Error bucket s3",
                           "description": "Undefined.",
                           "status_code": 500}},
+
+    'IntegrityError': {"error": {"code": "E2301",
+                                     "message": "Integrity error data",
+                                     "description": "Duplicate key value violates unique constraint. row already exists.",
+                                     "status_code": 500}},
 
 }

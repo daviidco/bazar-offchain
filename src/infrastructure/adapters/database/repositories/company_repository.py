@@ -18,7 +18,7 @@ from src.domain.entities.company_entity import CompanyEntity, CompanyNewEntity, 
 from src.domain.ports.company_interface import ICompanyRepository
 from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.company import Company, ProfileImage, File
-from src.infrastructure.adapters.database.repositories.utils import send_email, get_email
+from src.infrastructure.adapters.database.repositories.utils import send_email
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
 from src.infrastructure.config.default_infra import AWS_BUCKET_NAME, AWS_REGION
@@ -108,12 +108,14 @@ class CompanyRepository(ICompanyRepository):
                     session_trans.add(object_to_save)
 
                 except AssertionError as e:
+                    session_trans.close()
                     self.__storage_repository.delete_all_objects_path(key=prefix + "/")
                     e = api_error('CompanySavingError')
                     self.logger.error(f"{e.message}")
                     abort(code=e.status_code, message=e.message, error=e.error)
                 except Exception as e:
                     session_trans.rollback()
+                    session_trans.close()
                     self.__storage_repository.delete_all_objects_path(key=prefix + "/")
                     self.logger.error(f"Error undefended {str(e)}")
                     abort(code=e.code, message=None, error=e.data['error'])

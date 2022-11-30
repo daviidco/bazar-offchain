@@ -27,9 +27,9 @@ from src.domain.entities.variety_entity import VarietiesListEntity, VarietyEntit
 from src.domain.ports.product_interface import IProductRepository
 from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.product import Product, BasicProduct, ProductType, Variety, \
-    MinimumOrder, Incoterm, SustainabilityCertification, ProductFile, ProductSustainabilityCertification, ProductImage, \
-    StatusProduct
-from src.infrastructure.adapters.database.repositories.utils import get_email, send_email, get_user_names
+    MinimumOrder, Incoterm, SustainabilityCertification, ProductFile, ProductSustainabilityCertification, \
+    ProductImage,StatusProduct
+from src.infrastructure.adapters.database.repositories.utils import send_email, get_user_names
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
 from src.infrastructure.config.default_infra import AWS_REGION, AWS_BUCKET_NAME
@@ -302,14 +302,29 @@ class ProductRepository(IProductRepository):
         list_objects = self.session.query(Product).offset(offset).limit(limit).all()
         return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
 
+    def get_products_by_user(self, uuid: str, role: str, limit: int, offset: int) -> ProductsListEntity:
+
+        if role == 'buyer':
+            total = self.get_companies_count()
+            list_objects = self.session.query(Product).offset(offset).limit(limit).all()
+            for p in list_objects:
+                p.check_use_like(uuid)
+            return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
+
+        elif role == 'seller':
+            company_id = self.utils_db.get_company_by_uuid_user(uuid).id
+            list_objects = self.session.query(Product).filter_by(company_id=company_id).all()
+            return ProductsListEntity(results=list_objects)
+
+        else:
+            e = api_error('RoleNotFound')
+            e.error['description'] = e.error['description'] + f' <role: {role}>'
+            self.logger.error(f"{e.error['description']}")
+            abort(code=e.status_code, message=e.message, error=e.error)
+
     def get_all_basic_products(self) -> BasicProductsListEntity:
         list_objects = self.session.query(BasicProduct).all()
         return BasicProductsListEntity(results=list_objects)
-
-    def get_products_by_user(self, uuid: str) -> ProductsListEntity:
-        company_id = self.utils_db.get_company_by_uuid_user(uuid).id
-        list_objects = self.session.query(Product).filter_by(company_id=company_id).all()
-        return ProductsListEntity(results=list_objects)
 
     def get_products_type_by_uuid_basic_product(self, uuid: str) -> ProductTypesListEntity:
         basic_product = self.get_basic_product_by_uuid(uuid)

@@ -27,7 +27,7 @@ from src.infrastructure.config.default_infra import UTC_TIME_ZONE
 #
 
 class CommentApproval(base):
-    # Don't forget import model in __all_models.py
+    # Don't forget import model in __init__.py to alembic works
     __tablename__ = 'comments_approval'
     id = Column(Integer, primary_key=True)
     uuid = Column(UUIDType, nullable=False, unique=True, default=uuid.uuid4)
@@ -47,7 +47,7 @@ class CommentApproval(base):
 
 
 class StatusFile(base):
-    # Don't forget import model in __all_models.py
+    # Don't forget import model in __init__.py to alembic works
     __tablename__ = 'status_file'
     id = Column(Integer, primary_key=True)
     uuid = Column(UUIDType, nullable=False, unique=True, default=uuid.uuid4)
@@ -62,7 +62,7 @@ class StatusFile(base):
 
 
 class ProfileImage(base):
-    # Don't forget import model in __all_models.py
+    # Don't forget import model in __init__.py to alembic works
     __tablename__ = 'profile_images'
     id = Column(Integer, primary_key=True)
     uuid = Column(UUIDType, nullable=False, unique=True, default=uuid.uuid4)
@@ -78,7 +78,7 @@ class ProfileImage(base):
 
 
 class FilesCompany(base):
-    # Don't forget import model in __all_models.py
+    # Don't forget import model in __init__.py to alembic works
     __tablename__ = "files_company"
     company_id = Column(ForeignKey("companies.id"), primary_key=True)
     file_id = Column(ForeignKey("files.id"), primary_key=True)
@@ -96,7 +96,7 @@ class FilesCompany(base):
 
 
 class Company(base):
-    # Don't forget import model in __all_models.py
+    # Don't forget import model in __init__.py to alembic works
     __tablename__ = 'companies'
 
     id = Column(Integer, primary_key=True)
@@ -142,7 +142,7 @@ class Company(base):
 
 
 class File(base):
-    # Don't forget import model in __all_models.py
+    # Don't forget import model in __init__.py to alembic works
     __tablename__ = 'files'
     id = Column(Integer, primary_key=True)
     uuid = Column(UUIDType, nullable=False, unique=True, default=uuid.uuid4)

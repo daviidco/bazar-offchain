@@ -151,7 +151,7 @@ class ProductIncoterm(base):
 # SustainabilityCertification -> Child
 
 class Product(base):
-    # Don't forget import model in __all_models.py
+    # Don't forget import model in __init__.py to alembic works
     __tablename__ = 'products'
 
     id = Column(Integer, primary_key=True)
@@ -199,6 +199,7 @@ class Product(base):
     minimum_order = association_proxy("minimum_order_r", "minimum_order")
     minimum_order_uuid = association_proxy("minimum_order_r", "uuid")
     url_avatar = association_proxy("company", "profile_image_url")
+    is_liked = False
 
     def __init__(self, basic_product_id, product_type_id, variety_id, capacity_per_year, date_in_port,
                  guild_or_association, available_for_sale, minimum_order_id, expected_price_per_kg,
@@ -222,6 +223,13 @@ class Product(base):
 
     def __str__(self):
         return f'<Product id:{self.id} - uuid: {self.uuid}>'
+
+    def check_use_like(self, uuid_user):
+        for u in self.user_wish_list:
+            if uuid_user == str(u.user.uuid):
+                self.is_liked = True
+                return self.is_liked
+        return self.is_liked
 
 
 class SustainabilityCertification(base):
@@ -263,7 +271,7 @@ class ProductSustainabilityCertification(base):
 
 
 class ProductFile(base):
-    # Don't forget import model in __all_models.py
+    # Don't forget import model in __init__.py to alembic works
     __tablename__ = 'product_files'
     id = Column(Integer, primary_key=True)
     uuid = Column(UUIDType, nullable=False, unique=True, default=uuid.uuid4)

@@ -60,7 +60,7 @@ class CompanyRepository(ICompanyRepository):
         user = self.session.query(User).filter_by(uuid=company_entity.uuid_user).first()
         if user is None:
             user_to_save = User(
-                uuid=company_entity.uuid_user,
+                uuid_user=company_entity.uuid_user,
                 rol=role
             )
             self.session.add(user_to_save)

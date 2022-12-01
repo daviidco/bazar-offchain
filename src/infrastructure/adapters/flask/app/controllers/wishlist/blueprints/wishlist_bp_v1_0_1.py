@@ -9,12 +9,14 @@
 # All Rights Reserved.
 #
 
-from src.infrastructure.adapters.database.models.user import User
-from src.infrastructure.adapters.database.models.company import *
-from src.infrastructure.adapters.database.models.product import *
-from src.infrastructure.adapters.database.models.wishlist import *
+from flask import Blueprint
+from flask_restx import Api
+
 
 #
-# This file lets recognize the models to work with alembic.
+# This file lets instance a blueprint.
 # @author David Córdoba
 #
+wish_lists_v1_01_bp = Blueprint('wish_lists_v1_01_bp', __name__)
+
+api = Api(wish_lists_v1_01_bp, version="0.1.0", title="WishList")

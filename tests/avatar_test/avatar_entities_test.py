@@ -14,18 +14,13 @@ import uuid
 from pydantic import AnyHttpUrl
 
 from src.domain.entities.avatar_entity import AvatarBaseEntity, AvatarNewEntity, AvatarEntity, AvatarsPaginationEntity
+from tests.utils import validate_data_entity, validate_instance_properties_entity
 
 
 #
 # This file contains unit-tests. It is an independent logic to the application
 # @author David Córdoba
 #
-
-
-def validate_instance_avatars(avatars):
-    for a in avatars:
-        assert isinstance(a.image_name, str)
-        assert isinstance(a.image_url, AnyHttpUrl)
 
 
 class TestAvatarEntity:
@@ -50,35 +45,24 @@ class TestAvatarEntity:
                                'total': 100,
                                'results': [data_avatar_entity_v1, data_avatar_entity_v2]}
 
-    def validate_data_avatars(self, avatars):
-        for a in avatars:
-            assert a.image_name == self.data_base_avatar['image_name']
-            assert a.image_url == self.data_base_avatar['image_url']
-
     def test_base_avatar_entity(self):
         avatar_1 = AvatarBaseEntity.parse_obj(self.data_base_avatar)
-        self.validate_data_avatars([avatar_1])
-        validate_instance_avatars([avatar_1])
+        validate_data_entity([avatar_1], AvatarBaseEntity, [self.data_base_avatar])
+        validate_instance_properties_entity([avatar_1], AvatarBaseEntity)
 
     def test_new_avatar_entity(self):
         avatar_1 = AvatarNewEntity.parse_obj(self.data_new_avatar)
-        self.validate_data_avatars([avatar_1])
-        validate_instance_avatars([avatar_1])
+        validate_data_entity([avatar_1], AvatarNewEntity, [self.data_new_avatar])
+        validate_instance_properties_entity([avatar_1], AvatarNewEntity)
 
     def test_avatar_entity(self):
         avatar_1 = AvatarEntity.parse_obj(self.data_avatar_entity_v1)
         avatar_2 = AvatarEntity.parse_obj(self.data_avatar_entity_v2)
         avatars = [avatar_1, avatar_2]
-        assert avatar_1.uuid == self.generated_uuid
-        assert avatar_2.uuid == self.generated_uuid
-        assert isinstance(avatar_1.uuid, uuid.UUID)
-        assert isinstance(avatar_2.uuid, uuid.UUID)
-        self.validate_data_avatars(avatars)
-        validate_instance_avatars(avatars)
+        validate_data_entity(avatars, AvatarEntity, [self.data_avatar_entity_v1, self.data_avatar_entity_v2])
+        validate_instance_properties_entity(avatars, AvatarEntity)
 
     def test_product_pagination_entity(self):
         avatar_pagination = AvatarsPaginationEntity.parse_obj(self.data_avatar_pagination)
-        assert avatar_pagination.limit == 10
-        assert avatar_pagination.offset == 1
-        self.validate_data_avatars(avatar_pagination.results)
-        validate_instance_avatars(avatar_pagination.results)
+        validate_data_entity([avatar_pagination], AvatarsPaginationEntity, [self.data_avatar_pagination])
+        validate_instance_properties_entity([avatar_pagination], AvatarsPaginationEntity)

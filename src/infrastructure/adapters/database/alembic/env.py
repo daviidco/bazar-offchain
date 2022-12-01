@@ -38,6 +38,14 @@ target_metadata = base.metadata
 # ... etc.
 
 
+def include_name(name, type_, parent_names):
+    if type_ == "schema":
+        # note this will not include the default schema
+        return name in [None]
+    else:
+        return True
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -56,6 +64,8 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_schemas=True,
+        include_name=include_name
     )
 
     with context.begin_transaction():
@@ -82,7 +92,8 @@ def run_migrations_online() -> None:
             connection=connection, target_metadata=target_metadata,
             # new
             version_table_schema=target_metadata.schema,
-            include_schemas=True
+            include_schemas=True,
+            include_name=include_name
         )
 
         with context.begin_transaction():

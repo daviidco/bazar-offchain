@@ -4,7 +4,7 @@ import requests
 from flask_restx import abort
 from sqlalchemy.orm import Session
 
-from src.infrastructure.adapters.database.models import User, Company
+from src.infrastructure.adapters.database.models import User, Company, Product
 from flask import current_app
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
@@ -97,21 +97,34 @@ def send_email(subject: str, data: str, destination: list, is_html: bool = False
 
 
 class UtilsDatabase:
-    def __init__(self, logger, adapter_db):
-        self.logger = logger
+    def __init__(self, adapter_db):
         self.engine = adapter_db.engine
         self.session = Session(adapter_db.engine)
 
-    def get_company_by_uuid_user(self, uuid_user):
+    def get_user_by_uuid_user(self, uuid_user):
         user = self.session.query(User).filter_by(uuid=uuid_user).first()
         if user is None:
             e = api_error('ObjectNotFound')
-            e.error['description'] = e.error['description'] + ' <user>'
+            e.error['description'] = e.error['description'] + f' <user uuid_user: {uuid_user}>'
+            current_app.logger.error(e.error['description'])
             abort(code=e.status_code, message=e.message, error=e.error)
+        return user
 
+    def get_company_by_uuid_user(self, uuid_user):
+        user = self.get_user_by_uuid_user(uuid_user)
         company = self.session.query(Company).filter_by(user_id=user.id).first()
         if company is None:
             e = api_error('ObjectNotFound')
-            e.error['description'] = e.error['description'] + ' <company>'
+            e.error['description'] = e.error['description'] + f' <company uuid_user: {uuid_user}>'
+            current_app.logger.error(e.error['description'])
             abort(code=e.status_code, message=e.message, error=e.error)
         return company
+
+    def get_product_by_uuid_product(self, uuid_product):
+        product = self.session.query(Product).filter_by(uuid=uuid_product).first()
+        if product is None:
+            e = api_error('ObjectNotFound')
+            e.error['description'] = e.error['description'] + f' <product uuid_product: {uuid_product}>'
+            current_app.logger.error(e.error['description'])
+            abort(code=e.status_code, message=e.message, error=e.error)
+        return product

@@ -34,7 +34,7 @@ class StatusUser(base):
 
 
 class User(base):
-    # Don't forget import model in __all_models.py
+    # Don't forget import model in __init__.py to alembic works
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
@@ -49,8 +49,8 @@ class User(base):
     # Association Proxy
     status = association_proxy("status_user", "status_user")
 
-    def __init__(self, uuid, rol):
-        self.uuid = uuid
+    def __init__(self, uuid_user, rol):
+        self.uuid = uuid_user
         self.rol = rol
 
     def __repr__(self):

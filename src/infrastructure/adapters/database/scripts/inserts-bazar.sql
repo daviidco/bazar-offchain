@@ -97,8 +97,8 @@ INSERT INTO incoterms (uuid, incoterm) VALUES(gen_random_uuid(), 'Ex works (EXW)
 
 -- Populate minimums_order
 INSERT INTO minimums_order (uuid, minimum_order) VALUES(gen_random_uuid(), 'Bags (DHL)');
-INSERT INTO minimums_order (uuid, minimum_order) VALUES(gen_random_uuid(), 'A Continer');
-INSERT INTO minimums_order (uuid, minimum_order) VALUES(gen_random_uuid(), 'Multiple Continers');
+INSERT INTO minimums_order (uuid, minimum_order) VALUES(gen_random_uuid(), 'A Container');
+INSERT INTO minimums_order (uuid, minimum_order) VALUES(gen_random_uuid(), 'Multiple Containers');
 
 
 

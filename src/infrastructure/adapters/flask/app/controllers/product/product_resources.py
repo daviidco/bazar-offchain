@@ -17,10 +17,10 @@ from flask_restx import Resource, Namespace, reqparse
 from flask_restx.reqparse import request
 from werkzeug.datastructures import FileStorage
 
-from src.application.company.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
-    GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, GetAllProducts, GetProductsByUser, \
-    GetProductStates
-from src.domain.entities.common_entity import JwtEntity, InputPaginationEntity
+from src.application.product.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
+    GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, \
+    GetAllProducts, GetProductsByUser, GetProductStates
+from src.domain.entities.common_entity import InputPaginationEntity
 from src.domain.entities.product_entity import ProductNewEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
 from src.infrastructure.adapters.flask.app.utils.ultils import get_schema_and_type
@@ -63,7 +63,7 @@ class ProductResource(Resource):
     @requires_auth
     def get(self, *args, **kwargs):
         limit = request.args.get('limit', 10)
-        offset = request.args.get('offset', 1)
+        offset = request.args.get('offset', 0)
         result = self.get_all_products.execute(limit, offset)
         return json.loads(result.json()), 200
 
@@ -82,18 +82,23 @@ class ProductResource(Resource):
 
 
 @api.route("/products-user/<string:user_uuid>")
-class UserResource(Resource):
+@api.route("/feed/<string:user_uuid>")
+class ProductsByUserResource(Resource):
+    schema = InputPaginationEntity.schema()
 
     @inject.autoparams('get_products')
     def __init__(self, api: None, get_products: GetProductsByUser):
         self.api = api
         self.get_products = get_products
 
-    @api.doc(security='Private JWT')
+    @api.doc(params=schema['properties'], security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, user_uuid, *args, **kwargs):
-        result = self.get_products.execute(user_uuid)
+        role = kwargs.get('role', None)
+        limit = request.args.get('limit', 10)
+        offset = request.args.get('offset', 0)
+        result = self.get_products.execute(user_uuid, role, limit, offset)
         return json.loads(result.json()), 200
 
 

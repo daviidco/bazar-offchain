@@ -61,6 +61,7 @@ class ProductEntity(ProductBaseEntity, UuidEntity):
     incoterms: List[IncotermEntity] = None
     sustainability_certifications: List[SustainabilityCertificationEntity] = None
     url_avatar: AnyHttpUrl = None
+    is_liked: bool = False
 
 
 class ProductsListEntity(BaseModel):

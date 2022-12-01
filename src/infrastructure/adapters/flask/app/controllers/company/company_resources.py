@@ -70,10 +70,6 @@ class CompaniesResource(Resource):
     def post(self, *args, **kwargs):
         jwt = dict(request.headers).get('Authorization', None)
         role = kwargs.get('role', None)
-        if role is None:
-            e = api_error('RoleNotFound')
-            abort(code=e.status_code, message=e.message, error=e.error)
-
         entity = CompanyNewEntity.parse_obj(json.loads(request.form['body']))
         files = request.files.getlist('files[]')
         result = self.create_company.execute(jwt, role, entity, files)

@@ -39,7 +39,7 @@ class UserRepository(IUserRepository):
         user_exist = self.get_user_by_uuid(user_entity.uuid)
         if user_exist is None:
             object_to_save = User(
-                uuid=user_entity.uuid,
+                uuid_user=user_entity.uuid,
                 rol=user_entity.rol,
             )
 

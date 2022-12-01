@@ -21,6 +21,7 @@ from src.domain.entities.common_entity import InputPaginationEntity, JwtEntity
 from src.domain.entities.user_entity import UserNewEntity
 from src.domain.entities.user_manage_entity import UserManageEntity, ProductManageEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
+from src.infrastructure.adapters.flask.app.utils.ultils import get_schema
 
 #
 # This file contains the user endpoints Api-rest
@@ -33,17 +34,13 @@ api = Namespace(name='users', description="User controller", path='/api/v1/users
 @api.route("/")
 class UsersResource(Resource):
 
-    # Swagger params pagination
-    schema = InputPaginationEntity.schema()
-    model = api.schema_model("InputPaginationEntity", schema)
-
     @inject.autoparams('get_all_users', 'create_user')
     def __init__(self, api: None, get_all_users: GetAllUsers, create_user: CreateUser):
         self.api = api
         self.get_all_users = get_all_users
         self.create_user = create_user
 
-    @api.doc(params=schema['properties'], security='Private JWT')
+    @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
@@ -101,8 +98,8 @@ class UserApprovalResource(Resource):
     product_schema = ProductManageEntity.schema()
     product_model = api.schema_model("ProductManageEntity", product_schema)
 
-    schema = UserManageEntity.schema()
-    model = api.schema_model("UserManageEntity", schema)
+    user_schema = UserManageEntity.schema()
+    user_model = api.schema_model("UserManageEntity", user_schema)
 
     @inject.autoparams('put_states_approval')
     def __init__(self, api: None, put_states_approval: PutStatesApproval):
@@ -110,7 +107,7 @@ class UserApprovalResource(Resource):
         self.put_states_approval = put_states_approval
 
     @api.doc(security='Private JWT')
-    @api.expect(product_model, model)
+    @api.expect(product_model, user_model)
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def put(self, *args, **kwargs):

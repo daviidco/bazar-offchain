@@ -18,11 +18,10 @@ from flask_restx.reqparse import request
 from werkzeug.datastructures import FileStorage
 
 from src.application.company.company_uc import GetCompany, GetAllCompanies, CreateCompany
-from src.domain.entities.common_entity import  InputPaginationEntity
+from src.domain.entities.common_entity import InputPaginationEntity
 from src.domain.entities.company_entity import CompanyNewEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
-from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
-from src.infrastructure.adapters.flask.app.utils.ultils import get_schema_and_type
+from src.infrastructure.adapters.flask.app.utils.ultils import get_help_schema, get_schema
 
 #
 # This file contains the company endpoints Api-rest
@@ -34,11 +33,8 @@ api = Namespace("companies", description="Company controller", path='/api/v1/com
 
 @api.route("/")
 class CompaniesResource(Resource):
-    schema = InputPaginationEntity.schema()
 
-    schema_company = CompanyNewEntity.schema()
-    model = api.schema_model("CompanyNewEntity", schema_company)
-    help_new_company = json.dumps(get_schema_and_type(schema_company), indent=2)
+    help_new_company = get_help_schema(CompanyNewEntity)
 
     # Object to upload file and json body in form data
     upload_parser = reqparse.RequestParser()
@@ -54,7 +50,7 @@ class CompaniesResource(Resource):
         self.get_all_companies = get_all_companies
         self.create_company = create_company
 
-    @api.doc(params=schema['properties'], security='Private JWT')
+    @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):

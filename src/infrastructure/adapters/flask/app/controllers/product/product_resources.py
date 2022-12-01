@@ -19,11 +19,11 @@ from werkzeug.datastructures import FileStorage
 
 from src.application.product.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
     GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, \
-    GetAllProducts, GetProductsByUser, GetProductStates
+    GetAllProducts, GetProductsByUser, GetProductStates, EditProductAvailability, GetDetailProduct
 from src.domain.entities.common_entity import InputPaginationEntity
-from src.domain.entities.product_entity import ProductNewEntity
+from src.domain.entities.product_entity import ProductNewEntity, AvailabilityEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
-from src.infrastructure.adapters.flask.app.utils.ultils import get_schema_and_type
+from src.infrastructure.adapters.flask.app.utils.ultils import get_help_schema, get_schema
 
 #
 # This file contains the products endpoints Api-rest
@@ -35,11 +35,8 @@ api = Namespace("products", description="Product controller", path='/api/v1/prod
 
 @api.route("/")
 class ProductResource(Resource):
-    schema = InputPaginationEntity.schema()
 
-    schema_product = ProductNewEntity.schema()
-    model = api.schema_model("ProductNewEntity", schema_product)
-    help_new_product = json.dumps(get_schema_and_type(schema_product), indent=2)
+    help_new_product = get_help_schema(ProductNewEntity)
 
     # Object to upload file and json body in form data
     upload_parser = reqparse.RequestParser()
@@ -58,7 +55,7 @@ class ProductResource(Resource):
         self.get_all_products = get_all_products
         self.create_product = create_product
 
-    @api.doc(params=schema['properties'], security='Private JWT')
+    @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
@@ -84,14 +81,12 @@ class ProductResource(Resource):
 @api.route("/products-user/<string:user_uuid>")
 @api.route("/feed/<string:user_uuid>")
 class ProductsByUserResource(Resource):
-    schema = InputPaginationEntity.schema()
-
     @inject.autoparams('get_products')
     def __init__(self, api: None, get_products: GetProductsByUser):
         self.api = api
         self.get_products = get_products
 
-    @api.doc(params=schema['properties'], security='Private JWT')
+    @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, user_uuid, *args, **kwargs):
@@ -205,4 +200,36 @@ class ProductStatesResource(Resource):
     @requires_auth
     def get(self, *args, **kwargs):
         result = self.get_product_states.execute()
+        return json.loads(result.json()), 200
+
+
+@api.route("/availability")
+class ProductsByUserResource(Resource):
+
+    @inject.autoparams('edit_product_availability')
+    def __init__(self, api: None, edit_product_availability: EditProductAvailability):
+        self.api = api
+        self.edit_product_availability = edit_product_availability
+
+    @api.doc(params=get_schema(AvailabilityEntity), security='Private JWT')
+    @cross_origin(headers=["Content-Type", "Authorization"])
+    @requires_auth
+    def patch(self, *args, **kwargs):
+        entity = AvailabilityEntity.parse_obj(request.args)
+        result = self.edit_product_availability.execute(entity)
+        return json.loads(result.json()), 200
+
+
+@api.route("/detail/<string:uuid_product>")
+class VarietiesResource(Resource):
+    @inject.autoparams('get_detail_by_uuid_product')
+    def __init__(self, api: None, get_detail_by_uuid_product: GetDetailProduct):
+        self.api = api
+        self.get_detail_by_uuid_product = get_detail_by_uuid_product
+
+    @api.doc(security='Private JWT')
+    @cross_origin(headers=["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, uuid_product, *args, **kwargs):
+        result = self.get_detail_by_uuid_product.execute(uuid_product)
         return json.loads(result.json()), 200

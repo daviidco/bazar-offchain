@@ -16,6 +16,7 @@ from importlib import import_module
 
 # Instance Blueprint
 service_swagger = Blueprint('api', __name__, url_prefix='/')
+
 # Dictionary to manage Bearer token application
 authorizations = {
     'Private JWT': {
@@ -23,11 +24,12 @@ authorizations = {
         'in': 'header',
         'name': 'Authorization',
         'description': 'Enter JWT Bearer token. Example: \"Bearer {token}\"'
+
     },
 }
 
 # Instance Api swagger
-api = Api(service_swagger, title="Bazar-Network Api - Documentation",
+api = Api(service_swagger, title="bazar-offchain Api - Documentation",
           authorizations=authorizations, version="0.1.0",
           description="This api documentation contains all endpoints developed by backend team with flask framework. \n"
                       "Remember you should first do login and set the Bearer token in option authorize.")

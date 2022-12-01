@@ -15,7 +15,8 @@ from src.domain.entities.basic_product_entity import BasicProductsListEntity, Ba
 from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
-from src.domain.entities.product_entity import ProductNewEntity, ProductEntity, ProductsPaginationEntity
+from src.domain.entities.product_entity import ProductNewEntity, ProductEntity, ProductsPaginationEntity, \
+    AvailabilityEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity, ProductTypeEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity
 from src.domain.entities.variety_entity import VarietiesListEntity, VarietyEntity
@@ -95,3 +96,12 @@ class IProductRepository(ABC):
     @abstractmethod
     def product_states(self) -> BasicEntity:
         raise Exception('Not implemented method')
+
+    @abstractmethod
+    def edit_product_availability(self, entity: AvailabilityEntity) -> AvailabilityEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_detail_product_by_uuid(self, uuid: str) -> ProductEntity:
+        raise Exception('Not implemented method')
+

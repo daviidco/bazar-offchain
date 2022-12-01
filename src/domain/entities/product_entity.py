@@ -70,3 +70,9 @@ class ProductsListEntity(BaseModel):
 
 class ProductsPaginationEntity(PaginationEntity):
     results: List[ProductEntity]
+
+
+# Availability
+class AvailabilityEntity(BaseModel):
+    uuid_product: UUID
+    available_for_sale: float

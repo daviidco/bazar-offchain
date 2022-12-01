@@ -42,8 +42,8 @@ class PaginationEntity(BaseModel):
 
 
 class InputPaginationEntity(BaseModel):
-    limit: int = Field(description="limit the number of rows returned from a query")
-    offset: int = Field(description="Omit a specified number of rows before the beginning of the result set")
+    limit: int = Field(default=10, description="limit the number of rows returned from a query")
+    offset: int = Field(default=0, description="Omit a specified number of rows before the beginning of the result set")
 
 
 class ErrorEntity(BaseModel):

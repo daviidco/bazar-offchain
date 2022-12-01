@@ -19,6 +19,7 @@ from flask_restx.reqparse import request
 from src.application.company.avatar_uc import GetAllAvatars
 from src.domain.entities.common_entity import InputPaginationEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
+from src.infrastructure.adapters.flask.app.utils.ultils import get_schema
 
 #
 # This file contains the avatar endpoints Api-rest
@@ -30,15 +31,13 @@ api = Namespace("avatars", description="Avatar controller", path='/api/v1/avatar
 
 @api.route("/")
 class AvatarsResource(Resource):
-    schema = InputPaginationEntity.schema()
-    model = api.schema_model("InputPaginationEntity", schema)
 
     @inject.autoparams('get_all_avatars')
     def __init__(self, api: None, get_all_avatars: GetAllAvatars):
         self.api = api
         self.get_all_avatars = get_all_avatars
 
-    @api.doc(params=schema['properties'], security='Private JWT')
+    @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):

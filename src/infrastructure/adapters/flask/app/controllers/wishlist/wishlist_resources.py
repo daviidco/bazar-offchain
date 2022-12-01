@@ -20,8 +20,9 @@ from src.application.product.product_uc import CreateProduct, \
     GetAllProducts
 from src.application.wishlist.wishlist_uc import CreateWishProduct, DeleteWishProduct
 from src.domain.entities.product_entity import ProductNewEntity
-from src.domain.entities.wishlist_entity import WishProductNewEntity
+from src.domain.entities.wishlist_entity import WishProductNewEntity, WishProductEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
+from src.infrastructure.adapters.flask.app.utils.ultils import get_schema
 
 #
 # This file contains the wishlist endpoints Api-rest
@@ -33,9 +34,6 @@ api = Namespace("wishlist", description="Wishlist controller", path='/api/v1/wis
 
 @api.route("/")
 class ProductResource(Resource):
-    # Swagger
-    schema = WishProductNewEntity.schema()
-    model = api.schema_model("WishProductNewEntity", schema)
 
     @inject.autoparams('create_wish_product', 'delete_wish_product')
     def __init__(self, api: None, create_wish_product: CreateWishProduct, delete_wish_product: DeleteWishProduct):
@@ -43,7 +41,7 @@ class ProductResource(Resource):
         self.create_wish_product = create_wish_product
         self.delete_wish_product = delete_wish_product
 
-    @api.doc(params=schema['properties'], security='Private JWT')
+    @api.doc(params=get_schema(WishProductNewEntity), security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
@@ -53,7 +51,7 @@ class ProductResource(Resource):
         result = self.create_wish_product.execute(role, entity)
         return json.loads(result.json()), 201
 
-    @api.doc(params=schema['properties'], security='Private JWT')
+    @api.doc(params=get_schema(WishProductEntity), security='Private JWT')
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def delete(self, *args, **kwargs):

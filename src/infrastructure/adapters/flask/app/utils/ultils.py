@@ -8,7 +8,7 @@
 # 2022: Bazar Network S.A.S.
 # All Rights Reserved.
 #
-
+import json
 from datetime import datetime
 
 
@@ -28,7 +28,21 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def get_schema_and_type(schema):
+# Swagger Documentation
+def get_help_schema(c_e):
+    schema = c_e.schema()
     for key in list(schema['properties'].keys()):
+        """function return json help"""
         schema["properties"][key] = schema["properties"][key]['type']
-    return schema['properties']
+    return json.dumps(schema["properties"], indent=2)
+
+
+def get_schema(c_e):
+    """function return schema with fields required"""
+    schema = c_e.schema()['properties']
+    internal_models = [c_e.__fields__[prop] for prop in c_e.__fields__]
+    list_dicts = [{im.name: {'title': im.name, 'required': im.required}} for im in internal_models]
+    dict_merged = {k: v for d in list_dicts for k, v in d.items()}
+    for prop in schema:
+        schema[prop]['required'] = dict_merged[prop]['required']
+    return schema

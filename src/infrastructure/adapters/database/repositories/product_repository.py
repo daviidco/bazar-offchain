@@ -19,7 +19,7 @@ from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity, IncotermEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductEntity, ProductsPaginationEntity, ProductNewEntity, \
-    ProductsListEntity
+    ProductsListEntity, AvailabilityEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity, ProductTypeEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity, \
     SustainabilityCertificationEntity
@@ -298,14 +298,14 @@ class ProductRepository(IProductRepository):
         return count
 
     def get_all_products(self, limit: int, offset: int) -> ProductsPaginationEntity:
-        total = self.get_companies_count()
+        total = self.get_products_count()
         list_objects = self.session.query(Product).offset(offset).limit(limit).all()
         return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
 
     def get_products_by_user(self, uuid: str, role: str, limit: int, offset: int) -> ProductsListEntity:
 
         if role == 'buyer':
-            total = self.get_companies_count()
+            total = self.get_products_count()
             list_objects = self.session.query(Product).offset(offset).limit(limit).all()
             for p in list_objects:
                 p.check_use_like(uuid)
@@ -352,3 +352,15 @@ class ProductRepository(IProductRepository):
         product_states = self.session.query(StatusProduct.uuid, StatusProduct.status_product.label('tag')).all()
         response = BasicEntity(results=product_states)
         return response
+
+    def edit_product_availability(self, entity: AvailabilityEntity) -> AvailabilityEntity:
+        product = self.utils_db.get_product_by_uuid_product(entity.uuid_product)
+        product.available_for_sale = entity.available_for_sale
+        self.session.merge(product)
+        self.session.commit()
+        self.logger.info(f"{product} edited availability")
+        return entity
+
+    def get_detail_product_by_uuid(self, uuid: str) -> ProductEntity:
+        product = self.utils_db.get_product_by_uuid_product(uuid)
+        return ProductEntity.from_orm(product)

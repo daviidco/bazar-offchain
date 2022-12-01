@@ -44,6 +44,7 @@ class UsersResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
+        """Gets all users with pagination"""
         jwt = dict(request.headers).get('Authorization', None)
         limit = request.args.get('limit', 10)
         offset = request.args.get('offset', 0)
@@ -54,6 +55,7 @@ class UsersResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
+        """Creates a new user. Note: Just in bazar-offchain"""
         entity = UserNewEntity.parse_obj(request.json)
         result = self.create_user.execute(entity)
         return json.loads(result.json()), 201
@@ -71,6 +73,7 @@ class UserByUuidResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, user_uuid, *args, **kwargs):
+        """Gets a specific user by user uuid"""
         result = self.get_user.execute(user_uuid)
         return json.loads(result.json()), 200
 
@@ -87,6 +90,7 @@ class UserResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
+        """Gets all user states"""
         result = self.get_user_states.execute()
         return json.loads(result.json()), 200
 
@@ -111,6 +115,7 @@ class UserApprovalResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def put(self, *args, **kwargs):
+        """Approves user and product or only product or only user"""
         entity = UserManageEntity.parse_obj(request.json)
         result = self.put_states_approval.execute(entity)
         return json.loads(result.json()), 200

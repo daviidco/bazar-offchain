@@ -54,6 +54,7 @@ class CompaniesResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
+        """Gets  all companies with pagination"""
         limit = request.args.get('limit', 10)
         offset = request.args.get('offset', 0)
         result = self.get_all_companies.execute(limit, offset)
@@ -64,6 +65,7 @@ class CompaniesResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
+        """Creates a new company"""
         jwt = dict(request.headers).get('Authorization', None)
         role = kwargs.get('role', None)
         entity = CompanyNewEntity.parse_obj(json.loads(request.form['body']))
@@ -84,5 +86,6 @@ class CompanyResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, company_uuid, *args, **kwargs):
+        """Gets  a specific company by uuid"""
         result = self.get_company.execute(company_uuid)
         return json.loads(result.json()), 200

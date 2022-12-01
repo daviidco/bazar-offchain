@@ -68,7 +68,6 @@ api = Api(application, catch_all_404s=True)
 class Help(Resource):
     def get(self):
         """Print available functions."""
-        # print(application.config["DEBUG"])
         routes = {}
         rules = application.url_map.iter_rules()
         for r in rules:

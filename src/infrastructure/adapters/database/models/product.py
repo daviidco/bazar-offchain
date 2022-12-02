@@ -219,10 +219,10 @@ class Product(base):
         self.company_id = company_id
 
     def __repr__(self):
-        return f'<Product {self.id}>'
+        return f'<Product uuid: {self.uuid}, state: {self.status}>'
 
     def __str__(self):
-        return f'<Product id:{self.id} - uuid: {self.uuid}>'
+        return f'<Product uuid: {self.uuid}, state: {self.status}>'
 
     def check_use_like(self, uuid_user):
         for u in self.user_wish_list:

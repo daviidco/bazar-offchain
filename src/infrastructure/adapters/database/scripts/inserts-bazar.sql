@@ -13,6 +13,7 @@ INSERT INTO status_product (uuid, status_product, description) VALUES (gen_rando
 INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Approved','Product is approved and visible to buyers');
 INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Rejected','Product is rejected');
 INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Hide','Product is hidden to buyers and was previously approved');
+INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Deleted','Product has a logic deleted');
 
 -- Populate profile_images
 INSERT INTO profile_images (uuid, image_name, format, image_url) VALUES(gen_random_uuid(), 'astronaut-s', 'png', 'https://s3-offchain-test.s3.us-east-2.amazonaws.com/profile_images/astronaut-s.png');

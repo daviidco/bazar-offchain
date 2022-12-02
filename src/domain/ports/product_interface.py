@@ -105,3 +105,7 @@ class IProductRepository(ABC):
     def get_detail_product_by_uuid(self, uuid: str) -> ProductEntity:
         raise Exception('Not implemented method')
 
+    @abstractmethod
+    def edit_product_state(self, status: str, uuid: str) -> ProductEntity:
+        raise Exception('Not implemented method')
+

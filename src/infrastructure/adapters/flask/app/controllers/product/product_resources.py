@@ -19,7 +19,7 @@ from werkzeug.datastructures import FileStorage
 
 from src.application.product.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
     GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, \
-    GetAllProducts, GetProductsByUser, GetProductStates, EditProductAvailability, GetDetailProduct
+    GetAllProducts, GetProductsByUser, GetProductStates, EditProductAvailability, GetDetailProduct, EditStateProduct
 from src.domain.entities.common_entity import InputPaginationEntity
 from src.domain.entities.product_entity import ProductNewEntity, AvailabilityEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
@@ -59,6 +59,7 @@ class ProductResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
+        """Gets  all products with pagination"""
         limit = request.args.get('limit', 10)
         offset = request.args.get('offset', 0)
         result = self.get_all_products.execute(limit, offset)
@@ -69,6 +70,7 @@ class ProductResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
+        """Creates a new product"""
         jwt = dict(request.headers).get('Authorization', None)
         role = kwargs.get('role', None)
         entity = ProductNewEntity.parse_obj(json.loads(request.form['body']))
@@ -90,6 +92,7 @@ class ProductsByUserResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, user_uuid, *args, **kwargs):
+        """Gets all user's products by the user uuid. if user is buyer will try to list all products"""
         role = kwargs.get('role', None)
         limit = request.args.get('limit', 10)
         offset = request.args.get('offset', 0)
@@ -108,6 +111,7 @@ class BasicProductsResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
+        """Gets all basic products"""
         result = self.get_all_basic_products.execute()
         return json.loads(result.json()), 200
 
@@ -123,6 +127,7 @@ class ProductTypesResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, uuid_basic_product, *args, **kwargs):
+        """Gets all product types"""
         result = self.get_products_type_by_uuid_basic_product.execute(uuid_basic_product)
         return json.loads(result.json()), 200
 
@@ -138,6 +143,7 @@ class VarietiesResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, uuid_basic_product, *args, **kwargs):
+        """Gets all varieties"""
         result = self.get_varieties_by_uuid_basic_product.execute(uuid_basic_product)
         return json.loads(result.json()), 200
 
@@ -153,6 +159,7 @@ class SustainabilityCertificationsResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
+        """Gets all sustainability certifications"""
         result = self.get_all_sustainability_certifications.execute()
         return json.loads(result.json()), 200
 
@@ -168,6 +175,7 @@ class IncotermsResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
+        """Gets all incoterms"""
         result = self.get_all_incoterms.execute()
         return json.loads(result.json()), 200
 
@@ -183,6 +191,7 @@ class MinimumOrdersResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
+        """Gets all minimum orders"""
         result = self.get_all_minimum_orders.execute()
         return json.loads(result.json()), 200
 
@@ -199,6 +208,7 @@ class ProductStatesResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
+        """Gets all product states"""
         result = self.get_product_states.execute()
         return json.loads(result.json()), 200
 
@@ -215,13 +225,14 @@ class ProductsByUserResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def patch(self, *args, **kwargs):
+        """Update product availability for sale"""
         entity = AvailabilityEntity.parse_obj(request.args)
         result = self.edit_product_availability.execute(entity)
         return json.loads(result.json()), 200
 
 
 @api.route("/detail/<string:uuid_product>")
-class VarietiesResource(Resource):
+class ProductDetailResource(Resource):
     @inject.autoparams('get_detail_by_uuid_product')
     def __init__(self, api: None, get_detail_by_uuid_product: GetDetailProduct):
         self.api = api
@@ -231,5 +242,58 @@ class VarietiesResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, uuid_product, *args, **kwargs):
+        """Gets product detail of a specific product by product uuid"""
         result = self.get_detail_by_uuid_product.execute(uuid_product)
+        return json.loads(result.json()), 200
+
+
+@api.route("/update-hidden/<string:uuid_product>")
+class ProductHiddenResource(Resource):
+    @inject.autoparams('edit_product_state')
+    def __init__(self, api: None, edit_product_state: EditStateProduct):
+        self.api = api
+        self.edit_product_state = edit_product_state
+
+    @api.doc(security='Private JWT')
+    @cross_origin(headers=["Content-Type", "Authorization"])
+    @requires_auth
+    def patch(self, uuid_product, *args, **kwargs):
+        """Updates state product to hidden"""
+        state = 'Hide'
+        result = self.edit_product_state.execute(state, uuid_product)
+        return json.loads(result.json()), 200
+
+
+@api.route("/update-public/<string:uuid_product>")
+@api.route("/update-approve/<string:uuid_product>")
+class ProductPublicResource(Resource):
+    @inject.autoparams('edit_product_state')
+    def __init__(self, api: None, edit_product_state: EditStateProduct):
+        self.api = api
+        self.edit_product_state = edit_product_state
+
+    @api.doc(security='Private JWT')
+    @cross_origin(headers=["Content-Type", "Authorization"])
+    @requires_auth
+    def patch(self, uuid_product, *args, **kwargs):
+        """Updates state product to public"""
+        state = 'Approved'
+        result = self.edit_product_state.execute(state, uuid_product)
+        return json.loads(result.json()), 200
+
+
+@api.route("/update-delete/<string:uuid_product>")
+class ProductDeleteResource(Resource):
+    @inject.autoparams('edit_product_state')
+    def __init__(self, api: None, edit_product_state: EditStateProduct):
+        self.api = api
+        self.edit_product_state = edit_product_state
+
+    @api.doc(security='Private JWT')
+    @cross_origin(headers=["Content-Type", "Authorization"])
+    @requires_auth
+    def patch(self, uuid_product, *args, **kwargs):
+        """Updates state product to delete"""
+        state = 'Deleted'
+        result = self.edit_product_state.execute(state, uuid_product)
         return json.loads(result.json()), 200

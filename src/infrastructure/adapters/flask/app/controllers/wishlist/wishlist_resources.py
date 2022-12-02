@@ -45,8 +45,8 @@ class ProductResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
+        """Append product to user wishlist"""
         role = kwargs.get('role', None)
-        role = 'buyer'
         entity = WishProductNewEntity.parse_obj(request.args)
         result = self.create_wish_product.execute(role, entity)
         return json.loads(result.json()), 201
@@ -55,8 +55,8 @@ class ProductResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def delete(self, *args, **kwargs):
+        """Remove product from user wishlist"""
         role = kwargs.get('role', None)
-        role = 'buyer'
         entity = WishProductNewEntity.parse_obj(request.args)
         result = self.delete_wish_product.execute(role, entity)
         return json.loads(result.json()), 200

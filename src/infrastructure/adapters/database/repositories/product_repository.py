@@ -358,9 +358,20 @@ class ProductRepository(IProductRepository):
         product.available_for_sale = entity.available_for_sale
         self.session.merge(product)
         self.session.commit()
-        self.logger.info(f"{product} edited availability")
+        self.logger.info(f"{product} availability edited")
         return entity
 
     def get_detail_product_by_uuid(self, uuid: str) -> ProductEntity:
         product = self.utils_db.get_product_by_uuid_product(uuid)
+        return ProductEntity.from_orm(product)
+
+    def edit_product_state(self, status: str, uuid: str) -> ProductEntity:
+        product = self.utils_db.get_product_by_uuid_product(uuid)
+        state = self.session.query(StatusProduct).filter_by(status_product=status).first()
+        if state is None:
+            e = api_error('ObjectNotFound')
+            abort(code=e.status_code, message=e.message, error=e.error)
+        product.status_id = state.id
+        self.session.commit()
+        self.logger.info(f"{product} state edited")
         return ProductEntity.from_orm(product)

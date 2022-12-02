@@ -13,7 +13,7 @@ import json
 
 import inject
 from flask_cors import cross_origin
-from flask_restx import Resource, Namespace, fields
+from flask_restx import Resource, Namespace
 from flask_restx.reqparse import request
 
 from src.application.company.avatar_uc import GetAllAvatars
@@ -41,6 +41,7 @@ class AvatarsResource(Resource):
     @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
+        """Gets  all avatars with pagination or without pagination"""
         limit = request.args.get('limit', None)
         offset = request.args.get('offset', None)
         result = self.get_all_avatars.execute(limit, offset)

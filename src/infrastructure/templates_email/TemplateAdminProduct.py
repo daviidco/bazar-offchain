@@ -39,7 +39,7 @@ html = '''
             <div style="font-size: 20.2px; font-weight: 600; font-stretch: normal; font-style: normal; color: #023047; margin-top: 25.3px;">
                 Product documents
             </div>
-            <p>Go to the link to review the folder with the documents. {link}</p>
+            <p>Go to the link to review the folder with the documents. <a href="{link}">{link}</a> </p>
             </p>
         </section>
         <footer style="font-size: 11.7px; text-align: center;">

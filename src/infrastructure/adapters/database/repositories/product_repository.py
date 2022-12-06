@@ -29,7 +29,8 @@ from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.product import Product, BasicProduct, ProductType, Variety, \
     MinimumOrder, Incoterm, SustainabilityCertification, ProductFile, ProductSustainabilityCertification, \
     ProductImage,StatusProduct
-from src.infrastructure.adapters.database.repositories.utils import send_email, get_user_names
+from src.infrastructure.adapters.database.repositories.utils import send_email, get_user_names, build_url_storage, \
+    build_url_bd
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
 from src.infrastructure.config.default_infra import AWS_REGION, AWS_BUCKET_NAME
@@ -211,10 +212,10 @@ class ProductRepository(IProductRepository):
                 if objects_cloud:
                     self.logger.info(f"Uploading files to cloud")
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                    prefix = f"https://{AWS_BUCKET_NAME}/{role}/{product_entity.uuid_user}/documents_product/" \
-                             f"{path_datetime}"
+                    prefix = f"{role}/{product_entity.uuid_user}/documents_product/{path_datetime}"
                     for idx, o in enumerate(objects_cloud):
-                        key = f"{prefix}/{o.filename}"
+                        key_bd = build_url_bd(prefix, o.filename)
+                        key_storage = build_url_storage(prefix, o.filename)
 
                         uuid_certification = str(product_entity.sustainability_certifications_uuid[idx])
                         certification = session_trans.query(SustainabilityCertification).filter_by(
@@ -224,7 +225,7 @@ class ProductRepository(IProductRepository):
                             e = api_error('CompanySavingErrorByCertification')
                             abort(code=e.status_code, message=e.message, error=e.error)
 
-                        file_to_save = ProductFile(name=o.filename, url=key)
+                        file_to_save = ProductFile(name=o.filename, url=key_bd)
                         session_trans.add(file_to_save)
                         session_trans.flush()
                         product_sustainability_certification = ProductSustainabilityCertification(
@@ -233,19 +234,20 @@ class ProductRepository(IProductRepository):
                             file_id=file_to_save.id
                         )
                         session_trans.add(product_sustainability_certification)
-                        self.__storage_repository.put_object(body=o, key=key, content_type=o.content_type)
+                        self.__storage_repository.put_object(body=o, key=key_storage, content_type=o.content_type)
                 # Save images in cloud and urls in database
                 session_trans.flush()
                 if images:
                     self.logger.info(f"Uploading images to cloud")
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                    prefix_images = f"https://{AWS_BUCKET_NAME}/{role}/{product_entity.uuid_user}/" \
+                    prefix_images = f"{role}/{product_entity.uuid_user}/" \
                                     f"{object_to_save.uuid}/product_images/{path_datetime}"
                     for i in images:
-                        key = f"{prefix_images}/{i.filename}"
-                        image_to_save = ProductImage(name=i.filename, product_id=object_to_save.id, url=key)
+                        key_bd = build_url_bd(prefix_images, i.filename)
+                        key_storage = build_url_storage(prefix_images, i.filename)
+                        image_to_save = ProductImage(name=i.filename, product_id=object_to_save.id, url=key_bd)
                         object_to_save.product_images.append(image_to_save)
-                        self.__storage_repository.put_object(body=i, key=key, content_type=i.content_type)
+                        self.__storage_repository.put_object(body=i, key=key_storage, content_type=i.content_type)
 
             except AssertionError as e:
                 if objects_cloud:

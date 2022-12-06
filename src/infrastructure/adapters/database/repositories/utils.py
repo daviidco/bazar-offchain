@@ -9,10 +9,22 @@ from sqlalchemy.orm import Session
 from src.infrastructure.adapters.database.models import User, Company, Product
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.default import URL_MS_BAZAR_AUTH, URL_EMAIL_LAMBDA
+from src.infrastructure.config.default_infra import AWS_BUCKET_NAME, AWS_REGION
 
 
 def default_prefix_cloud():
     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
+
+
+def build_url_bd(prefix, name):
+    file_name = name.replace('+', '%2B').replace(' ', '+')
+    key_bd = f"https://{AWS_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{prefix}/{file_name}"
+    return key_bd
+
+
+def build_url_storage(prefix, name):
+    key_storage = f"{prefix}/{name}"
+    return key_storage
 
 
 def request_to_ms_auth(jwt, uuid_user, get_person=False):

@@ -1,15 +1,13 @@
+import json
 from datetime import datetime
 
 import requests
+from flask import current_app
 from flask_restx import abort
 from sqlalchemy.orm import Session
 
 from src.infrastructure.adapters.database.models import User, Company, Product
-from flask import current_app
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
-
-import json
-
 from src.infrastructure.config.default import URL_MS_BAZAR_AUTH, URL_EMAIL_LAMBDA
 
 

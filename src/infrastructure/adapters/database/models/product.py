@@ -199,6 +199,8 @@ class Product(base):
     minimum_order = association_proxy("minimum_order_r", "minimum_order")
     minimum_order_uuid = association_proxy("minimum_order_r", "uuid")
     url_avatar = association_proxy("company", "profile_image_url")
+    url_images_ap = association_proxy("product_images", "url")
+    url_files_ap = association_proxy("product_sustainability_certifications", "files")
     is_liked = False
 
     def __init__(self, basic_product_id, product_type_id, variety_id, capacity_per_year, date_in_port,

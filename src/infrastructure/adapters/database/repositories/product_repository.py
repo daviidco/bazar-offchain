@@ -211,7 +211,8 @@ class ProductRepository(IProductRepository):
                 if objects_cloud:
                     self.logger.info(f"Uploading files to cloud")
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                    prefix = f"{role}/{product_entity.uuid_user}/documents_product/{path_datetime}"
+                    prefix = f"https://{AWS_BUCKET_NAME}/{role}/{product_entity.uuid_user}/documents_product/" \
+                             f"{path_datetime}"
                     for idx, o in enumerate(objects_cloud):
                         key = f"{prefix}/{o.filename}"
 
@@ -238,8 +239,8 @@ class ProductRepository(IProductRepository):
                 if images:
                     self.logger.info(f"Uploading images to cloud")
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                    prefix_images = f"{role}/{product_entity.uuid_user}/{object_to_save.uuid}" \
-                                    f"/product_images/{path_datetime}"
+                    prefix_images = f"https://{AWS_BUCKET_NAME}/{role}/{product_entity.uuid_user}/" \
+                                    f"{object_to_save.uuid}/product_images/{path_datetime}"
                     for i in images:
                         key = f"{prefix_images}/{i.filename}"
                         image_to_save = ProductImage(name=i.filename, product_id=object_to_save.id, url=key)
@@ -314,7 +315,13 @@ class ProductRepository(IProductRepository):
         elif role == 'seller':
             company_id = self.utils_db.get_company_by_uuid_user(uuid).id
             list_objects = self.session.query(Product).filter_by(company_id=company_id).all()
-            return ProductsListEntity(results=list_objects)
+            list_e_objects = []
+            for p in list_objects:
+                ep = ProductEntity.from_orm(p)
+                ep.url_images = list(p.url_images_ap)
+                ep.url_files = [x.url for x in p.url_files_ap]
+                list_e_objects.append(ep)
+            return ProductsListEntity(results=list_e_objects)
 
         else:
             e = api_error('RoleNotFound')

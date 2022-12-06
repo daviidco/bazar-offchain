@@ -41,9 +41,9 @@ class TestAvatarEntity:
     data_avatar_entity_v2 = dict(data_base_avatar, **data_avatar_entity_aux)
 
     data_avatar_pagination = {'limit': 10,
-                               'offset': 1,
-                               'total': 100,
-                               'results': [data_avatar_entity_v1, data_avatar_entity_v2]}
+                              'offset': 1,
+                              'total': 100,
+                              'results': [data_avatar_entity_v1, data_avatar_entity_v2]}
 
     def test_base_avatar_entity(self):
         avatar_1 = AvatarBaseEntity.parse_obj(self.data_base_avatar)

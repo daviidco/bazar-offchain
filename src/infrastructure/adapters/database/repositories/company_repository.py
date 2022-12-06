@@ -18,7 +18,7 @@ from src.domain.entities.company_entity import CompanyEntity, CompanyNewEntity, 
 from src.domain.ports.company_interface import ICompanyRepository
 from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.company import Company, ProfileImage, File
-from src.infrastructure.adapters.database.repositories.utils import send_email
+from src.infrastructure.adapters.database.repositories.utils import send_email, build_url_bd, build_url_storage
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
 from src.infrastructure.config.default_infra import AWS_BUCKET_NAME, AWS_REGION
@@ -96,15 +96,16 @@ class CompanyRepository(ICompanyRepository):
                     # Save files in cloud and urls in database
                     if objects_cloud:
                         path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                        prefix = f"https://{AWS_BUCKET_NAME}/{role}/{company_entity.uuid_user}" \
-                                 f"/documents_company/{path_datetime}"
+                        prefix = f"{role}/{company_entity.uuid_user}/documents_company/{path_datetime}"
 
                         for o in objects_cloud:
-                            key = f"{prefix}/{o.filename}"
+                            key_bd = build_url_bd(prefix, o.filename)
+                            key_storage = build_url_storage(prefix, o.filename)
+
                             file_to_save = File(name=o.filename,
-                                                url=key)
+                                                url=key_bd)
                             object_to_save.files.append(file_to_save)
-                            self.__storage_repository.put_object(body=o, key=key, content_type=o.content_type)
+                            self.__storage_repository.put_object(body=o, key=key_storage, content_type=o.content_type)
                     session_trans.add(object_to_save)
 
                 except AssertionError as e:

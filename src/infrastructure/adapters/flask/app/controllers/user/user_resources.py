@@ -12,6 +12,7 @@
 import json
 
 import inject
+from flask import current_app
 from flask_cors import cross_origin
 from flask_restx import Resource, Namespace
 from flask_restx.reqparse import request
@@ -45,10 +46,12 @@ class UsersResource(Resource):
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets all users with pagination"""
+        current_app.logger.info(f"Starts {request.url} [{request.method}]")
         jwt = dict(request.headers).get('Authorization', None)
         limit = request.args.get('limit', 10)
         offset = request.args.get('offset', 0)
         result = self.get_all_users.execute(limit, offset, jwt)
+        current_app.logger.info(f"Ends {request.url} [{request.method}]")
         return json.loads(result.json()), 200
 
     @api.doc(security='Private JWT')

@@ -36,15 +36,17 @@ def request_to_ms_auth(jwt, uuid_user, get_person=False):
     url = f"{base_url}/person/uuid/{uuid_user}"
 
     response_auth = requests.request("GET", url, headers=headers)
-    if get_person:
+    if 200 < response_auth.status_code < 300 and get_person:
         uuid_person = response_auth.json()['data']['uuid']
         url = f"{base_url}/email/uuidperson/{uuid_person}"
         response_auth = requests.request("GET", url, headers=headers)
+
+    if 200 < response_auth.status_code < 300:
         data_response = response_auth.json()['data']
         return data_response
-
-    data_response = response_auth.json()['data']
-    return data_response
+    else:
+        current_app.logger.error(f"Error getting info ms-auth - code response: {response_auth.status_code}")
+        return None
 
 
 def get_user_names(jwt, uuid_user) -> tuple:

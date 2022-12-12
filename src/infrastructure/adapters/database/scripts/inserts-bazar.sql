@@ -10,9 +10,10 @@ INSERT INTO status_file (uuid, status_user, description) VALUES (gen_random_uuid
 
 -- Populate status_product
 INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Pending review','Product is being checking');
-INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Approved','Product is approved and visible to buyers');
-INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Rejected','Product is rejected');
-INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Hide','Product is hidden to buyers and was previously approved');
+INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Approved','Product is approved by admin');
+INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Rejected','Product is rejected by admin');
+INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Published','Product is visible to buyers and is a operation by seller');
+INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Hidden','Product is hidden to buyers and is a default state when product is edited or when product has not certifications');
 INSERT INTO status_product (uuid, status_product, description) VALUES (gen_random_uuid(), 'Deleted','Product has a logic deleted');
 
 -- Populate profile_images
@@ -45,7 +46,7 @@ INSERT INTO profile_images (uuid, image_name, format, image_url) VALUES(gen_rand
 INSERT INTO profile_images (uuid, image_name, format, image_url) VALUES(gen_random_uuid(), 'hat2-b', 'png', 'https://s3-offchain-test.s3.us-east-2.amazonaws.com/profile_images/hat2-b.png');
 
 -- Populate Basic Products
-INSERT INTO basic_products (uuid, basic_product) VALUES(gen_random_uuid(), 'Coffe');
+INSERT INTO basic_products (uuid, basic_product) VALUES(gen_random_uuid(), 'Coffee');
 INSERT INTO basic_products (uuid, basic_product) VALUES(gen_random_uuid(), 'Cocoa');
 INSERT INTO basic_products (uuid, basic_product) VALUES(gen_random_uuid(), 'Avocado');
 
@@ -61,8 +62,8 @@ INSERT INTO products_type (uuid, product_type, basic_product_id) VALUES(gen_rand
 INSERT INTO products_type (uuid, product_type, basic_product_id) VALUES(gen_random_uuid(), 'Fruits', 3);
 
 -- Populate varieties
-INSERT INTO varieties (uuid, variety, basic_product_id) VALUES(gen_random_uuid(), 'Arabica coffe',1);
-INSERT INTO varieties (uuid, variety, basic_product_id) VALUES(gen_random_uuid(), 'Robusta coffe',1);
+INSERT INTO varieties (uuid, variety, basic_product_id) VALUES(gen_random_uuid(), 'Arabica coffee',1);
+INSERT INTO varieties (uuid, variety, basic_product_id) VALUES(gen_random_uuid(), 'Robusta coffee',1);
 
 INSERT INTO varieties (uuid, variety, basic_product_id) VALUES(gen_random_uuid(), 'Forastero',2);
 INSERT INTO varieties (uuid, variety, basic_product_id) VALUES(gen_random_uuid(), 'Criollo',2);

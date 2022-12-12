@@ -212,7 +212,8 @@ class ProductRepository(IProductRepository):
                 if objects_cloud:
                     self.logger.info(f"Uploading files to cloud")
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                    prefix = f"{role}/{product_entity.uuid_user}/documents_product/{path_datetime}"
+                    prefix = f"{role}/{product_entity.uuid_user}/{object_to_save.uuid}" \
+                             f"/documents_product/{path_datetime}"
                     for idx, o in enumerate(objects_cloud):
                         key_bd = build_url_bd(prefix, o.filename)
                         key_storage = build_url_storage(prefix, o.filename)
@@ -235,6 +236,11 @@ class ProductRepository(IProductRepository):
                         )
                         session_trans.add(product_sustainability_certification)
                         self.__storage_repository.put_object(body=o, key=key_storage, content_type=o.content_type)
+                else:
+                    # Product without certifications, status hidden because it's not necessary admin approve product,
+                    # and its necessary seller publish the product to transfer data to blockchain.
+                    status_product = session_trans.query(StatusProduct).filter_by(status_product='Hidden').first()
+                    object_to_save.status_id = status_product.id
                 # Save images in cloud and urls in database
                 session_trans.flush()
                 if images:
@@ -254,15 +260,21 @@ class ProductRepository(IProductRepository):
                     self.__storage_repository.delete_all_objects_path(key=prefix + "/")
                 if images:
                     self.__storage_repository.delete_all_objects_path(key=prefix_images + "/")
-                e = api_error('CompanySavingError')
+                e = api_error('ProductSavingError')
+                self.logger.error(f"{e.error['message']}")
                 abort(code=e.status_code, message=e.message, error=e.error)
             except Exception as e:
                 session_trans.rollback()
+                session_trans.close()
                 if objects_cloud:
                     self.__storage_repository.delete_all_objects_path(key=prefix + "/")
                 if images:
                     self.__storage_repository.delete_all_objects_path(key=prefix_images + "/")
-                abort(code=e.code, message=None, error=e.data['error'])
+                error_detail = str(e)
+                e = api_error('UndefendedError')
+                e.error['message'] = error_detail
+                self.logger.error(f"{e.error['message']}")
+                abort(code=e.status_code, message=e.message, error=e.error)
             else:
                 session_trans.commit()
                 url_images = [x.url for x in object_to_save.product_images]

@@ -112,14 +112,17 @@ class CompanyRepository(ICompanyRepository):
                     session_trans.close()
                     self.__storage_repository.delete_all_objects_path(key=prefix + "/")
                     e = api_error('CompanySavingError')
-                    self.logger.error(f"{e.message}")
+                    self.logger.error(f"{e.error['message']}")
                     abort(code=e.status_code, message=e.message, error=e.error)
                 except Exception as e:
                     session_trans.rollback()
                     session_trans.close()
                     self.__storage_repository.delete_all_objects_path(key=prefix + "/")
-                    self.logger.error(f"Error undefended {str(e)}")
-                    abort(code=e.code, message=None, error=e.data['error'])
+                    error_detail = str(e)
+                    e = api_error('UndefendedError')
+                    e.error['message'] = error_detail
+                    self.logger.error(f"{e.error['message']}")
+                    abort(code=e.status_code, message=e.message, error=e.error)
 
                 else:
                     session_trans.commit()

@@ -97,6 +97,10 @@ APIErrors = {
                                         "description": "Role hasn't permission.",
                                         "status_code": 422}},
     # Product
+    'ProductSavingError': {"error": {"code": "E2209",
+                                     "message": "Error saving product",
+                                     "description": "Please check the documents and json body.",
+                                     "status_code": 422}},
 
     'BasicProductNotExists': {"error": {"code": "E2210",
                                         "message": "Basic product not exists",
@@ -138,7 +142,10 @@ APIErrors = {
                              "description": "Email not sent",
                              "status_code": 500}},
 
-
+    'UndefendedError': {"error": {"code": "E2218",
+                                  "message": "Error undefended",
+                                  "description": "Undefined.",
+                                  "status_code": 500}},
 
     # Errors Flask E2200 - E2300
 
@@ -149,8 +156,8 @@ APIErrors = {
                           "status_code": 500}},
 
     'IntegrityError': {"error": {"code": "E2301",
-                                     "message": "Integrity error data",
-                                     "description": "Duplicate key value violates unique constraint. row already exists.",
-                                     "status_code": 500}},
+                                 "message": "Integrity error data",
+                                 "description": "Duplicate key value violates unique constraint. row already exists.",
+                                 "status_code": 500}},
 
 }

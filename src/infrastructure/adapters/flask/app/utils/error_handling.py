@@ -8,6 +8,7 @@
 # 2022: Bazar Network S.A.S.
 # All Rights Reserved.
 #
+import copy
 
 from src.domain.entities.common_entity import ErrorEntity
 from src.infrastructure.adapters.flask.app.utils.errors_definition import APIErrors
@@ -19,8 +20,8 @@ from src.infrastructure.adapters.flask.app.utils.errors_definition import APIErr
 #
 def api_error(error_name):
     """Internal API error handler"""
-
-    error = APIErrors[f"{error_name}"]
+    dict_errors = copy.deepcopy(APIErrors)
+    error = dict_errors[f"{error_name}"]
 
     res_error = ErrorEntity(
         status_code=error['error']["status_code"],

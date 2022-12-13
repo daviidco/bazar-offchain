@@ -208,6 +208,7 @@ class ProductRepository(IProductRepository):
                     incoterm = session_trans.query(Incoterm).filter_by(uuid=i).first()
                     object_to_save.incoterms.append(incoterm)
                 session_trans.add(object_to_save)
+                session_trans.flush()
                 # Save files in cloud and urls in database
                 if objects_cloud:
                     self.logger.info(f"Uploading files to cloud")
@@ -242,7 +243,6 @@ class ProductRepository(IProductRepository):
                     status_product = session_trans.query(StatusProduct).filter_by(status_product='Hidden').first()
                     object_to_save.status_id = status_product.id
                 # Save images in cloud and urls in database
-                session_trans.flush()
                 if images:
                     self.logger.info(f"Uploading images to cloud")
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))

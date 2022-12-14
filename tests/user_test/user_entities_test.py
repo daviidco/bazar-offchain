@@ -66,7 +66,8 @@ class TestUserEntity:
     data_user_pagination = {'limit': 10,
                             'offset': 1,
                             'total': 100,
-                            'results': [data_user_entity_v1, data_user_entity_v2]}
+                            'results': [data_user_entity_v1, data_user_entity_v2],
+                            'total_pages': 10}
 
     data_product_manage_entity_v1 = {'uuid_product_status': generated_uuid,
                                      'uuid_product': generated_uuid}

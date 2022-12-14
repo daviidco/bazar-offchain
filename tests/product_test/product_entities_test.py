@@ -111,7 +111,8 @@ class TestProductEntity:
     data_product_pagination = {'limit': 10,
                                'offset': 1,
                                'total': 100,
-                               'results': [data_product_entity_v1, data_product_entity_v2]}
+                               'results': [data_product_entity_v1, data_product_entity_v2],
+                               'total_pages': 10}
 
     def test_base_product_entity(self):
         product_1 = ProductBaseEntity.parse_obj(self.data_base_product)

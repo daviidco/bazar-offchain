@@ -46,7 +46,8 @@ class TestCompanyEntity:
     data_companies_pagination = {'limit': 10,
                                  'offset': 1,
                                  'total': 100,
-                                 'results': [data_company_entity_v1, data_company_entity_v2]}
+                                 'results': [data_company_entity_v1, data_company_entity_v2],
+                                 'total_pages': 10}
 
     def test_base_company_entity(self):
         company_1 = CompanyBaseEntity.parse_obj(self.data_base_company)

@@ -38,10 +38,3 @@ class WishProductNewEntity(WishProductBaseEntity):
 class WishProductEntity(WishProductBaseEntity):
     pass
 
-
-class WishProductsListEntity(BaseModel):
-    results: List[WishProductEntity]
-
-
-class WishProductsEntityPaginationEntity(PaginationEntity):
-    results: List[WishProductEntity]

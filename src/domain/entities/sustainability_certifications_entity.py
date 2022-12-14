@@ -22,7 +22,7 @@ from src.domain.entities.common_entity import UuidEntity
 #
 
 
-class SustainabilityCertificationBaseEntity(UuidEntity):
+class SustainabilityCertificationBaseEntity(BaseModel):
     certification: str
 
     class Config:

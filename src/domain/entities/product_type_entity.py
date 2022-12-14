@@ -22,7 +22,7 @@ from src.domain.entities.common_entity import UuidEntity
 #
 
 
-class ProductTypeBaseEntity(UuidEntity):
+class ProductTypeBaseEntity(BaseModel):
     product_type: str
 
     class Config:

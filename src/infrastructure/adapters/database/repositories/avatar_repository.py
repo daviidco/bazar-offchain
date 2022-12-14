@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from src.domain.entities.avatar_entity import AvatarsPaginationEntity, AvatarEntity, AvatarNewEntity, AvatarsListEntity
 from src.domain.ports.avatar_interface import IAvatarRepository
 from src.infrastructure.adapters.database.models.company import ProfileImage
+from src.infrastructure.adapters.database.repositories.utils import get_total_pages
 
 
 #
@@ -45,8 +46,8 @@ class AvatarRepository(IAvatarRepository):
         total = self.get_avatars_count()
         list_objects = self.session.query(ProfileImage).offset(offset).limit(limit).all()
         if limit is not None and offset is not None:
-            return AvatarsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
+            total_pages = get_total_pages(total, int(limit))
+            return AvatarsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
+                                           total_pages=total_pages)
         else:
             return AvatarsListEntity(results=list_objects)
-
-

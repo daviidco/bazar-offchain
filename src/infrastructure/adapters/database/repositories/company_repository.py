@@ -18,7 +18,8 @@ from src.domain.entities.company_entity import CompanyEntity, CompanyNewEntity, 
 from src.domain.ports.company_interface import ICompanyRepository
 from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.company import Company, ProfileImage, File
-from src.infrastructure.adapters.database.repositories.utils import send_email, build_url_bd, build_url_storage
+from src.infrastructure.adapters.database.repositories.utils import send_email, build_url_bd, build_url_storage, \
+    get_total_pages
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
 from src.infrastructure.config.default_infra import AWS_BUCKET_NAME, AWS_REGION
@@ -174,7 +175,9 @@ class CompanyRepository(ICompanyRepository):
     def get_all_companies(self, limit: int, offset: int) -> CompaniesPaginationEntity:
         total = self.get_companies_count()
         list_objects = self.session.query(Company).offset(offset).limit(limit).all()
-        response = CompaniesPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
+        total_pages = get_total_pages(total, int(limit))
+        response = CompaniesPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
+                                             total_pages=total_pages)
         response.results = [x.dict(exclude={'profile_images'}) for x in response.results]
         self.logger.info(f"OK - Get all companies")
         return response

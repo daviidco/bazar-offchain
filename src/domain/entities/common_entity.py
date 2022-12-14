@@ -39,6 +39,7 @@ class PaginationEntity(BaseModel):
     limit: int
     offset: int
     total: int
+    total_pages: int
 
 
 class InputPaginationEntity(BaseModel):

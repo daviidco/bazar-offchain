@@ -30,7 +30,7 @@ from src.infrastructure.adapters.database.models.product import Product, BasicPr
     MinimumOrder, Incoterm, SustainabilityCertification, ProductFile, ProductSustainabilityCertification, \
     ProductImage,StatusProduct
 from src.infrastructure.adapters.database.repositories.utils import send_email, get_user_names, build_url_storage, \
-    build_url_bd
+    build_url_bd, get_total_pages
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
 from src.infrastructure.config.default_infra import AWS_REGION, AWS_BUCKET_NAME
@@ -314,17 +314,21 @@ class ProductRepository(IProductRepository):
 
     def get_all_products(self, limit: int, offset: int) -> ProductsPaginationEntity:
         total = self.get_products_count()
+        total_pages = get_total_pages(total, int(limit))
         list_objects = self.session.query(Product).offset(offset).limit(limit).all()
-        return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
+        return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
+                                        total_pages=total_pages)
 
     def get_products_by_user(self, uuid: str, role: str, limit: int, offset: int) -> ProductsListEntity:
 
         if role == 'buyer':
             total = self.get_products_count()
+            total_pages = get_total_pages(total, int(limit))
             list_objects = self.session.query(Product).offset(offset).limit(limit).all()
             for p in list_objects:
                 p.check_use_like(uuid)
-            return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
+            return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
+                                            total_pages=total_pages)
 
         elif role == 'seller':
             company_id = self.utils_db.get_company_by_uuid_user(uuid).id

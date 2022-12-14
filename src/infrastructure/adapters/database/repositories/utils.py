@@ -108,6 +108,14 @@ def send_email(subject: str, data: str, destination: list, is_html: bool = False
         abort(code=e.status_code, message=e.message, error=e.error)
 
 
+def get_total_pages(total_elements: int, limit: int):
+    if total_elements == limit:
+        return 1
+    elif total_elements == 0:
+        return 0
+    return (total_elements // limit) + 1
+
+
 class UtilsDatabase:
     def __init__(self, adapter_db):
         self.engine = adapter_db.engine
@@ -140,3 +148,5 @@ class UtilsDatabase:
             current_app.logger.error(e.error['description'])
             abort(code=e.status_code, message=e.message, error=e.error)
         return product
+
+

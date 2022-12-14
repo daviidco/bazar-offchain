@@ -19,7 +19,7 @@ from src.domain.ports.user_interface import IUserRepository
 from src.domain.entities.user_entity import UserNewEntity, UserEntity, UsersPaginationEntity
 from src.infrastructure.adapters.database.models import Product, CommentApproval, StatusProduct
 from src.infrastructure.adapters.database.models.user import User, StatusUser
-from src.infrastructure.adapters.database.repositories.utils import get_user_names
+from src.infrastructure.adapters.database.repositories.utils import get_user_names, get_total_pages
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
@@ -65,8 +65,10 @@ class UserRepository(IUserRepository):
 
     def get_all_users(self, limit: int, offset: int, jwt: str) -> UsersPaginationEntity:
         total = self.get_users_count()
+        total_pages = get_total_pages(total, int(limit))
         list_objects = self.session.query(User).offset(offset).limit(limit).all()
-        response = UsersPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects)
+        response = UsersPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
+                                         total_pages=total_pages)
 
         for idx_r, x in enumerate(response.results):
             # Call endpoint to get user_name microservice auth

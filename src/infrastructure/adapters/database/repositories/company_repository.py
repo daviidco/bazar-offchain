@@ -39,20 +39,6 @@ class CompanyRepository(ICompanyRepository):
         self.session = Session(adapter_db.engine)
         self.__storage_repository = storage_repository
 
-    @staticmethod
-    def build_urls_profile_images(profile_image):
-        # Urls profile images
-        profile_images = []
-        if profile_image is not None:
-            if profile_image.image_url is not None:
-                idx_last_dot = profile_image.image_url.rindex('.')
-                format_file = profile_image.image_url[idx_last_dot:]
-                url_base = profile_image.image_url[:idx_last_dot - 2]
-                profile_images.append(f"{url_base}-s{format_file}")
-                profile_images.append(f"{url_base}-m{format_file}")
-                profile_images.append(f"{url_base}-b{format_file}")
-        return profile_images
-
     def new_company(self, jwt: str, role: str, company_entity: CompanyNewEntity, objects_cloud: list) -> CompanyEntity:
         self.logger.info(f"Creating new company: {company_entity.company_name}")
         global user_rol
@@ -111,14 +97,14 @@ class CompanyRepository(ICompanyRepository):
 
                 except AssertionError as e:
                     session_trans.close()
-                    self.__storage_repository.delete_all_objects_path(key=prefix + "/")
+                    self.__storage_repository.delete_objects(key=prefix + "/")
                     e = api_error('CompanySavingError')
                     self.logger.error(f"{e.error['message']}")
                     abort(code=e.status_code, message=e.message, error=e.error)
                 except Exception as e:
                     session_trans.rollback()
                     session_trans.close()
-                    self.__storage_repository.delete_all_objects_path(key=prefix + "/")
+                    self.__storage_repository.delete_objects(key=prefix + "/")
                     error_detail = str(e)
                     e = api_error('UndefendedError')
                     e.error['message'] = error_detail

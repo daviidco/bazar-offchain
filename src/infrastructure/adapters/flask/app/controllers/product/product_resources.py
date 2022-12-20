@@ -21,7 +21,8 @@ from werkzeug.datastructures import FileStorage
 
 from src.application.product.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
     GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, \
-    GetAllProducts, GetProductsByUser, GetProductStates, EditProductAvailability, GetDetailProduct, EditStateProduct
+    GetAllProducts, GetProductsByUser, GetProductStates, EditProductAvailability, GetDetailProduct, EditStateProduct, \
+    EditProduct
 from src.domain.entities.basic_product_entity import BasicProductsListEntity
 from src.domain.entities.common_entity import InputPaginationEntity, BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity
@@ -420,3 +421,55 @@ class ProductDeleteResource(Resource):
         is_valid_uuid_input(uuid_product)
         result = self.edit_product_state.execute(state, uuid_product)
         return json.loads(result.json()), self.success_code
+
+
+@api.route("/update-product/<string:uuid_product>")
+class ProductEditResource(Resource):
+    # Swagger
+    response_schema_put = ProductEntity.schema()
+    response_model_put = api.schema_model(response_schema_put['title'], response_schema_put)
+    success_code_put = 200
+
+    help_new_product = get_help_schema(ProductEditEntity)
+
+    # Object to upload file and json body in form data
+    upload_parser = reqparse.RequestParser()
+    upload_parser.add_argument('files[]', location='files',
+                               type=FileStorage, action='append', help='Product Files')
+
+    upload_parser.add_argument('images[]', location='images',
+                               type=FileStorage, action='append', help='Product Images')
+
+    upload_parser.add_argument('body', location='form',
+                               type=dict, required=False, help='Product Information \n' + help_new_product)
+
+    @inject.autoparams('edit_product')
+    def __init__(self, app: current_app, edit_product: EditProduct, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api = app
+        self.edit_product = edit_product
+
+    @api.expect(upload_parser)
+    @api.doc(security='Private JWT', responses={403: 'Not Authorized'})
+    @api.response(success_code_put, 'Success', response_model_put)
+    @cross_origin(["Content-Type", "Authorization"])
+    @requires_auth
+    def put(self, uuid_product, **kwargs):
+        """Updates product. This endpoint has two important boolean keys (change_files, change_images)
+        when one is true delete relationships and delete object from cloud repository respectively.
+
+        It is not necessary upload old files when change_files is false
+        It is not necessary upload old images when change_images is false
+
+        When the request has a certification (file) will be sent email to bazar admin and product state will be
+        (pending review)
+
+        When the request has not a certification (file) product state will be (hidden)"""
+        jwt = dict(request.headers).get('Authorization', None)
+        role = kwargs.get('role', None)
+        entity = ProductEditEntity.parse_obj(json.loads(request.form['body']))
+        files = request.files.getlist('files[]')
+        images = request.files.getlist('images[]')
+        is_valid_uuid_input(uuid_product)
+        result = self.edit_product.execute(jwt, role, uuid_product, entity, files, images)
+        return json.loads(result.json()), self.success_code_put

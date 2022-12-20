@@ -141,6 +141,14 @@ def get_total_pages(total_elements: int, limit: int):
     return (total_elements // limit) + 1
 
 
+def validate_num_certifications_vs_num_files(num_certs: int, num_files: int):
+    if num_certs != num_files:
+        e = api_error('NumCertificationsVSNumFilesError')
+        description = e.error.get('description', 'Not description')
+        current_app.logger.error(f"{description}")
+        abort(code=e.status_code, message=e.message, error=e.error)
+
+
 class UtilsDatabase:
     def __init__(self, adapter_db):
         self.engine = adapter_db.engine

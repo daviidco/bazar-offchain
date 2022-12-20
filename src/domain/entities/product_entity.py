@@ -26,10 +26,13 @@ from src.domain.entities.sustainability_certifications_entity import Sustainabil
 #
 
 
-class ProductBaseEntity(BaseModel):
+class ProductOptionsEntity(BaseModel):
     basic_product_uuid: UUID
     product_type_uuid: UUID
     variety_uuid: UUID
+
+
+class ProductBaseEntity(BaseModel):
     capacity_per_year: float
     date_in_port: date
     guild_or_association: str
@@ -43,13 +46,21 @@ class ProductBaseEntity(BaseModel):
         orm_mode = True
 
 
-class ProductNewEntity(ProductBaseEntity):
+class ProductNewEntity(ProductOptionsEntity, ProductBaseEntity):
     uuid_user: UUID
-    incoterms_uuid: List[UUID] = None
-    sustainability_certifications_uuid: List[UUID] = None
+    incoterms_uuid: List[UUID] = []
+    sustainability_certifications_uuid: List[UUID] = []
 
 
-class ProductEntity(ProductBaseEntity, UuidEntity):
+class ProductEditEntity(ProductBaseEntity):
+    uuid_user: UUID
+    incoterms_uuid: List[UUID] = []
+    sustainability_certifications_uuid: List[UUID] = []
+    change_files: bool = True
+    change_images: bool = True
+
+
+class ProductEntity(ProductOptionsEntity, ProductBaseEntity, UuidEntity):
     status: str
     basic_product: str
     minimum_order: str

@@ -147,6 +147,11 @@ APIErrors = {
                                   "description": "Undefined.",
                                   "status_code": 500}},
 
+    'UuidError': {"error": {"code": "E2219",
+                            "message": "Parameter is not UUID",
+                            "description": "Convert to UUID is impossible",
+                            "status_code": 500}},
+
     # Errors Flask E2200 - E2300
 
     # Errors AWS E2300 - ...

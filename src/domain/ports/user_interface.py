@@ -27,7 +27,7 @@ class IUserRepository(ABC):
         raise Exception('Not implemented method')
 
     @abstractmethod
-    def get_user_by_uuid(self, uuid: str) -> UserEntity:
+    def get_user_by_uuid(self, jwt: str, uuid: str) -> UserEntity:
         raise Exception('Not implemented method')
 
     @abstractmethod

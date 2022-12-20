@@ -10,13 +10,14 @@
 #
 
 from abc import ABC, abstractmethod
+from typing import Union
 
 from src.domain.entities.basic_product_entity import BasicProductsListEntity, BasicProductEntity
 from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductNewEntity, ProductEntity, ProductsPaginationEntity, \
-    AvailabilityEntity
+    AvailabilityEntity, ProductsListEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity, ProductTypeEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity
 from src.domain.entities.variety_entity import VarietiesListEntity, VarietyEntity
@@ -47,7 +48,8 @@ class IProductRepository(ABC):
         raise Exception('Not implemented method')
 
     @abstractmethod
-    def get_products_by_user(self, uuid: str, role: str, limit: int, offset: int) -> ProductsPaginationEntity:
+    def get_products_by_user(self, uuid: str, role: str, limit: int, offset: int) -> Union[ProductsPaginationEntity,
+                                                                                           ProductsListEntity]:
         raise Exception('Not implemented method')
 
     # ComboBox
@@ -109,3 +111,7 @@ class IProductRepository(ABC):
     def edit_product_state(self, status: str, uuid: str) -> ProductEntity:
         raise Exception('Not implemented method')
 
+    @abstractmethod
+    def edit_product(self, jwt: str, role: str, uuid_product: str, product_entity: ProductNewEntity,
+                     objects_cloud: list, images: list) -> ProductEntity:
+        raise Exception('Not implemented method')

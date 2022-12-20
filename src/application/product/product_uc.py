@@ -154,3 +154,13 @@ class EditStateProduct:
 
     def execute(self, state: str, uuid: str) -> ProductEntity:
         return self.__product_repository.edit_product_state(state, uuid)
+
+
+class EditProduct:
+    @inject.autoparams('product_repository')
+    def __init__(self, product_repository: IProductRepository):
+        self.__product_repository = product_repository
+
+    def execute(self, jwt: str, role: str, uuid_product: str, product_entity: ProductNewEntity,
+                objects_cloud: list, images: list) -> ProductEntity:
+        return self.__product_repository.edit_product(jwt, role, uuid_product, product_entity, objects_cloud, images)

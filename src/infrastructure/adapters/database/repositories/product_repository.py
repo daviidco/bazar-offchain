@@ -10,8 +10,10 @@
 #
 
 from datetime import datetime
+from typing import Union
 
 from flask_restx import abort
+from sqlalchemy.sql import exists
 from sqlalchemy.orm import Session
 
 from src.domain.entities.basic_product_entity import BasicProductsListEntity, BasicProductEntity
@@ -19,7 +21,7 @@ from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity, IncotermEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductEntity, ProductsPaginationEntity, ProductNewEntity, \
-    ProductsListEntity, AvailabilityEntity
+    ProductsListEntity, AvailabilityEntity, ProductEditEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity, ProductTypeEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity, \
     SustainabilityCertificationEntity
@@ -28,9 +30,9 @@ from src.domain.ports.product_interface import IProductRepository
 from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.product import Product, BasicProduct, ProductType, Variety, \
     MinimumOrder, Incoterm, SustainabilityCertification, ProductFile, ProductSustainabilityCertification, \
-    ProductImage,StatusProduct
+    ProductImage, StatusProduct, ProductIncoterm
 from src.infrastructure.adapters.database.repositories.utils import send_email, get_user_names, build_url_storage, \
-    build_url_bd, get_total_pages
+    build_url_bd, get_total_pages, validate_num_certifications_vs_num_files
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
 from src.infrastructure.config.default_infra import AWS_REGION, AWS_BUCKET_NAME
@@ -41,6 +43,23 @@ from src.infrastructure.templates_email import TemplateAdminProduct
 # This repository contains logic main related with product.
 # @author David Córdoba
 #
+
+def send_email_to_admin(jwt, uuid_user, product, prefix_files):
+    # Build html to send email
+    first_name, last_name = get_user_names(jwt, uuid_user)
+    user_name = f"{first_name.title()} {last_name.title()}"
+    url_s3 = f"https://s3.console.aws.amazon.com/s3/buckets/{AWS_BUCKET_NAME}?" \
+             f"region={AWS_REGION}&prefix={prefix_files}/&showversions=false"
+    data_email = TemplateAdminProduct.html.format(product_name=product.basic_product,
+                                                  user_name=user_name,
+                                                  company_name=product.company.company_name,
+                                                  link=url_s3)
+
+    send_email(subject="Review Documents - Product",
+               data=data_email,
+               destination=[EMAIL_BAZAR_ADMIN],
+               is_html=True)
+
 
 class ProductRepository(IProductRepository):
 
@@ -163,28 +182,32 @@ class ProductRepository(IProductRepository):
             e = api_error('IncotermNotExists')
             abort(code=e.status_code, message=e.message, error=e.error)
 
+    def validate_exists_certifications(self, certifications):
+        for c in certifications:
+            certification = self.session.query(SustainabilityCertification).filter_by(uuid=c).first()
+            if certification is None:
+                e = api_error('ObjectNotFound')
+                e.error['description'] = e.error['description'] + f' <uuid_certification> {c}'
+                abort(code=e.status_code, message=e.message, error=e.error)
+
     def new_product(self, jwt: str, role: str, product_entity: ProductNewEntity,
                     objects_cloud: list, images: list) -> ProductEntity:
+
         self.logger.info(f"Creating new product of user: {product_entity.uuid_user}")
-        global user
-        global prefix
-        prefix = None
+
+        validate_num_certifications_vs_num_files(len(product_entity.sustainability_certifications_uuid),
+                                                 len(objects_cloud))
+
+        if len(product_entity.sustainability_certifications_uuid):
+            self.validate_exists_certifications(product_entity.sustainability_certifications_uuid)
+
         company = self.utils_db.get_company_by_uuid_user(product_entity.uuid_user)
-        user = self.session.query(User).filter_by(uuid=product_entity.uuid_user).first()
+        self.session.query(User).filter_by(uuid=product_entity.uuid_user).first()
 
         basic_product = self.get_basic_product_by_uuid(product_entity.basic_product_uuid)
         product_type_id = self.get_product_type_id_by_uuid(product_entity.product_type_uuid)
         variety_id = self.get_variety_id_by_uuid(product_entity.variety_uuid)
         minimum_order_id = self.get_minimum_order_id_by_uuid(product_entity.minimum_order_uuid)
-
-        if product_entity.sustainability_certifications_uuid is None:
-            product_entity.sustainability_certifications_uuid = []
-
-        if len(product_entity.sustainability_certifications_uuid) != len(objects_cloud):
-            e = api_error('NumCertificationsVSNumFilesError')
-            description = e.error.get('description', 'Not description')
-            self.logger.error(f"{description}")
-            abort(code=e.status_code, message=e.message, error=e.error)
 
         object_to_save = Product(
             basic_product_id=basic_product.id,
@@ -201,79 +224,81 @@ class ProductRepository(IProductRepository):
             company_id=company.id
         )
 
+        global prefix_files
+        prefix_files = None
+
         with Session(self.engine) as session_trans:
             session_trans.begin()
             try:
+                # Save incoterms
                 for i in product_entity.incoterms_uuid:
                     incoterm = session_trans.query(Incoterm).filter_by(uuid=i).first()
                     object_to_save.incoterms.append(incoterm)
                 session_trans.add(object_to_save)
                 session_trans.flush()
+
+                path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
+                prefix_base = f"{role}/{product_entity.uuid_user}/{object_to_save.uuid}"
+
                 # Save files in cloud and urls in database
                 if objects_cloud:
                     self.logger.info(f"Uploading files to cloud")
-                    path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                    prefix = f"{role}/{product_entity.uuid_user}/{object_to_save.uuid}" \
-                             f"/documents_product/{path_datetime}"
+                    prefix_files = f"{prefix_base}/documents_product/{path_datetime}"
                     for idx, o in enumerate(objects_cloud):
-                        key_bd = build_url_bd(prefix, o.filename)
-                        key_storage = build_url_storage(prefix, o.filename)
-
-                        uuid_certification = str(product_entity.sustainability_certifications_uuid[idx])
-                        certification = session_trans.query(SustainabilityCertification).filter_by(
-                            uuid=uuid_certification
-                        ).first()
-                        if certification is None:
-                            e = api_error('CompanySavingErrorByCertification')
-                            abort(code=e.status_code, message=e.message, error=e.error)
+                        key_bd = build_url_bd(prefix_files, o.filename)
+                        key_storage = build_url_storage(prefix_files, o.filename)
 
                         file_to_save = ProductFile(name=o.filename, url=key_bd)
                         session_trans.add(file_to_save)
                         session_trans.flush()
+
+                        uuid_certification = str(product_entity.sustainability_certifications_uuid[idx])
+                        certification = session_trans.query(SustainabilityCertification).filter_by(
+                            uuid=uuid_certification).first()
                         product_sustainability_certification = ProductSustainabilityCertification(
                             product_id=object_to_save.id,
                             sustainability_certification_id=certification.id,
-                            file_id=file_to_save.id
-                        )
+                            file_id=file_to_save.id)
                         session_trans.add(product_sustainability_certification)
+
                         self.__storage_repository.put_object(body=o, key=key_storage, content_type=o.content_type)
                 else:
                     # Product without certifications, status hidden because it's not necessary admin approve product,
                     # and its necessary seller publish the product to transfer data to blockchain.
                     status_product = session_trans.query(StatusProduct).filter_by(status_product='Hidden').first()
                     object_to_save.status_id = status_product.id
+
                 # Save images in cloud and urls in database
                 if images:
                     self.logger.info(f"Uploading images to cloud")
-                    path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                    prefix_images = f"{role}/{product_entity.uuid_user}/" \
-                                    f"{object_to_save.uuid}/product_images/{path_datetime}"
+                    prefix_images = f"{prefix_base}/product_images/{path_datetime}"
                     for i in images:
                         key_bd = build_url_bd(prefix_images, i.filename)
                         key_storage = build_url_storage(prefix_images, i.filename)
                         image_to_save = ProductImage(name=i.filename, product_id=object_to_save.id, url=key_bd)
                         object_to_save.product_images.append(image_to_save)
                         self.__storage_repository.put_object(body=i, key=key_storage, content_type=i.content_type)
+                session_trans.flush()
 
             except AssertionError as e:
                 if objects_cloud:
-                    self.__storage_repository.delete_all_objects_path(key=prefix + "/")
+                    self.__storage_repository.delete_objects(key=prefix_files + "/")
                 if images:
-                    self.__storage_repository.delete_all_objects_path(key=prefix_images + "/")
+                    self.__storage_repository.delete_objects(key=prefix_images + "/")
                 e = api_error('ProductSavingError')
-                self.logger.error(f"{e.error['message']}")
+                self.logger.error(f"{e.error['description']}")
                 abort(code=e.status_code, message=e.message, error=e.error)
             except Exception as e:
                 session_trans.rollback()
                 session_trans.close()
                 if objects_cloud:
-                    self.__storage_repository.delete_all_objects_path(key=prefix + "/")
+                    self.__storage_repository.delete_objects(key=prefix_files + "/")
                 if images:
-                    self.__storage_repository.delete_all_objects_path(key=prefix_images + "/")
+                    self.__storage_repository.delete_objects(key=prefix_images + "/")
                 error_detail = str(e)
                 e = api_error('UndefendedError')
-                e.error['message'] = error_detail
-                self.logger.error(f"{e.error['message']}")
+                e.error['description'] = error_detail
+                self.logger.error(f"{e.error['description']}")
                 abort(code=e.status_code, message=e.message, error=e.error)
             else:
                 session_trans.commit()
@@ -285,22 +310,10 @@ class ProductRepository(IProductRepository):
                 self.logger.info(f"{object_to_save} saved")
                 session_trans.close()
 
-                if prefix is not None:
-                    # Build html to send email
-                    first_name, last_name = get_user_names(jwt, user.uuid)
-                    user_name = f"{first_name.title()} {last_name.title()}"
-                    url_s3 = f"https://s3.console.aws.amazon.com/s3/buckets/{AWS_BUCKET_NAME}?" \
-                             f"region={AWS_REGION}&prefix={prefix}/&showversions=false"
-                    data_email = TemplateAdminProduct.html.format(product_name=basic_product.basic_product,
-                                                                  user_name=user_name,
-                                                                  company_name=company.company_name,
-                                                                  link=url_s3)
-
-                    send_email(subject="Review Documents - Product",
-                               data=data_email,
-                               destination=[EMAIL_BAZAR_ADMIN],
-                               is_html=True)
-
+                if prefix_files is not None:
+                    self.logger.info(f"Sending email to bazar admin")
+                    send_email_to_admin(jwt, product_entity.uuid_user, object_to_save, prefix_files)
+                    self.logger.info(f"Email sent")
                 return res_product
 
     def get_product_by_uuid(self, uuid: str) -> ProductEntity:
@@ -319,7 +332,8 @@ class ProductRepository(IProductRepository):
         return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                         total_pages=total_pages)
 
-    def get_products_by_user(self, uuid: str, role: str, limit: int, offset: int) -> ProductsListEntity:
+    def get_products_by_user(self, uuid: str, role: str, limit: int, offset: int) -> Union[ProductsPaginationEntity,
+                                                                                           ProductsListEntity]:
 
         if role == 'buyer':
             total = self.get_products_count()
@@ -388,7 +402,12 @@ class ProductRepository(IProductRepository):
 
     def get_detail_product_by_uuid(self, uuid: str) -> ProductEntity:
         product = self.utils_db.get_product_by_uuid_product(uuid)
-        return ProductEntity.from_orm(product)
+        url_images = [x.url for x in product.product_images]
+        url_files = [x.files.url for x in product.product_sustainability_certifications]
+        res_product = ProductEntity.from_orm(product)
+        res_product.url_images = url_images
+        res_product.url_files = url_files
+        return res_product
 
     def edit_product_state(self, status: str, uuid: str) -> ProductEntity:
         product = self.utils_db.get_product_by_uuid_product(uuid)
@@ -400,3 +419,151 @@ class ProductRepository(IProductRepository):
         self.session.commit()
         self.logger.info(f"{product} state edited")
         return ProductEntity.from_orm(product)
+
+    def edit_product(self, jwt: str, role: str, uuid_product: str, product_entity: ProductEditEntity,
+                     objects_cloud: list, images: list) -> ProductEntity:
+
+        self.logger.info(f"Editing product: {uuid_product}")
+
+        if product_entity.change_files:
+            validate_num_certifications_vs_num_files(len(product_entity.sustainability_certifications_uuid),
+                                                     len(objects_cloud))
+
+        if len(product_entity.sustainability_certifications_uuid):
+            self.validate_exists_certifications(product_entity.sustainability_certifications_uuid)
+
+        product_to_edit = self.utils_db.get_product_by_uuid_product(uuid_product)
+        product_to_edit.capacity_per_year = product_entity.capacity_per_year
+        product_to_edit.date_in_port = product_entity.date_in_port
+        product_to_edit.guild_or_association = product_entity.guild_or_association
+        product_to_edit.available_for_sale = product_entity.available_for_sale
+        product_to_edit.minimum_order_uuid = product_entity.minimum_order_uuid
+        product_to_edit.expected_price_per_kg = product_entity.expected_price_per_kg
+        product_to_edit.assistance_logistic = product_entity.assistance_logistic
+        product_to_edit.additional_description = product_entity.additional_description
+
+        global prefix_files
+        prefix_files = None
+
+        with Session(self.engine) as session_trans:
+            session_trans.begin()
+            try:
+                incoterms_uuid_saved = [x.uuid for x in product_to_edit.incoterms]
+                if set(incoterms_uuid_saved) != set(product_entity.incoterms_uuid):
+                    # Remove old incoterms
+                    self.session.query(ProductIncoterm).filter(
+                        ProductIncoterm.product_id == product_to_edit.id).delete()
+
+                    # Save new incoterms
+                    for i in product_entity.incoterms_uuid:
+                        incoterm = session_trans.query(Incoterm).filter_by(uuid=i).first()
+                        product_to_edit.incoterms.append(incoterm)
+                    session_trans.add(product_to_edit)
+
+                session_trans.flush()
+
+                path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
+                prefix_base = f"{role}/{product_entity.uuid_user}/{product_to_edit.uuid}"
+
+                # Save new files in cloud and urls in database
+                if product_entity.change_files:
+                    self.logger.info(f"Removing old file relationships product")
+                    # Remove old product files (certifications)
+                    subquery_certifications = session_trans.query(ProductSustainabilityCertification).filter(
+                        ProductSustainabilityCertification.product_id == product_to_edit.id).subquery()
+
+                    # Remove old certifications
+                    session_trans.query(ProductSustainabilityCertification).filter(exists().where(
+                        subquery_certifications.c.product_id == product_to_edit.id)).delete(
+                        synchronize_session=False)
+
+                    session_trans.query(ProductFile).filter(exists().where(
+                        subquery_certifications.c.file_id == ProductFile.id)).delete(synchronize_session=False)
+
+                    # Remove old objects from cloud
+                    self.logger.info(f"Remove old files from cloud")
+                    self.__storage_repository.delete_objects(key=f'{prefix_base}/documents_product/')
+
+                if objects_cloud:
+                    if product_entity.change_files:
+                        self.logger.info(f"Uploading files to cloud")
+                        prefix_files = f"{prefix_base}/documents_product/{path_datetime}"
+                        for idx, o in enumerate(objects_cloud):
+                            key_bd = build_url_bd(prefix_files, o.filename)
+                            key_storage = build_url_storage(prefix_files, o.filename)
+
+                            file_to_save = ProductFile(name=o.filename, url=key_bd)
+                            session_trans.add(file_to_save)
+                            session_trans.flush()
+
+                            uuid_certification = str(product_entity.sustainability_certifications_uuid[idx])
+                            certification = session_trans.query(SustainabilityCertification).filter_by(
+                                uuid=uuid_certification).first()
+                            product_sustainability_certification = ProductSustainabilityCertification(
+                                product_id=product_to_edit.id,
+                                sustainability_certification_id=certification.id,
+                                file_id=file_to_save.id)
+                            session_trans.add(product_sustainability_certification)
+
+                            self.__storage_repository.put_object(body=o, key=key_storage, content_type=o.content_type)
+                else:
+                    # Product without certifications, status hidden because it's not necessary admin approve product,
+                    # and its necessary seller publish the product to transfer data to blockchain.
+                    status_product = session_trans.query(StatusProduct).filter_by(status_product='Hidden').first()
+                    product_to_edit.status_id = status_product.id
+
+                if product_entity.change_images:
+                    # Remove old images
+                    session_trans.query(ProductImage).filter(
+                        ProductImage.product_id == product_to_edit.id).delete(synchronize_session=False)
+
+                    # Remove old objects from cloud
+                    self.logger.info(f"Remove old images from cloud")
+                    self.__storage_repository.delete_objects(key=f'{prefix_base}/product_images/')
+
+                # Save images in cloud and urls in database
+                if images:
+                    if product_entity.change_images:
+                        self.logger.info(f"Uploading images to cloud")
+                        prefix_images = f"{prefix_base}/product_images/{path_datetime}"
+                        for i in images:
+                            key_bd = build_url_bd(prefix_images, i.filename)
+                            key_storage = build_url_storage(prefix_images, i.filename)
+                            image_to_save = ProductImage(name=i.filename, product_id=product_to_edit.id, url=key_bd)
+                            product_to_edit.product_images.append(image_to_save)
+                            self.__storage_repository.put_object(body=i, key=key_storage, content_type=i.content_type)
+
+            except AssertionError as e:
+                if objects_cloud:
+                    self.__storage_repository.delete_objects(key=prefix_files + "/")
+                if images:
+                    self.__storage_repository.delete_objects(key=prefix_images + "/")
+                e = api_error('ProductSavingError')
+                self.logger.error(f"{e.error['description']}")
+                abort(code=e.status_code, message=e.message, error=e.error)
+            except Exception as e:
+                session_trans.rollback()
+                session_trans.close()
+                if objects_cloud:
+                    self.__storage_repository.delete_objects(key=prefix_files + "/")
+                if images:
+                    self.__storage_repository.delete_objects(key=prefix_images + "/")
+                error_detail = str(e)
+                e = api_error('UndefendedError')
+                e.error['description'] = error_detail
+                self.logger.error(f"{e.error['description']}")
+                abort(code=e.status_code, message=e.message, error=e.error)
+            else:
+                session_trans.commit()
+                url_images = [x.url for x in product_to_edit.product_images]
+                url_files = [x.files.url for x in product_to_edit.product_sustainability_certifications]
+                res_product = ProductEntity.from_orm(product_to_edit)
+                res_product.url_images = url_images
+                res_product.url_files = url_files
+                self.logger.info(f"{product_to_edit} saved")
+                session_trans.close()
+
+                if prefix_files is not None:
+                    send_email_to_admin(jwt, product_entity.uuid_user, product_to_edit, prefix_files)
+
+                return res_product

@@ -19,7 +19,7 @@ from src.domain.ports.company_interface import ICompanyRepository
 from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.company import Company, ProfileImage, File
 from src.infrastructure.adapters.database.repositories.utils import send_email, build_url_bd, build_url_storage, \
-    get_total_pages
+    get_total_pages, build_urls_from_profile_image
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
 from src.infrastructure.config.default_infra import AWS_BUCKET_NAME, AWS_REGION
@@ -38,20 +38,6 @@ class CompanyRepository(ICompanyRepository):
         self.engine = adapter_db.engine
         self.session = Session(adapter_db.engine)
         self.__storage_repository = storage_repository
-
-    @staticmethod
-    def build_urls_profile_images(profile_image):
-        # Urls profile images
-        profile_images = []
-        if profile_image is not None:
-            if profile_image.image_url is not None:
-                idx_last_dot = profile_image.image_url.rindex('.')
-                format_file = profile_image.image_url[idx_last_dot:]
-                url_base = profile_image.image_url[:idx_last_dot - 2]
-                profile_images.append(f"{url_base}-s{format_file}")
-                profile_images.append(f"{url_base}-m{format_file}")
-                profile_images.append(f"{url_base}-b{format_file}")
-        return profile_images
 
     def new_company(self, jwt: str, role: str, company_entity: CompanyNewEntity, objects_cloud: list) -> CompanyEntity:
         self.logger.info(f"Creating new company: {company_entity.company_name}")
@@ -92,7 +78,7 @@ class CompanyRepository(ICompanyRepository):
                 session_trans.begin()
                 try:
 
-                    list_profile_images = self.build_urls_profile_images(profile_image)
+                    list_profile_images = build_urls_from_profile_image(profile_image)
 
                     # Save files in cloud and urls in database
                     if objects_cloud:
@@ -111,14 +97,14 @@ class CompanyRepository(ICompanyRepository):
 
                 except AssertionError as e:
                     session_trans.close()
-                    self.__storage_repository.delete_all_objects_path(key=prefix + "/")
+                    self.__storage_repository.delete_objects(key=prefix + "/")
                     e = api_error('CompanySavingError')
                     self.logger.error(f"{e.error['message']}")
                     abort(code=e.status_code, message=e.message, error=e.error)
                 except Exception as e:
                     session_trans.rollback()
                     session_trans.close()
-                    self.__storage_repository.delete_all_objects_path(key=prefix + "/")
+                    self.__storage_repository.delete_objects(key=prefix + "/")
                     error_detail = str(e)
                     e = api_error('UndefendedError')
                     e.error['message'] = error_detail
@@ -158,7 +144,7 @@ class CompanyRepository(ICompanyRepository):
             found_object = self.session.query(Company).filter_by(uuid=uuid).first()
             result_object = CompanyEntity.from_orm(found_object) if found_object is not None else None
             profile_image = self.session.query(ProfileImage).filter_by(id=found_object.profile_image_id).first()
-            list_profile_images = self.build_urls_profile_images(profile_image)
+            list_profile_images = build_urls_from_profile_image(profile_image)
             result_object.profile_images = list_profile_images
             return result_object
 

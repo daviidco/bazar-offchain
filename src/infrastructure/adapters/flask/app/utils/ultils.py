@@ -8,8 +8,15 @@
 # 2022: Bazar Network S.A.S.
 # All Rights Reserved.
 #
+import copy
 import json
+import uuid
 from datetime import datetime
+
+from flask import current_app
+from flask_restx import abort
+
+from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
 #
@@ -30,9 +37,9 @@ def allowed_file(filename):
 
 # Swagger Documentation
 def get_help_schema(c_e):
-    schema = c_e.schema()
+    """function return json help"""
+    schema = copy.deepcopy(c_e.schema())
     for key in list(schema['properties'].keys()):
-        """function return json help"""
         schema["properties"][key] = schema["properties"][key]['type']
     return json.dumps(schema["properties"], indent=2)
 
@@ -46,3 +53,15 @@ def get_schema(c_e):
     for prop in schema:
         schema[prop]['required'] = dict_merged[prop]['required']
     return schema
+
+
+def is_valid_uuid_input(uuid_to_validate) -> bool:
+    try:
+        uuid.UUID(str(uuid_to_validate))
+        return True
+    except Exception as e:
+        e = api_error('UuidError')
+        e.error['description'] = e.error['description'] + f' <uuid> {uuid_to_validate}'
+        current_app.logger.error(f"{e.error['description']}")
+        abort(code=e.status_code, message=e.message, error=e.error)
+

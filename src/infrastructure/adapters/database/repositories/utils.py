@@ -16,6 +16,31 @@ def default_prefix_cloud():
     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
 
 
+def build_urls_from_profile_image(profile_image):
+    # Urls profile images
+    profile_images = []
+    if profile_image is not None:
+        if profile_image.image_url is not None:
+            idx_last_dot = profile_image.image_url.rindex('.')
+            format_file = profile_image.image_url[idx_last_dot:]
+            url_base = profile_image.image_url[:idx_last_dot - 2]
+            profile_images.append(f"{url_base}-s{format_file}")
+            profile_images.append(f"{url_base}-m{format_file}")
+            profile_images.append(f"{url_base}-b{format_file}")
+    return profile_images
+
+
+def build_urls_from_url_image(url_image):
+    profile_images = []
+    idx_last_dot = url_image.rindex('.')
+    format_file = url_image[idx_last_dot:]
+    url_base = url_image[:idx_last_dot - 2]
+    profile_images.append(f"{url_base}-s{format_file}")
+    profile_images.append(f"{url_base}-m{format_file}")
+    profile_images.append(f"{url_base}-b{format_file}")
+    return profile_images
+
+
 def build_url_bd(prefix, name):
     file_name = name.replace('+', '%2B').replace(' ', '+')
     key_bd = f"https://{AWS_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{prefix}/{file_name}"

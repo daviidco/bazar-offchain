@@ -19,7 +19,7 @@ from src.domain.ports.company_interface import ICompanyRepository
 from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.company import Company, ProfileImage, File
 from src.infrastructure.adapters.database.repositories.utils import send_email, build_url_bd, build_url_storage, \
-    get_total_pages
+    get_total_pages, build_urls_from_profile_image
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
 from src.infrastructure.config.default_infra import AWS_BUCKET_NAME, AWS_REGION
@@ -92,7 +92,7 @@ class CompanyRepository(ICompanyRepository):
                 session_trans.begin()
                 try:
 
-                    list_profile_images = self.build_urls_profile_images(profile_image)
+                    list_profile_images = build_urls_from_profile_image(profile_image)
 
                     # Save files in cloud and urls in database
                     if objects_cloud:
@@ -158,7 +158,7 @@ class CompanyRepository(ICompanyRepository):
             found_object = self.session.query(Company).filter_by(uuid=uuid).first()
             result_object = CompanyEntity.from_orm(found_object) if found_object is not None else None
             profile_image = self.session.query(ProfileImage).filter_by(id=found_object.profile_image_id).first()
-            list_profile_images = self.build_urls_profile_images(profile_image)
+            list_profile_images = build_urls_from_profile_image(profile_image)
             result_object.profile_images = list_profile_images
             return result_object
 

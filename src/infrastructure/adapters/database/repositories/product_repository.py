@@ -278,6 +278,7 @@ class ProductRepository(IProductRepository):
                         image_to_save = ProductImage(name=i.filename, product_id=object_to_save.id, url=key_bd)
                         object_to_save.product_images.append(image_to_save)
                         self.__storage_repository.put_object(body=i, key=key_storage, content_type=i.content_type)
+                session_trans.flush()
 
             except AssertionError as e:
                 if objects_cloud:

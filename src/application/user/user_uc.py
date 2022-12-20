@@ -37,8 +37,8 @@ class GetUser:
     def __init__(self, user_repository: IUserRepository):
         self.__user_repository = user_repository
 
-    def execute(self, uuid: str) -> UserEntity:
-        return self.__user_repository.get_user_by_uuid(uuid)
+    def execute(self, jwt: str, uuid: str) -> UserEntity:
+        return self.__user_repository.get_user_by_uuid(jwt, uuid)
 
 
 class GetAllUsers:

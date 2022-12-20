@@ -22,7 +22,7 @@ from src.domain.entities.common_entity import InputPaginationEntity, JwtEntity
 from src.domain.entities.user_entity import UserNewEntity
 from src.domain.entities.user_manage_entity import UserManageEntity, ProductManageEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
-from src.infrastructure.adapters.flask.app.utils.ultils import get_schema
+from src.infrastructure.adapters.flask.app.utils.ultils import get_schema, is_valid_uuid_input
 
 #
 # This file contains the user endpoints Api-rest
@@ -77,7 +77,9 @@ class UserByUuidResource(Resource):
     @requires_auth
     def get(self, user_uuid, *args, **kwargs):
         """Gets a specific user by user uuid"""
-        result = self.get_user.execute(user_uuid)
+        jwt = dict(request.headers).get('Authorization', None)
+        is_valid_uuid_input(user_uuid)
+        result = self.get_user.execute(jwt, user_uuid)
         return json.loads(result.json()), 200
 
 

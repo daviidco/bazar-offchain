@@ -21,7 +21,7 @@ from src.application.company.company_uc import GetCompany, GetAllCompanies, Crea
 from src.domain.entities.common_entity import InputPaginationEntity
 from src.domain.entities.company_entity import CompanyNewEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
-from src.infrastructure.adapters.flask.app.utils.ultils import get_help_schema, get_schema
+from src.infrastructure.adapters.flask.app.utils.ultils import get_help_schema, get_schema, is_valid_uuid_input
 
 #
 # This file contains the company endpoints Api-rest
@@ -87,5 +87,6 @@ class CompanyResource(Resource):
     @requires_auth
     def get(self, company_uuid, *args, **kwargs):
         """Gets  a specific company by uuid"""
+        is_valid_uuid_input(company_uuid)
         result = self.get_company.execute(company_uuid)
         return json.loads(result.json()), 200

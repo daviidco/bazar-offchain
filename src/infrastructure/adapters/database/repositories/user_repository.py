@@ -19,7 +19,8 @@ from src.domain.ports.user_interface import IUserRepository
 from src.domain.entities.user_entity import UserNewEntity, UserEntity, UsersPaginationEntity
 from src.infrastructure.adapters.database.models import Product, CommentApproval, StatusProduct
 from src.infrastructure.adapters.database.models.user import User, StatusUser
-from src.infrastructure.adapters.database.repositories.utils import get_user_names, get_total_pages
+from src.infrastructure.adapters.database.repositories.utils import get_user_names, get_total_pages, \
+     build_urls_from_url_image
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
@@ -50,12 +51,15 @@ class UserRepository(IUserRepository):
             e = api_error('UserExistingError')
             abort(code=e.status_code, message=e.message, error=e.error)
 
-    def get_user_by_uuid(self, uuid: str) -> UserEntity:
+    def get_user_by_uuid(self, jwt: str, uuid: str) -> UserEntity:
         found_object = self.session.query(User).filter_by(uuid=uuid).first()
         found_object = UserEntity.from_orm(found_object) if found_object is not None else None
         if found_object is None:
             e = api_error('ObjectNotFound')
             abort(code=e.status_code, message=e.message, error=e.error)
+        for c in found_object.company:
+            c.profile_images = build_urls_from_url_image(c.profile_image_url)
+        found_object.first_name, found_object.last_name = get_user_names(jwt, uuid)
         return found_object
 
     def get_users_count(self) -> int:

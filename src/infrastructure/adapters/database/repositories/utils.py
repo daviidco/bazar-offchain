@@ -32,6 +32,8 @@ def build_urls_from_profile_image(profile_image):
 
 def build_urls_from_url_image(url_image):
     profile_images = []
+    if url_image is None:
+        return []
     idx_last_dot = url_image.rindex('.')
     format_file = url_image[idx_last_dot:]
     url_base = url_image[:idx_last_dot - 2]

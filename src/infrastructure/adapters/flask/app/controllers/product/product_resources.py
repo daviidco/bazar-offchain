@@ -521,4 +521,3 @@ class ProductFilterBuyerResource(Resource):
         entity = ProductFilterBuyerEntity.parse_obj(json.loads(request.form['body']))
         result = self.get_products_filter_buyer.execute(entity)
         return json.loads(result.json()), self.success_code
-

@@ -21,7 +21,7 @@ from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity, IncotermEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductEntity, ProductsPaginationEntity, ProductNewEntity, \
-    ProductsListEntity, AvailabilityEntity, ProductEditEntity
+    ProductsListEntity, AvailabilityEntity, ProductEditEntity, ProductFilterBuyerEntity, ProductFilterSellerEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity, ProductTypeEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity, \
     SustainabilityCertificationEntity
@@ -567,8 +567,12 @@ class ProductRepository(IProductRepository):
 
                 return res_product
 
-    def get_products_filter_seller(self, product_filter_seller_entity):
-        pass
+    def get_products_filter_seller(self, filter_entity: ProductFilterSellerEntity):
+        self.session.query(Product).filter(Product.status.in_(filter_entity.status),
+                                           Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
+                                           Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
+                                           Product.available_for_sale == filter_entity.available_for_sale,
+                                           Product.assistance_logistic == filter_entity.assistance_logistic)
 
-    def get_products_filter_buyer(self, product_filter_buyer_entity):
+    def get_products_filter_buyer(self, filter_entity: ProductFilterBuyerEntity):
         pass

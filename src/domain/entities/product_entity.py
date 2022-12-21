@@ -86,12 +86,12 @@ class ProductFilterEntity(BaseModel):
     price_per_kg_start: float
     price_per_kg_end: float
     available_for_sale: float
-    date_in_port_num_months: int
+    date_in_port_num_months: List[int]
     assistance_logistic: bool
 
 
 class ProductFilterSellerEntity(ProductFilterEntity):
-    status: str
+    status: List[str]
 
 
 class ProductFilterBuyerEntity(ProductFilterEntity):

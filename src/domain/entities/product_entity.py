@@ -66,7 +66,6 @@ class ProductEntity(ProductOptionsEntity, ProductBaseEntity, UuidEntity):
     minimum_order: str
     product_type: str
     variety: str
-    status: str
     url_images: List[AnyHttpUrl] = None
     url_files: List[AnyHttpUrl] = None
     incoterms: List[IncotermEntity] = None
@@ -83,7 +82,24 @@ class ProductsPaginationEntity(PaginationEntity):
     results: List[ProductEntity]
 
 
+class ProductFilterEntity(BaseModel):
+    price_per_kg_start: float
+    price_per_kg_end: float
+    available_for_sale: float
+    date_in_port_num_months: int
+    assistance_logistic: bool
+
+
+class ProductFilterSellerEntity(ProductFilterEntity):
+    status: str
+
+
+class ProductFilterBuyerEntity(ProductFilterEntity):
+    pass
+
+
 # Availability
 class AvailabilityEntity(BaseModel):
     uuid_product: UUID
     available_for_sale: float
+

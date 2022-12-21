@@ -16,7 +16,7 @@ from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductNewEntity, ProductEntity, ProductsPaginationEntity, \
-    AvailabilityEntity
+    AvailabilityEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity
 from src.domain.entities.variety_entity import VarietiesListEntity
@@ -164,3 +164,21 @@ class EditProduct:
     def execute(self, jwt: str, role: str, uuid_product: str, product_entity: ProductNewEntity,
                 objects_cloud: list, images: list) -> ProductEntity:
         return self.__product_repository.edit_product(jwt, role, uuid_product, product_entity, objects_cloud, images)
+
+
+class GetProductsFilterSeller:
+    @inject.autoparams('product_repository')
+    def __init__(self, product_repository: IProductRepository):
+        self.__product_repository = product_repository
+
+    def execute(self, product_filter_seller_entity: ProductFilterSellerEntity) -> ProductsPaginationEntity:
+        return self.__product_repository.get_products_filter_seller(product_filter_seller_entity)
+
+
+class GetProductsFilterBuyer:
+    @inject.autoparams('product_repository')
+    def __init__(self, product_repository: IProductRepository):
+        self.__product_repository = product_repository
+
+    def execute(self, product_filter_buyer_entity: ProductFilterBuyerEntity) -> ProductsPaginationEntity:
+        return self.__product_repository.get_products_filter_buyer(product_filter_buyer_entity)

@@ -566,3 +566,9 @@ class ProductRepository(IProductRepository):
                     send_email_to_admin(jwt, product_entity.uuid_user, product_to_edit, prefix_files)
 
                 return res_product
+
+    def get_products_filter_seller(self, product_filter_seller_entity):
+        pass
+
+    def get_products_filter_buyer(self, product_filter_buyer_entity):
+        pass

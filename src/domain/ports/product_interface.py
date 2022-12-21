@@ -115,3 +115,12 @@ class IProductRepository(ABC):
     def edit_product(self, jwt: str, role: str, uuid_product: str, product_entity: ProductNewEntity,
                      objects_cloud: list, images: list) -> ProductEntity:
         raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_products_filter_seller(self, product_filter_seller_entity):
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_products_filter_buyer(self, product_filter_buyer_entity):
+        raise Exception('Not implemented method')
+

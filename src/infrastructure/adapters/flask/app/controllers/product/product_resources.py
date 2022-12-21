@@ -22,13 +22,13 @@ from werkzeug.datastructures import FileStorage
 from src.application.product.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
     GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, \
     GetAllProducts, GetProductsByUser, GetProductStates, EditProductAvailability, GetDetailProduct, EditStateProduct, \
-    EditProduct
+    EditProduct, GetProductsFilterSeller, GetProductsFilterBuyer
 from src.domain.entities.basic_product_entity import BasicProductsListEntity
 from src.domain.entities.common_entity import InputPaginationEntity, BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductNewEntity, AvailabilityEntity, ProductEntity, \
-    ProductsPaginationEntity, ProductEditEntity
+    ProductsPaginationEntity, ProductEditEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity
 from src.domain.entities.variety_entity import VarietiesListEntity
@@ -62,7 +62,7 @@ class ProductResource(Resource):
     upload_parser.add_argument('files[]', location='files',
                                type=FileStorage, action='append', help='Product Files')
 
-    upload_parser.add_argument('images[]', location='images',
+    upload_parser.add_argument('images[]', location='files',
                                type=FileStorage, action='append', help='Product Images')
 
     upload_parser.add_argument('body', location='form',
@@ -437,7 +437,7 @@ class ProductEditResource(Resource):
     upload_parser.add_argument('files[]', location='files',
                                type=FileStorage, action='append', help='Product Files')
 
-    upload_parser.add_argument('images[]', location='images',
+    upload_parser.add_argument('images[]', location='files',
                                type=FileStorage, action='append', help='Product Images')
 
     upload_parser.add_argument('body', location='form',
@@ -473,3 +473,52 @@ class ProductEditResource(Resource):
         is_valid_uuid_input(uuid_product)
         result = self.edit_product.execute(jwt, role, uuid_product, entity, files, images)
         return json.loads(result.json()), self.success_code_put
+
+
+@api.route("/filter-seller")
+class ProductFilterSellerResource(Resource):
+    # Swagger
+    response_schema = ProductFilterSellerEntity.schema()
+    response_model = api.schema_model(response_schema['title'], response_schema)
+    success_code = 200
+
+    @inject.autoparams('get_products_filter_seller')
+    def __init__(self, app: current_app, get_products_filter_seller: GetProductsFilterSeller, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api = app
+        self.get_products_filter_seller = get_products_filter_seller
+
+    @api.doc(security='Private JWT')
+    @api.response(success_code, 'Success', response_model)
+    @cross_origin(["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, *args, **kwargs):
+        """Filter to products by seller"""
+        entity = ProductFilterSellerEntity.parse_obj(json.loads(request.form['body']))
+        result = self.get_products_filter_seller.execute(entity)
+        return json.loads(result.json()), self.success_code
+
+
+@api.route("/filter-buyer")
+class ProductFilterBuyerResource(Resource):
+    # Swagger
+    response_schema = ProductFilterBuyerEntity.schema()
+    response_model = api.schema_model(response_schema['title'], response_schema)
+    success_code = 200
+
+    @inject.autoparams('get_products_filter_buyer')
+    def __init__(self, app: current_app, get_products_filter_buyer: GetProductsFilterBuyer, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api = app
+        self.get_products_filter_buyer = get_products_filter_buyer
+
+    @api.doc(security='Private JWT')
+    @api.response(success_code, 'Success', response_model)
+    @cross_origin(["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, *args, **kwargs):
+        """Filter to products by buyer"""
+        entity = ProductFilterBuyerEntity.parse_obj(json.loads(request.form['body']))
+        result = self.get_products_filter_buyer.execute(entity)
+        return json.loads(result.json()), self.success_code
+

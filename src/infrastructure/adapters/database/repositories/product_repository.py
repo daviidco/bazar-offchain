@@ -395,7 +395,6 @@ class ProductRepository(IProductRepository):
     def edit_product_availability(self, entity: AvailabilityEntity) -> AvailabilityEntity:
         product = self.utils_db.get_product_by_uuid_product(entity.uuid_product)
         product.available_for_sale = entity.available_for_sale
-        self.session.merge(product)
         self.session.commit()
         self.logger.info(f"{product} availability edited")
         return entity

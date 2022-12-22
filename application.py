@@ -9,8 +9,9 @@
 # All Rights Reserved.
 #
 import os
+import time
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, g
 from flask_restx import Api, Resource
 
 import src.infrastructure.adapters.swagger.swagger_service
@@ -34,7 +35,6 @@ application.config.from_pyfile(f'{path_config_file}')
 configure_logging(application)
 application.logger.info(f'Environment: {config_env}')
 application.logger.info(f'Environment configuration file: {path_config_file}')
-
 configure_inject(application.logger)
 
 # Disable strict mode when URL ends with /
@@ -45,6 +45,21 @@ application.url_map.strict_slashes = False
 def add_cors_headers(response):
     response.headers["Access-Control-Allow-Headers"] = "*"
     response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
+
+@application.before_request
+def log_request_start():
+    g.start_time = time.time()
+    application.logger.debug(f"Request {request.url} started")
+
+
+@application.after_request
+def log_request_end(response):
+    elapsed_time = time.time() - g.start_time
+    minutes, seconds = divmod(elapsed_time, 60)
+    seconds = round(seconds, 2)
+    application.logger.debug(f"Request {request.url} processed in {minutes} minutes and {seconds} seconds")
     return response
 
 

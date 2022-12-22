@@ -20,7 +20,7 @@ from src.domain.entities.user_entity import UserNewEntity, UserEntity, UsersPagi
 from src.infrastructure.adapters.database.models import Product, CommentApproval, StatusProduct
 from src.infrastructure.adapters.database.models.user import User, StatusUser
 from src.infrastructure.adapters.database.repositories.utils import get_user_names, get_total_pages, \
-     build_urls_from_url_image
+    build_urls_from_url_image
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
@@ -108,8 +108,17 @@ class UserRepository(IUserRepository):
 
                 # Modify user state
                 user = session_trans.query(User).filter_by(uuid=user_manage.uuid_user).first()
-                status_id = session_trans.query(StatusUser).filter_by(uuid=user_manage.uuid_user_status).first().id
-                user.status_id = status_id
+                if user is None:
+                    e = api_error('ObjectNotFound')
+                    e.error['description'] = e.error['description'] + f' <uuid> {user_manage.uuid_user}'
+                    abort(code=e.status_code, message=e.message, error=e.error)
+
+                status = session_trans.query(StatusUser).filter_by(status_user=user_manage.user_status).first()
+                if status is None:
+                    e = api_error('ObjectNotFound')
+                    e.error['description'] = e.error['description'] + f' <status_user> {user_manage.user_status}'
+                    abort(code=e.status_code, message=e.message, error=e.error)
+                user.status_id = status.id
 
                 # Modify product state
                 if user_manage.products is not None:
@@ -127,10 +136,11 @@ class UserRepository(IUserRepository):
                             for p in products_from_db:
                                 if u_m_entity.uuid_product == p.uuid:
                                     status_product = session_trans.query(StatusProduct).filter_by(
-                                        uuid=u_m_entity.uuid_product_status).first()
+                                        status_product=u_m_entity.product_status).first()
                                     if status_product is None:
                                         e = api_error('ObjectNotFound')
-                                        e.error['description'] = e.error['description'] + ' <uuid_product_status>'
+                                        e.error['description'] = e.error['description'] \
+                                                                 + f' <status_product> {u_m_entity.product_status}'
                                         abort(code=e.status_code, message=e.message, error=e.error)
                                     p.status_id = status_product.id
                     else:
@@ -148,4 +158,3 @@ class UserRepository(IUserRepository):
             else:
                 session_trans.commit()
                 return user_manage
-

@@ -69,10 +69,10 @@ class TestUserEntity:
                             'results': [data_user_entity_v1, data_user_entity_v2],
                             'total_pages': 10}
 
-    data_product_manage_entity_v1 = {'uuid_product_status': generated_uuid,
+    data_product_manage_entity_v1 = {'product_status': "Hidden",
                                      'uuid_product': generated_uuid}
 
-    data_product_manage_entity_v2 = {'uuid_product_status': generated_uuid,
+    data_product_manage_entity_v2 = {'product_status': "Hidden",
                                      'uuid_product': generated_uuid}
 
     data_user_manage_entity = {'uuid_user': generated_uuid,

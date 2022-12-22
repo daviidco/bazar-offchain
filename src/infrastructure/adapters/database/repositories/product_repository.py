@@ -12,6 +12,7 @@
 from datetime import datetime
 from typing import Union
 
+from flask import current_app
 from flask_restx import abort
 from sqlalchemy.sql import exists
 from sqlalchemy.orm import Session
@@ -393,7 +394,12 @@ class ProductRepository(IProductRepository):
         return response
 
     def edit_product_availability(self, entity: AvailabilityEntity) -> AvailabilityEntity:
-        product = self.utils_db.get_product_by_uuid_product(entity.uuid_product)
+        product = self.session.query(Product).filter_by(uuid=entity.uuid_product).first()
+        if product is None:
+            e = api_error('ObjectNotFound')
+            e.error['description'] = e.error['description'] + f' <product uuid_product: {entity.uuid_product}>'
+            current_app.logger.error(e.error['description'])
+            abort(code=e.status_code, message=e.message, error=e.error)
         product.available_for_sale = entity.available_for_sale
         self.session.commit()
         self.logger.info(f"{product} availability edited")

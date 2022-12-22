@@ -42,7 +42,8 @@ class AvatarRepository(IAvatarRepository):
         count = count if count is not None else 0
         return count
 
-    def get_all_avatars(self, limit: int = None, offset: int = None) -> Union[AvatarsListEntity, AvatarsPaginationEntity]:
+    def get_all_avatars(self, limit: int = None, offset: int = None) -> \
+            Union[AvatarsListEntity, AvatarsPaginationEntity]:
         total = self.get_avatars_count()
         list_objects = self.session.query(ProfileImage).offset(offset).limit(limit).all()
         if limit is not None and offset is not None:

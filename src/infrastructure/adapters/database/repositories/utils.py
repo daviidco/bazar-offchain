@@ -72,7 +72,7 @@ def request_to_ms_auth(jwt, uuid_user, get_person=False):
         data_response = response_auth.json()['data']
         return data_response
     else:
-        current_app.logger.error(f"Error getting info ms-auth - code response: {response_auth.status_code}")
+        current_app.logger.critical(f"Error getting info ms-auth - code response: {response_auth.status_code}")
         return None
 
 

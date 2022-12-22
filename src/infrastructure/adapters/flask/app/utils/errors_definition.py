@@ -134,7 +134,7 @@ APIErrors = {
 
     'ObjectNotFound': {"error": {"code": "E2216",
                                  "message": "Object not found",
-                                 "description": "Object not found, please verify uuid.",
+                                 "description": "Object not found, please verify",
                                  "status_code": 422}},
 
     'EmailError': {"error": {"code": "E2217",

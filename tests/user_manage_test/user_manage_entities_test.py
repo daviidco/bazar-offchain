@@ -27,19 +27,19 @@ from tests.utils import validate_data_entity, validate_instance_properties_entit
 class TestUserManageEntity:
     generated_uuid = uuid.uuid4()
 
-    data_ProductManageEntity_v1 = {'uuid_product_status': generated_uuid,
+    data_ProductManageEntity_v1 = {'product_status': "Hidden",
                                    'uuid_product': generated_uuid}
 
-    data_ProductManageEntity_v2 = {'uuid_product_status': generated_uuid,
+    data_ProductManageEntity_v2 = {'product_status': "Hidden",
                                    'uuid_product': generated_uuid}
 
     data_UserManageEntity_v1 = {'uuid_user': generated_uuid,
-                                'uuid_user_status': generated_uuid,
+                                'user_status': "Approve",
                                 'products': [],
                                 'comment_approval': 'comment to approve'}
 
     data_UserManageEntity_v2 = {'uuid_user': generated_uuid,
-                                'uuid_user_status': generated_uuid,
+                                'user_status': "Approve",
                                 'products': [data_ProductManageEntity_v1, data_ProductManageEntity_v2],
                                 'comment_approval': 'comment to approve'}
 

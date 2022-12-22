@@ -46,7 +46,6 @@ class UsersResource(Resource):
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets all users with pagination"""
-        current_app.logger.info(f"Starts {request.url} [{request.method}]")
         jwt = dict(request.headers).get('Authorization', None)
         limit = request.args.get('limit', 10)
         offset = request.args.get('offset', 0)

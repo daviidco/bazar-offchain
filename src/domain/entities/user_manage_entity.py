@@ -21,13 +21,13 @@ from pydantic import BaseModel
 #
 
 class ProductManageEntity(BaseModel):
-    uuid_product_status: UUID
+    product_status: str
     uuid_product: UUID
 
 
 class UserManageEntity(BaseModel):
     uuid_user: UUID
-    uuid_user_status: UUID = None
+    user_status: str = None
     products: List[ProductManageEntity] = None
     comment_approval: str = None
 

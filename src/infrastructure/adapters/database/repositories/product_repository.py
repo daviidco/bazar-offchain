@@ -573,12 +573,37 @@ class ProductRepository(IProductRepository):
 
                 return res_product
 
-    def get_products_filter_seller(self, filter_entity: ProductFilterSellerEntity):
-        self.session.query(Product).filter(Product.status.in_(filter_entity.status),
-                                           Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
-                                           Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
-                                           Product.available_for_sale == filter_entity.available_for_sale,
-                                           Product.assistance_logistic == filter_entity.assistance_logistic)
+    def get_products_filter_seller(self, filter_entity: ProductFilterSellerEntity) -> ProductsListEntity:
+        company_id = self.utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
+        list_objects = self.session.query(Product)\
+            .filter(Product.company_id == company_id,
+                    Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
+                    Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
+                    Product.available_for_sale >= filter_entity.available_for_sale).all()
 
-    def get_products_filter_buyer(self, filter_entity: ProductFilterBuyerEntity):
-        pass
+        list_e_objects = []
+        for p in list_objects:
+            ep = ProductEntity.from_orm(p)
+            ep.url_images = list(p.url_images_ap)
+            ep.url_files = [x.url for x in p.url_files_ap]
+            list_e_objects.append(ep)
+        return ProductsListEntity(results=list_e_objects)
+
+    def get_products_filter_buyer(self, filter_entity: ProductFilterBuyerEntity) -> ProductsPaginationEntity:
+        query = self.session.query(Product) \
+            .filter(Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
+                    Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
+                    Product.available_for_sale >= filter_entity.available_for_sale)
+
+        total = query.from_self().count()
+        list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
+        total_pages = get_total_pages(total, int(filter_entity.limit))
+
+        list_e_objects = []
+        for p in list_objects:
+            ep = ProductEntity.from_orm(p)
+            ep.url_images = list(p.url_images_ap)
+            ep.url_files = [x.url for x in p.url_files_ap]
+            list_e_objects.append(ep)
+        return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
+                                        results=list_e_objects, total_pages=total_pages)

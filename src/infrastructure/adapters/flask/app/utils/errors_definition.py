@@ -150,7 +150,12 @@ APIErrors = {
     'UuidError': {"error": {"code": "E2219",
                             "message": "Parameter is not UUID",
                             "description": "Convert to UUID is impossible",
-                            "status_code": 500}},
+                            "status_code": 406}},
+
+    'CompareError': {"error": {"code": "E2220",
+                               "message": "Values compared are not right",
+                               "description": "Undefined.",
+                               "status_code": 406}},
 
     # Errors Flask E2200 - E2300
 

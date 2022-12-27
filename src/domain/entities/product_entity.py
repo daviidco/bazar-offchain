@@ -12,10 +12,10 @@
 from typing import List
 from uuid import UUID
 
-from pydantic import BaseModel, AnyHttpUrl
+from pydantic import BaseModel, AnyHttpUrl, Field
 from pydantic.types import date
 
-from src.domain.entities.common_entity import UuidEntity, PaginationEntity
+from src.domain.entities.common_entity import UuidEntity, PaginationEntity, InputPaginationEntity
 from src.domain.entities.incoterm_entity import IncotermEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationEntity
 
@@ -83,18 +83,16 @@ class ProductsPaginationEntity(PaginationEntity):
 
 
 class ProductFilterEntity(BaseModel):
-    price_per_kg_start: float
-    price_per_kg_end: float
-    available_for_sale: float
-    date_in_port_num_months: List[int]
-    assistance_logistic: bool
+    price_per_kg_start: float = Field(default=0, description="Initial price per kg")
+    price_per_kg_end: float = Field(description="limit price per kg")
+    available_for_sale: float = Field(description="Amount available for sale")
 
 
 class ProductFilterSellerEntity(ProductFilterEntity):
-    status: List[str]
+    user_uuid: UUID = Field(description="UUID of seller")
 
 
-class ProductFilterBuyerEntity(ProductFilterEntity):
+class ProductFilterBuyerEntity(ProductFilterEntity, InputPaginationEntity):
     pass
 
 

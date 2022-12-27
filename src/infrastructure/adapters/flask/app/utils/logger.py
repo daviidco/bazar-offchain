@@ -19,7 +19,7 @@ import logging
 
 def verbose_formatter():
     return logging.Formatter(
-        '[%(asctime)s.%(msecs)d]\t %(levelname)s \t[%(name)s.%(funcName)s:%(lineno)d]\t %(message)s',
+        '%(levelname)s \t[%(name)s.%(funcName)s:%(lineno)d]\t %(message)s',
         datefmt='%d/%m/%Y %H:%M:%S'
     )
 

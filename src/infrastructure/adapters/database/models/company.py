@@ -18,13 +18,15 @@ from sqlalchemy.orm import relationship
 from sqlalchemy_utils import UUIDType
 
 from src.infrastructure.adapters.database.models.model_base import base
-from src.infrastructure.config.default_infra import UTC_TIME_ZONE
-
+from src.infrastructure.config.config_parameters import get_parameter_value
 
 #
 # These models are related with company model  they are defined to create database table.
 # @author David Córdoba
 #
+
+UTC_TIME_ZONE = get_parameter_value('UTC_TIME_ZONE')
+
 
 class CommentApproval(base):
     # Don't forget import model in __init__.py to alembic works

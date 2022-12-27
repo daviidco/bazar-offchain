@@ -11,7 +11,7 @@
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
-from src.infrastructure.config.default_infra import SQLALCHEMY_DATABASE_URI, DB_SCHEMA
+from src.infrastructure.config.config_parameters import get_database_connection
 
 
 #
@@ -20,6 +20,7 @@ from src.infrastructure.config.default_infra import SQLALCHEMY_DATABASE_URI, DB_
 #
 class PostgresAdapter:
     def __init__(self) -> None:
+        SQLALCHEMY_DATABASE_URI, DB_SCHEMA = get_database_connection()
         self.engine = create_engine(SQLALCHEMY_DATABASE_URI,
                                     connect_args={'options': '-csearch_path={}'.format(DB_SCHEMA)})
         self.session = Session(self.engine)

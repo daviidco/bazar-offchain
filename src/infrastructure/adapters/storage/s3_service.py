@@ -16,13 +16,22 @@ from flask_restx import abort
 
 from src.domain.ports.object_file_interface import IStorage
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
-from src.infrastructure.config.default_infra import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME
+from src.infrastructure.config.config_parameters import get_parameter_value
+from src.infrastructure.config.default import _get_env_variable
+
+# from src.infrastructure.config.default_infra import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME
 
 
 #
 # This file contains generic methods of bucket s3 aws
 # @author David Córdoba
 #
+
+AWS_ACCESS_KEY_ID = _get_env_variable("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = _get_env_variable("AWS_SECRET_ACCESS_KEY")
+AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
+
+
 class S3Repository(IStorage):
 
     @inject.autoparams()

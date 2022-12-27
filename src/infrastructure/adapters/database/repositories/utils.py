@@ -8,8 +8,12 @@ from sqlalchemy.orm import Session
 
 from src.infrastructure.adapters.database.models import User, Company, Product
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
-from src.infrastructure.config.default import URL_MS_BAZAR_AUTH, URL_EMAIL_LAMBDA
-from src.infrastructure.config.default_infra import AWS_BUCKET_NAME, AWS_REGION
+from src.infrastructure.config.config_parameters import get_parameter_value
+
+URL_MS_BAZAR_AUTH = get_parameter_value('URL_MS_BAZAR_AUTH')
+URL_EMAIL_LAMBDA = get_parameter_value('URL_EMAIL_LAMBDA')
+AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
+AWS_REGION = current_app.config['AWS_REGION']
 
 
 def default_prefix_cloud():

@@ -158,3 +158,6 @@ class UserRepository(IUserRepository):
             else:
                 session_trans.commit()
                 return user_manage
+            finally:
+                session_trans.close()
+

@@ -11,6 +11,7 @@
 
 from datetime import datetime
 
+from flask import current_app
 from flask_restx import abort
 from sqlalchemy.orm import Session
 
@@ -21,8 +22,7 @@ from src.infrastructure.adapters.database.models.company import Company, Profile
 from src.infrastructure.adapters.database.repositories.utils import send_email, build_url_bd, build_url_storage, \
     get_total_pages, build_urls_from_profile_image
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
-from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
-from src.infrastructure.config.default_infra import AWS_BUCKET_NAME, AWS_REGION
+from src.infrastructure.config.config_parameters import get_parameter_value
 from src.infrastructure.templates_email import TemplateAdminReview
 
 
@@ -30,6 +30,11 @@ from src.infrastructure.templates_email import TemplateAdminReview
 # This repository contains logic main related with company.
 # @author David Córdoba
 #
+
+AWS_REGION = current_app.config['AWS_REGION']
+EMAIL_BAZAR_ADMIN = get_parameter_value('EMAIL_BAZAR_ADMIN')
+AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
+
 
 class CompanyRepository(ICompanyRepository):
 

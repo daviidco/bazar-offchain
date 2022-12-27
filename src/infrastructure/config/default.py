@@ -31,18 +31,15 @@ def _get_env_variable(name):
 
 # Environment flask-env
 ENV = _get_env_variable("ENV").upper()
-EMAIL_BAZAR_ADMIN = _get_env_variable("EMAIL_BAZAR_ADMIN")
-URL_EMAIL_LAMBDA = _get_env_variable("URL_EMAIL_LAMBDA")
-EMAIL_BAZAR_ADMIN = _get_env_variable("EMAIL_BAZAR_ADMIN")
-URL_MS_BAZAR_AUTH = _get_env_variable("URL_MS_BAZAR_AUTH")
 
 # Flask
-SECRET_KEY = _get_env_variable('SECRET_KEY')
 PROPAGATE_EXCEPTIONS = False
 
 # Flask-Restx
 BUNDLE_ERRORS = False
 ERROR_404_HELP = True
+
+AUTH0_ALGORITHMS = ["RS256"]
 
 # App environments
 APP_ENV_LOCAL = 'local'

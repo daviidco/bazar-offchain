@@ -22,9 +22,10 @@ from src.infrastructure.adapters.flask.app.controllers.user.blueprints.user_blue
 from src.infrastructure.adapters.flask.app.controllers.wishlist.blueprints.wishlist_bp_v1_0_1 import wish_lists_v1_01_bp
 from src.infrastructure.adapters.flask.app.utils.logger import configure_logging
 from src.infrastructure.adapters.flask.configuration_injector import configure_inject
+from src.infrastructure.config.config_parameters import get_parameter_value
 
 application = Flask(__name__)
-settings_module = os.getenv('APP_SETTINGS_MODULE')
+settings_module = get_parameter_value('APP_SETTINGS_MODULE')
 application.config.from_object(settings_module)
 # Load the configuration depending of environment
 config_env = application.config.get('ENV', 'LOCAL').lower()

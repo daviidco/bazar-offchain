@@ -35,8 +35,7 @@ from src.infrastructure.adapters.database.models.product import Product, BasicPr
 from src.infrastructure.adapters.database.repositories.utils import send_email, get_user_names, build_url_storage, \
     build_url_bd, get_total_pages, validate_num_certifications_vs_num_files
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
-from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
-from src.infrastructure.config.default_infra import AWS_REGION, AWS_BUCKET_NAME
+from src.infrastructure.config.config_parameters import get_parameter_value
 from src.infrastructure.templates_email import TemplateAdminProduct
 
 
@@ -44,6 +43,11 @@ from src.infrastructure.templates_email import TemplateAdminProduct
 # This repository contains logic main related with product.
 # @author David Córdoba
 #
+
+AWS_REGION = current_app.config['AWS_REGION']
+EMAIL_BAZAR_ADMIN = get_parameter_value('EMAIL_BAZAR_ADMIN')
+AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
+
 
 def send_email_to_admin(jwt, uuid_user, product, prefix_files):
     # Build html to send email
@@ -282,6 +286,7 @@ class ProductRepository(IProductRepository):
                 session_trans.flush()
 
             except AssertionError as e:
+                session_trans.close()
                 if objects_cloud:
                     self.__storage_repository.delete_objects(key=prefix_files + "/")
                 if images:
@@ -316,6 +321,8 @@ class ProductRepository(IProductRepository):
                     send_email_to_admin(jwt, product_entity.uuid_user, object_to_save, prefix_files)
                     self.logger.info(f"Email sent")
                 return res_product
+            finally:
+                session_trans.close()
 
     def get_product_by_uuid(self, uuid: str) -> ProductEntity:
         product = self.session.query(Product).filter_by(uuid=uuid).first()
@@ -539,6 +546,7 @@ class ProductRepository(IProductRepository):
                             self.__storage_repository.put_object(body=i, key=key_storage, content_type=i.content_type)
 
             except AssertionError as e:
+                session_trans.close()
                 if objects_cloud:
                     self.__storage_repository.delete_objects(key=prefix_files + "/")
                 if images:
@@ -572,6 +580,8 @@ class ProductRepository(IProductRepository):
                     send_email_to_admin(jwt, product_entity.uuid_user, product_to_edit, prefix_files)
 
                 return res_product
+            finally:
+                session_trans.close()
 
     def get_products_filter_seller(self, filter_entity: ProductFilterSellerEntity):
         self.session.query(Product).filter(Product.status.in_(filter_entity.status),

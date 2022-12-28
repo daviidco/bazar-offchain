@@ -28,12 +28,13 @@ from src.domain.entities.common_entity import InputPaginationEntity, BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductNewEntity, AvailabilityEntity, ProductEntity, \
-    ProductsPaginationEntity, ProductEditEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity
+    ProductsPaginationEntity, ProductEditEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity, ProductsListEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity
 from src.domain.entities.variety_entity import VarietiesListEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
-from src.infrastructure.adapters.flask.app.utils.ultils import get_help_schema, get_schema, is_valid_uuid_input
+from src.infrastructure.adapters.flask.app.utils.ultils import get_help_schema, get_schema, is_valid_uuid_input, \
+    compare_nums
 from tests.utils import generate_data_entity
 
 #
@@ -478,7 +479,7 @@ class ProductEditResource(Resource):
 @api.route("/filter-seller")
 class ProductFilterSellerResource(Resource):
     # Swagger
-    response_schema = ProductFilterSellerEntity.schema()
+    response_schema = ProductsListEntity.schema()
     response_model = api.schema_model(response_schema['title'], response_schema)
     success_code = 200
 
@@ -488,13 +489,24 @@ class ProductFilterSellerResource(Resource):
         self.api = app
         self.get_products_filter_seller = get_products_filter_seller
 
-    @api.doc(security='Private JWT')
+    @api.doc(params=get_schema(ProductFilterSellerEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Filter to products by seller"""
-        entity = ProductFilterSellerEntity.parse_obj(json.loads(request.form['body']))
+        user_uuid = request.args.get("user_uuid", 0)
+        is_valid_uuid_input(user_uuid)
+        price_per_kg_start = request.args.get("price_per_kg_start", 0)
+        price_per_kg_end = request.args.get("price_per_kg_end", 0)
+        compare_nums(price_per_kg_start, price_per_kg_end, '<')
+        available_for_sale = request.args.get("available_for_sale", 0)
+
+        entity = ProductFilterSellerEntity(price_per_kg_start=price_per_kg_start,
+                                           price_per_kg_end=price_per_kg_end,
+                                           available_for_sale=available_for_sale,
+                                           user_uuid=user_uuid)
+
         result = self.get_products_filter_seller.execute(entity)
         return json.loads(result.json()), self.success_code
 
@@ -502,7 +514,7 @@ class ProductFilterSellerResource(Resource):
 @api.route("/filter-buyer")
 class ProductFilterBuyerResource(Resource):
     # Swagger
-    response_schema = ProductFilterBuyerEntity.schema()
+    response_schema = ProductsPaginationEntity.schema()
     response_model = api.schema_model(response_schema['title'], response_schema)
     success_code = 200
 
@@ -512,12 +524,22 @@ class ProductFilterBuyerResource(Resource):
         self.api = app
         self.get_products_filter_buyer = get_products_filter_buyer
 
-    @api.doc(security='Private JWT')
+    @api.doc(params=get_schema(ProductFilterBuyerEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Filter to products by buyer"""
-        entity = ProductFilterBuyerEntity.parse_obj(json.loads(request.form['body']))
+        limit = request.args.get('limit', 10)
+        offset = request.args.get('offset', 0)
+        price_per_kg_start = request.args.get("price_per_kg_start", 0)
+        price_per_kg_end = request.args.get("price_per_kg_end", 0)
+        available_for_sale = request.args.get("available_for_sale", 0)
+
+        entity = ProductFilterBuyerEntity(limit=limit,
+                                          offset=offset,
+                                          price_per_kg_start=price_per_kg_start,
+                                          price_per_kg_end=price_per_kg_end,
+                                          available_for_sale=available_for_sale)
         result = self.get_products_filter_buyer.execute(entity)
         return json.loads(result.json()), self.success_code

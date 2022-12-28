@@ -65,3 +65,30 @@ def is_valid_uuid_input(uuid_to_validate) -> bool:
         current_app.logger.error(f"{e.error['description']}")
         abort(code=e.status_code, message=e.message, error=e.error)
 
+
+def compare_nums(num1, num2, operator='=') -> bool:
+    try:
+        if operator == '<':
+            if num1 < num2:
+                return True
+        elif operator == '>':
+            if num1 > num2:
+                return True
+        elif operator == '=':
+            if num1 == num2:
+                return True
+        elif operator == '<=':
+            if num1 <= num2:
+                return True
+        elif operator == '>=':
+            if num1 >= num2:
+                return True
+        else:
+            raise Exception(f'Operator {operator} not recognized')
+        raise Exception(f'Compare of nums is invalid')
+    except Exception as e:
+        e = api_error('UndefendedError')
+        e.error['description'] = f'{num1} must be {operator} than {num2}'
+        current_app.logger.error(f"{e.error['description']}")
+        abort(code=e.status_code, message=e.message, error=e.error)
+

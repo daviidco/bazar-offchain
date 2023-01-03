@@ -22,13 +22,15 @@ from werkzeug.datastructures import FileStorage
 from src.application.product.product_uc import GetAllBasicProducts, GetProductTypes, GetVarieties, \
     GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, \
     GetAllProducts, GetProductsByUser, GetProductStates, EditProductAvailability, GetDetailProduct, EditStateProduct, \
-    EditProduct, GetProductsFilterSeller, GetProductsFilterBuyer
+    EditProduct, GetProductsFilterSeller, GetProductsFilterBuyer, GetProductsFilterSellerAndBasicProduct, \
+    GetProductsFilterBuyerAndBasicProduct, GetProductsFilterBuyerSearchBar, GetProductsFilterSellerSearchBar
 from src.domain.entities.basic_product_entity import BasicProductsListEntity
 from src.domain.entities.common_entity import InputPaginationEntity, BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductNewEntity, AvailabilityEntity, ProductEntity, \
-    ProductsPaginationEntity, ProductEditEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity, ProductsListEntity
+    ProductsPaginationEntity, ProductEditEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity, \
+    ProductsListEntity, ProductFilterBuyerBasicProductEntity, ProductFilterSellerBasicProductEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity
 from src.domain.entities.variety_entity import VarietiesListEntity
@@ -164,7 +166,6 @@ class ProductTypesResource(Resource):
 
     @inject.autoparams('get_products_type_by_uuid_basic_product')
     def __init__(self, app: current_app, get_products_type_by_uuid_basic_product: GetProductTypes, *args, **kwargs):
-        
         super().__init__(*args, **kwargs)
         self.api = app
         self.get_products_type_by_uuid_basic_product = get_products_type_by_uuid_basic_product
@@ -189,7 +190,6 @@ class VarietiesResource(Resource):
 
     @inject.autoparams('get_varieties_by_uuid_basic_product')
     def __init__(self, app: current_app, get_varieties_by_uuid_basic_product: GetVarieties, *args, **kwargs):
-        
         super().__init__(*args, **kwargs)
         self.api = app
         self.get_varieties_by_uuid_basic_product = get_varieties_by_uuid_basic_product
@@ -542,4 +542,134 @@ class ProductFilterBuyerResource(Resource):
                                           price_per_kg_end=price_per_kg_end,
                                           available_for_sale=available_for_sale)
         result = self.get_products_filter_buyer.execute(entity)
+        return json.loads(result.json()), self.success_code
+
+
+@api.route("/filter-seller/basic-product")
+class ProductFilterSellerBasicProductResource(Resource):
+    # Swagger
+    response_schema = ProductsListEntity.schema()
+    response_model = api.schema_model(response_schema['title'], response_schema)
+    success_code = 200
+
+    @inject.autoparams('get_products_filter_seller_basic_product')
+    def __init__(self, app: current_app,
+                 get_products_filter_seller_basic_product: GetProductsFilterSellerAndBasicProduct,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api = app
+        self.get_products_filter_seller_basic_product = get_products_filter_seller_basic_product
+
+    @api.doc(params=get_schema(ProductFilterSellerBasicProductEntity), security='Private JWT')
+    @api.response(success_code, 'Success', response_model)
+    @cross_origin(["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, *args, **kwargs):
+        """Filter to products by uuid seller and by name basic product"""
+        user_uuid = request.args.get("user_uuid", 0)
+        is_valid_uuid_input(user_uuid)
+        basic_product = request.args.get("basic_product", 0)
+        entity = ProductFilterSellerBasicProductEntity(user_uuid=user_uuid,
+                                                       basic_product=basic_product,)
+        result = self.get_products_filter_seller_basic_product.execute(entity)
+        return json.loads(result.json()), self.success_code
+
+
+@api.route("/filter-buyer/basic-product")
+class ProductFilterBuyerBasicProductResource(Resource):
+    # Swagger
+    response_schema = ProductsPaginationEntity.schema()
+    response_model = api.schema_model(response_schema['title'], response_schema)
+    success_code = 200
+
+    @inject.autoparams('get_products_filter_buyer_basic_product')
+    def __init__(self, app: current_app,
+                 get_products_filter_buyer_basic_product: GetProductsFilterBuyerAndBasicProduct,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api = app
+        self.get_products_filter_buyer_basic_product = get_products_filter_buyer_basic_product
+
+    @api.doc(params=get_schema(ProductFilterBuyerBasicProductEntity), security='Private JWT')
+    @api.response(success_code, 'Success', response_model)
+    @cross_origin(["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, *args, **kwargs):
+        """Filter to products by name basic product to buyers"""
+        user_uuid = request.args.get("user_uuid", 0)
+        is_valid_uuid_input(user_uuid)
+        limit = request.args.get('limit', 10)
+        offset = request.args.get('offset', 0)
+        basic_product = request.args.get("basic_product", 0)
+        entity = ProductFilterBuyerBasicProductEntity(limit=limit,
+                                                      offset=offset,
+                                                      user_uuid=user_uuid,
+                                                      basic_product=basic_product)
+        result = self.get_products_filter_buyer_basic_product.execute(entity)
+        return json.loads(result.json()), self.success_code
+
+
+@api.route("/filter-seller/search-bar")
+class ProductFilterSellerSearchBar(Resource):
+    # Swagger
+    response_schema = ProductsListEntity.schema()
+    response_model = api.schema_model(response_schema['title'], response_schema)
+    success_code = 200
+
+    @inject.autoparams('get_products_filter_seller_search_bar')
+    def __init__(self, app: current_app,
+                 get_products_filter_seller_search_bar: GetProductsFilterSellerSearchBar,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api = app
+        self.get_products_filter_seller_search_bar = get_products_filter_seller_search_bar
+
+    @api.doc(params=get_schema(ProductFilterSellerBasicProductEntity), security='Private JWT')
+    @api.response(success_code, 'Success', response_model)
+    @cross_origin(["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, *args, **kwargs):
+        """Filter to products by uuid seller and by part name basic product.
+        It doesn't matter if part name is uppercase or lowercase."""
+        user_uuid = request.args.get("user_uuid", 0)
+        is_valid_uuid_input(user_uuid)
+        basic_product = request.args.get("basic_product", 0)
+        entity = ProductFilterSellerBasicProductEntity(user_uuid=user_uuid,
+                                                       basic_product=basic_product,)
+        result = self.get_products_filter_seller_search_bar.execute(entity)
+        return json.loads(result.json()), self.success_code
+
+
+@api.route("/filter-buyer/search-bar")
+class ProductFilterBuyerSearchBar(Resource):
+    # Swagger
+    response_schema = ProductsPaginationEntity.schema()
+    response_model = api.schema_model(response_schema['title'], response_schema)
+    success_code = 200
+
+    @inject.autoparams('get_products_filter_buyer_search_bar')
+    def __init__(self, app: current_app,
+                 get_products_filter_buyer_search_bar: GetProductsFilterBuyerSearchBar,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api = app
+        self.get_products_filter_buyer_search_bar = get_products_filter_buyer_search_bar
+
+    @api.doc(params=get_schema(ProductFilterBuyerBasicProductEntity), security='Private JWT')
+    @api.response(success_code, 'Success', response_model)
+    @cross_origin(["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, *args, **kwargs):
+        """Filter to products by part of name basic product to buyers.
+        It doesn't matter if part name is uppercase or lowercase."""
+        user_uuid = request.args.get("user_uuid", 0)
+        is_valid_uuid_input(user_uuid)
+        limit = request.args.get('limit', 10)
+        offset = request.args.get('offset', 0)
+        basic_product = request.args.get("basic_product", 0)
+        entity = ProductFilterBuyerBasicProductEntity(limit=limit,
+                                                      offset=offset,
+                                                      user_uuid=user_uuid,
+                                                      basic_product=basic_product)
+        result = self.get_products_filter_buyer_search_bar.execute(entity)
         return json.loads(result.json()), self.success_code

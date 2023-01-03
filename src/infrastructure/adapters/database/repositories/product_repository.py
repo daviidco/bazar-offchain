@@ -22,7 +22,8 @@ from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity, IncotermEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductEntity, ProductsPaginationEntity, ProductNewEntity, \
-    ProductsListEntity, AvailabilityEntity, ProductEditEntity, ProductFilterBuyerEntity, ProductFilterSellerEntity
+    ProductsListEntity, AvailabilityEntity, ProductEditEntity, ProductFilterBuyerEntity, ProductFilterSellerEntity, \
+    ProductFilterSellerBasicProductEntity, ProductFilterBuyerBasicProductEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity, ProductTypeEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity, \
     SustainabilityCertificationEntity
@@ -36,7 +37,7 @@ from src.infrastructure.adapters.database.repositories.utils import send_email, 
     build_url_bd, get_total_pages, validate_num_certifications_vs_num_files
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
-from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN, AWS_REGION
+from src.infrastructure.config.default import AWS_REGION
 from src.infrastructure.templates_email import TemplateAdminProduct
 
 
@@ -61,8 +62,24 @@ def send_email_to_admin(jwt, uuid_user, product, prefix_files):
 
     send_email(subject="Review Documents - Product",
                data=data_email,
-               destination=[EMAIL_BAZAR_ADMIN],
+               destination=[current_app.config['EMAIL_BAZAR_ADMIN']],
                is_html=True)
+
+
+def get_field_is_like(list_objects, user_uuid):
+    for p in list_objects:
+        p.check_use_like(user_uuid)
+    return list_objects
+
+
+def get_urls_files_and_images(list_objects):
+    list_e_objects = []
+    for p in list_objects:
+        ep = ProductEntity.from_orm(p)
+        ep.url_images = list(p.url_images_ap)
+        ep.url_files = [x.url for x in p.url_files_ap]
+        list_e_objects.append(ep)
+    return list_e_objects
 
 
 class ProductRepository(IProductRepository):
@@ -344,20 +361,14 @@ class ProductRepository(IProductRepository):
             total = self.get_products_count()
             total_pages = get_total_pages(total, int(limit))
             list_objects = self.session.query(Product).offset(offset).limit(limit).all()
-            for p in list_objects:
-                p.check_use_like(uuid)
+            list_objects = get_field_is_like(list_objects, uuid)
             return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                             total_pages=total_pages)
 
         elif role == 'seller':
             company_id = self.utils_db.get_company_by_uuid_user(uuid).id
             list_objects = self.session.query(Product).filter_by(company_id=company_id).all()
-            list_e_objects = []
-            for p in list_objects:
-                ep = ProductEntity.from_orm(p)
-                ep.url_images = list(p.url_images_ap)
-                ep.url_files = [x.url for x in p.url_files_ap]
-                list_e_objects.append(ep)
+            list_e_objects = get_urls_files_and_images(list_objects)
             return ProductsListEntity(results=list_e_objects)
 
         else:
@@ -581,36 +592,106 @@ class ProductRepository(IProductRepository):
                 session_trans.close()
 
     def get_products_filter_seller(self, filter_entity: ProductFilterSellerEntity) -> ProductsListEntity:
-        company_id = self.utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
-        list_objects = self.session.query(Product)\
-            .filter(Product.company_id == company_id,
-                    Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
-                    Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
-                    Product.available_for_sale >= filter_entity.available_for_sale).all()
+        try:
+            company_id = self.utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
+            list_objects = self.session.query(Product)\
+                .filter(Product.company_id == company_id,
+                        Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
+                        Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
+                        Product.available_for_sale >= filter_entity.available_for_sale).all()
 
-        list_e_objects = []
-        for p in list_objects:
-            ep = ProductEntity.from_orm(p)
-            ep.url_images = list(p.url_images_ap)
-            ep.url_files = [x.url for x in p.url_files_ap]
-            list_e_objects.append(ep)
-        return ProductsListEntity(results=list_e_objects)
+            list_e_objects = get_urls_files_and_images(list_objects)
+            return ProductsListEntity(results=list_e_objects)
+
+        finally:
+            self.session.close()
 
     def get_products_filter_buyer(self, filter_entity: ProductFilterBuyerEntity) -> ProductsPaginationEntity:
-        query = self.session.query(Product) \
-            .filter(Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
-                    Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
-                    Product.available_for_sale >= filter_entity.available_for_sale)
+        try:
+            query = self.session.query(Product) \
+                .filter(Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
+                        Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
+                        Product.available_for_sale >= filter_entity.available_for_sale)
 
-        total = query.from_self().count()
-        list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
-        total_pages = get_total_pages(total, int(filter_entity.limit))
+            total = query.from_self().count()
+            list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
+            total_pages = get_total_pages(total, int(filter_entity.limit))
 
-        list_e_objects = []
-        for p in list_objects:
-            ep = ProductEntity.from_orm(p)
-            ep.url_images = list(p.url_images_ap)
-            ep.url_files = [x.url for x in p.url_files_ap]
-            list_e_objects.append(ep)
-        return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
-                                        results=list_e_objects, total_pages=total_pages)
+            list_objects = get_field_is_like(list_objects, filter_entity.user_uuid)
+            list_e_objects = get_urls_files_and_images(list_objects)
+            return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
+                                            results=list_e_objects, total_pages=total_pages)
+
+        finally:
+            self.session.close()
+
+    def get_products_filter_seller_basic_product(self, filter_entity: ProductFilterSellerBasicProductEntity) \
+            -> ProductsListEntity:
+        try:
+            company_id = self.utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
+            list_objects = self.session.query(Product) \
+                .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
+                .filter(Product.company_id == company_id,
+                        Product.basic_product == filter_entity.basic_product).all()
+
+            list_e_objects = []
+
+            list_e_objects = get_urls_files_and_images(list_objects)
+            return ProductsListEntity(results=list_e_objects)
+
+        finally:
+            self.session.close()
+
+    def get_products_filter_buyer_basic_product(self, filter_entity: ProductFilterBuyerBasicProductEntity) \
+            -> ProductsPaginationEntity:
+        try:
+            query = self.session.query(Product) \
+                .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
+                .filter(BasicProduct.basic_product == filter_entity.basic_product)
+
+            total = query.from_self().count()
+            list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
+            total_pages = get_total_pages(total, int(filter_entity.limit))
+
+            list_objects = get_field_is_like(list_objects, filter_entity.user_uuid)
+
+            list_e_objects = get_urls_files_and_images(list_objects)
+            return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
+                                            results=list_e_objects, total_pages=total_pages)
+        finally:
+            self.session.close()
+
+    def get_products_filter_seller_search_bar(self, filter_entity: ProductFilterSellerBasicProductEntity) \
+            -> ProductsListEntity:
+        try:
+            company_id = self.utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
+            list_objects = self.session.query(Product) \
+                .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
+                .filter(Product.company_id == company_id,
+                        Product.basic_product.ilike('%' + filter_entity.basic_product + '%')).all()
+
+            list_e_objects = get_urls_files_and_images(list_objects)
+            return ProductsListEntity(results=list_e_objects)
+
+        finally:
+            self.session.close()
+
+    def get_products_filter_buyer_search_bar(self, filter_entity: ProductFilterBuyerBasicProductEntity) \
+            -> ProductsPaginationEntity:
+        try:
+            query = self.session.query(Product) \
+                .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
+                .filter(BasicProduct.basic_product.ilike('%' + filter_entity.basic_product + '%'))
+
+            total = query.from_self().count()
+            list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
+            total_pages = get_total_pages(total, int(filter_entity.limit))
+
+            list_objects = get_field_is_like(list_objects, filter_entity.user_uuid)
+            list_e_objects = get_urls_files_and_images(list_objects)
+
+            return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
+                                            results=list_e_objects, total_pages=total_pages)
+        finally:
+            self.session.close()
+

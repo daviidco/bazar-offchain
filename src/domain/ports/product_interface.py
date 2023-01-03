@@ -17,7 +17,8 @@ from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductNewEntity, ProductEntity, ProductsPaginationEntity, \
-    AvailabilityEntity, ProductsListEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity
+    AvailabilityEntity, ProductsListEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity, \
+    ProductFilterBuyerBasicProductEntity, ProductFilterSellerBasicProductEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity, ProductTypeEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity
 from src.domain.entities.variety_entity import VarietiesListEntity, VarietyEntity
@@ -123,4 +124,25 @@ class IProductRepository(ABC):
     @abstractmethod
     def get_products_filter_buyer(self, filter_entity: ProductFilterBuyerEntity):
         raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_products_filter_seller_basic_product(self, filter_entity: ProductFilterSellerBasicProductEntity) \
+            -> ProductsListEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_products_filter_buyer_basic_product(self, filter_entity: ProductFilterBuyerBasicProductEntity) \
+            -> ProductsPaginationEntity:
+        raise Exception('Not implemented method')
+
+    def get_products_filter_seller_search_bar(self, filter_entity: ProductFilterSellerBasicProductEntity) \
+            -> ProductsListEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_products_filter_buyer_search_bar(self, filter_entity: ProductFilterBuyerBasicProductEntity) \
+            -> ProductsPaginationEntity:
+        raise Exception('Not implemented method')
+
+
 

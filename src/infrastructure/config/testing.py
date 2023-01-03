@@ -17,6 +17,7 @@ from src.infrastructure.config.default import *
 #
 
 APP_ENV = APP_ENV_TESTING
+EMAIL_BAZAR_ADMIN = 'dperez@cafetosoftware.com'
 
 # Basic parameters
 TESTING = True

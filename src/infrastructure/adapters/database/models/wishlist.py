@@ -29,8 +29,8 @@ class WishList(base):
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), primary_key=True)
 
-    product = relationship("Product", backref="user_wish_list")
-    user = relationship("User", backref="product_wish_list")
+    product = relationship("Product", backref="product_wish_list")
+    user = relationship("User", backref="user_wish_list")
 
     # Association Proxy
     user_uuid = association_proxy("product", "uuid")

@@ -23,7 +23,7 @@ from src.infrastructure.adapters.database.repositories.utils import send_email, 
     get_total_pages, build_urls_from_profile_image
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
-from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN, AWS_REGION
+from src.infrastructure.config.default import AWS_REGION
 from src.infrastructure.templates_email import TemplateAdminReview
 
 
@@ -131,7 +131,7 @@ class CompanyRepository(ICompanyRepository):
 
                         send_email(subject="Review Documents",
                                    data=data_email,
-                                   destination=[EMAIL_BAZAR_ADMIN],
+                                   destination=[current_app.config['EMAIL_BAZAR_ADMIN']],
                                    is_html=True)
                     return res_company
                 finally:

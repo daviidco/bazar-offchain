@@ -16,7 +16,8 @@ from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductNewEntity, ProductEntity, ProductsPaginationEntity, \
-    AvailabilityEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity, ProductsListEntity
+    AvailabilityEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity, ProductsListEntity, \
+    ProductFilterSellerBasicProductEntity, ProductFilterBuyerBasicProductEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity
 from src.domain.entities.variety_entity import VarietiesListEntity
@@ -182,3 +183,45 @@ class GetProductsFilterBuyer:
 
     def execute(self, product_filter_buyer_entity: ProductFilterBuyerEntity) -> ProductsPaginationEntity:
         return self.__product_repository.get_products_filter_buyer(product_filter_buyer_entity)
+
+
+class GetProductsFilterSellerAndBasicProduct:
+    @inject.autoparams('product_repository')
+    def __init__(self, product_repository: IProductRepository):
+        self.__product_repository = product_repository
+
+    def execute(self, product_filter_seller_basic_product_entity: ProductFilterSellerBasicProductEntity) \
+            -> ProductsListEntity:
+        return self.__product_repository.get_products_filter_seller_basic_product(
+            product_filter_seller_basic_product_entity)
+
+
+class GetProductsFilterBuyerAndBasicProduct:
+    @inject.autoparams('product_repository')
+    def __init__(self, product_repository: IProductRepository):
+        self.__product_repository = product_repository
+
+    def execute(self, product_filter_buyer_basic_product_entity: ProductFilterBuyerBasicProductEntity) \
+            -> ProductsPaginationEntity:
+        return self.__product_repository.get_products_filter_buyer_basic_product(
+            product_filter_buyer_basic_product_entity)
+
+
+class GetProductsFilterSellerSearchBar:
+    @inject.autoparams('product_repository')
+    def __init__(self, product_repository: IProductRepository):
+        self.__product_repository = product_repository
+
+    def execute(self, search_bar_filter: ProductFilterSellerBasicProductEntity) \
+            -> ProductsListEntity:
+        return self.__product_repository.get_products_filter_seller_search_bar(search_bar_filter)
+
+
+class GetProductsFilterBuyerSearchBar:
+    @inject.autoparams('product_repository')
+    def __init__(self, product_repository: IProductRepository):
+        self.__product_repository = product_repository
+
+    def execute(self, search_bar_filter: ProductFilterBuyerBasicProductEntity) \
+            -> ProductsPaginationEntity:
+        return self.__product_repository.get_products_filter_buyer_search_bar(search_bar_filter)

@@ -87,15 +87,32 @@ class ProductFilterEntity(BaseModel):
     price_per_kg_start: float = Field(default=0, description="Initial price per kg")
     price_per_kg_end: float = Field(description="limit price per kg")
     available_for_sale: float = Field(description="Amount available for sale")
+    user_uuid: UUID = Field(description="UUID of user")
 
 
 # todo pending unit-test
 class ProductFilterSellerEntity(ProductFilterEntity):
-    user_uuid: UUID = Field(description="UUID of seller")
+    pass
 
 
 # todo pending unit-test
 class ProductFilterBuyerEntity(ProductFilterEntity, InputPaginationEntity):
+    pass
+
+
+# todo pending unit-test
+class ProductFilterBasicProduct(BaseModel):
+    basic_product: str = Field(description="Name of basic Product example: (Cocoa, Avocado, Coffee)")
+    user_uuid: UUID = Field(description="UUID of user")
+
+
+# todo pending unit-test
+class ProductFilterSellerBasicProductEntity(ProductFilterBasicProduct):
+    pass
+
+
+# todo pending unit-test
+class ProductFilterBuyerBasicProductEntity(ProductFilterBasicProduct, InputPaginationEntity):
     pass
 
 

@@ -228,8 +228,8 @@ class Product(base):
         return f'<Product uuid: {self.uuid}, state: {self.status}>'
 
     def check_use_like(self, uuid_user):
-        for u in self.user_wish_list:
-            if uuid_user == str(u.user.uuid):
+        for u in self.product_wish_list:
+            if uuid_user == u.user.uuid:
                 self.is_liked = True
                 return self.is_liked
         return self.is_liked

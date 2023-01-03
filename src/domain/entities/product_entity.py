@@ -82,16 +82,19 @@ class ProductsPaginationEntity(PaginationEntity):
     results: List[ProductEntity]
 
 
+# todo pending unit-test
 class ProductFilterEntity(BaseModel):
     price_per_kg_start: float = Field(default=0, description="Initial price per kg")
     price_per_kg_end: float = Field(description="limit price per kg")
     available_for_sale: float = Field(description="Amount available for sale")
 
 
+# todo pending unit-test
 class ProductFilterSellerEntity(ProductFilterEntity):
     user_uuid: UUID = Field(description="UUID of seller")
 
 
+# todo pending unit-test
 class ProductFilterBuyerEntity(ProductFilterEntity, InputPaginationEntity):
     pass
 
@@ -100,4 +103,3 @@ class ProductFilterBuyerEntity(ProductFilterEntity, InputPaginationEntity):
 class AvailabilityEntity(BaseModel):
     uuid_product: UUID
     available_for_sale: float
-

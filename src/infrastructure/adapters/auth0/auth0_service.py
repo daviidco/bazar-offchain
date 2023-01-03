@@ -21,8 +21,7 @@ from requests import request
 from jose import jwt
 
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
-from src.infrastructure.config.config_parameters import get_parameter_value
-from src.infrastructure.config.default import AUTH0_ALGORITHMS
+from src.infrastructure.config.default import AUTH0_ALGORITHMS, AUTH0_DOMAIN, AUTH0_API_AUDIENCE
 
 
 #
@@ -63,9 +62,6 @@ def requires_auth(f):
     @wraps(f)
     @inject.autoparams('api_error')
     def decorated(*args, **kwargs):
-
-        AUTH0_DOMAIN = get_parameter_value('AUTH0_DOMAIN')
-        AUTH0_API_AUDIENCE = get_parameter_value('AUTH0_API_AUDIENCE')
 
         token = get_token_auth_header()
         url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"

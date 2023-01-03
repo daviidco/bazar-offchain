@@ -17,14 +17,13 @@ from sqlalchemy.orm import relationship
 from sqlalchemy_utils import UUIDType
 
 from src.infrastructure.adapters.database.models.model_base import base
-from src.infrastructure.config.config_parameters import get_parameter_value
+from src.infrastructure.config.default import UTC_TIME_ZONE
+
 
 #
 # These models are related with product model they are defined to create database table.
 # @author David Córdoba
 #
-
-UTC_TIME_ZONE = get_parameter_value('UTC_TIME_ZONE')
 
 
 class BasicProduct(base):

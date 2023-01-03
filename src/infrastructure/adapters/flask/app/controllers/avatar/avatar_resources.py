@@ -12,6 +12,7 @@
 import json
 
 import inject
+from flask import current_app
 from flask_cors import cross_origin
 from flask_restx import Resource, Namespace
 from flask_restx.reqparse import request
@@ -42,6 +43,7 @@ class AvatarsResource(Resource):
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets  all avatars with pagination or without pagination"""
+        current_app.logger.info(f"Get Avatars")
         limit = request.args.get('limit', None)
         offset = request.args.get('offset', None)
         result = self.get_all_avatars.execute(limit, offset)

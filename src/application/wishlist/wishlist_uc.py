@@ -11,6 +11,7 @@
 
 import inject
 
+from src.domain.entities.product_entity import ProductsPaginationEntity
 from src.domain.entities.wishlist_entity import WishProductNewEntity, WishProductEntity
 from src.domain.ports.wishlist_interface import IWishListRepository
 
@@ -37,3 +38,14 @@ class DeleteWishProduct:
 
     def execute(self, role: str, wish_product_entity: WishProductNewEntity) -> WishProductEntity:
         return self.__wishlist_repository.delete_product_from_wishlist(role, wish_product_entity)
+
+
+class GetWishList:
+    @inject.autoparams('wishlist_repository')
+    def __init__(self, wishlist_repository: IWishListRepository):
+        self.__wishlist_repository = wishlist_repository
+
+    def execute(self, uid: str, role: str, limit: int, offset: int) -> ProductsPaginationEntity:
+        return self.__wishlist_repository.get_wishlist_by_uuid_buyer(uid, role, limit, offset)
+
+

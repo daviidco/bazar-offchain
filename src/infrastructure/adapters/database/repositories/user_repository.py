@@ -8,7 +8,7 @@
 # 2022: Bazar Network S.A.S.
 # All Rights Reserved.
 #
-
+from flask import current_app
 from flask_restx import abort
 from sqlalchemy.orm import Session
 from werkzeug.exceptions import UnprocessableEntity
@@ -30,8 +30,7 @@ from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 #
 class UserRepository(IUserRepository):
 
-    def __init__(self, logger, adapter_db, utils_db):
-        self.logger = logger
+    def __init__(self, adapter_db, utils_db):
         self.engine = adapter_db.engine
         self.session = Session(adapter_db.engine)
         self.utils_db = utils_db
@@ -153,7 +152,7 @@ class UserRepository(IUserRepository):
                 if isinstance(e, UnprocessableEntity):
                     abort(code=e.code, message=None, error=e.data['error'])
                 else:
-                    self.logger.error(f"Error undefended saving states approval: {str(e)}")
+                    current_app.logger.error(f"Error undefended saving states approval: {str(e)}")
 
             else:
                 session_trans.commit()

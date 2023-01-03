@@ -25,8 +25,7 @@ from src.infrastructure.adapters.flask.configuration_injector import configure_i
 from src.infrastructure.config.config_parameters import get_parameter_value
 
 application = Flask(__name__)
-settings_module = get_parameter_value('APP_SETTINGS_MODULE')
-application.config.from_object(settings_module)
+application.config.from_object('src.infrastructure.config.default')
 # Load the configuration depending of environment
 config_env = application.config.get('ENV', 'LOCAL').lower()
 path_config_file = f'src/infrastructure/config/{config_env}.py'
@@ -71,7 +70,7 @@ application.register_blueprint(companies_v1_01_bp, url_prefix=f'{prefix}')
 application.register_blueprint(avatars_v1_01_bp, url_prefix=f'{prefix}')
 application.register_blueprint(products_v1_01_bp, url_prefix=f'{prefix}')
 application.register_blueprint(wish_lists_v1_01_bp, url_prefix=f'{prefix}')
-application.logger.info('Blueprints Registered')
+application.logger.info("Blueprints Registered")
 
 # Initialize swagger
 application.register_blueprint(src.infrastructure.adapters.swagger.swagger_service.service_swagger)

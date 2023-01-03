@@ -37,10 +37,10 @@ def configure_inject(logger) -> None:
     def config(binder: inject.Binder) -> None:
         psql_adapter = PostgresAdapter()
         utils_db = UtilsDatabase(psql_adapter)
-        binder.bind(IUserRepository, UserRepository(logger, psql_adapter, utils_db))
-        binder.bind(ICompanyRepository, CompanyRepository(logger, psql_adapter, S3Repository(logger)))
-        binder.bind(IAvatarRepository, AvatarRepository(logger, psql_adapter))
-        binder.bind(IProductRepository, ProductRepository(logger, psql_adapter, S3Repository(logger), utils_db))
-        binder.bind(IWishListRepository, WishListRepository(logger, psql_adapter, utils_db))
+        binder.bind(IUserRepository, UserRepository(psql_adapter, utils_db))
+        binder.bind(ICompanyRepository, CompanyRepository(psql_adapter, S3Repository()))
+        binder.bind(IAvatarRepository, AvatarRepository(psql_adapter))
+        binder.bind(IProductRepository, ProductRepository(psql_adapter, S3Repository(), utils_db))
+        binder.bind(IWishListRepository, WishListRepository(psql_adapter, utils_db))
 
     inject.configure(config)

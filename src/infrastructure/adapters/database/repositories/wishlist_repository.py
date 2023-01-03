@@ -8,13 +8,16 @@
 # 2022: Bazar Network S.A.S.
 # All Rights Reserved.
 #
+from flask import current_app
 from flask_restx import abort
 from sqlalchemy.orm import Session
 
 from src.domain.entities.common_entity import DeleteEntity
+from src.domain.entities.product_entity import ProductsPaginationEntity
 from src.domain.entities.wishlist_entity import WishProductNewEntity, WishProductEntity
 from src.domain.ports.wishlist_interface import IWishListRepository
-from src.infrastructure.adapters.database.models import WishList
+from src.infrastructure.adapters.database.models import WishList, Product
+from src.infrastructure.adapters.database.repositories.utils import get_total_pages
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
@@ -25,8 +28,7 @@ from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 class WishListRepository(IWishListRepository):
 
-    def __init__(self, logger, adapter_db, utils_db):
-        self.logger = logger
+    def __init__(self, adapter_db, utils_db):
         self.engine = adapter_db.engine
         self.session = Session(adapter_db.engine)
         self.utils_db = utils_db
@@ -44,15 +46,15 @@ class WishListRepository(IWishListRepository):
                 self.session.commit()
             except Exception as e:
                 self.session.close()
-                self.logger.error(f"Error saving wishlist")
+                current_app.logger.error(f"Error saving wishlist")
                 e = api_error('IntegrityError')
                 abort(code=e.status_code, message=e.message, error=e.error)
 
             response = WishProductEntity.from_orm(object_to_save)
-            self.logger.info(f"Wish product {object_to_save} saved")
+            current_app.logger.info(f"Wish product {object_to_save} saved")
             return response
         else:
-            self.logger.info(f"Can't do action because the role is not buyer")
+            current_app.logger.info(f"Can't do action because the role is not buyer")
             e = api_error('RoleWithoutPermission')
             abort(code=e.status_code, message=e.message, error=e.error)
 
@@ -64,9 +66,32 @@ class WishListRepository(IWishListRepository):
             object_to_delete.delete()
             self.session.commit()
             response = DeleteEntity(description=f'Wish product of user: {user.uuid}')
-            self.logger.info(f"Wish product {object_to_delete} deleted")
+            current_app.logger.info(f"Wish product {object_to_delete} deleted")
             return response
         else:
-            self.logger.info(f"Can't do action because the role is not buyer")
+            current_app.logger.info(f"Can't do action because the role is not buyer")
             e = api_error('RoleWithoutPermission')
             abort(code=e.status_code, message=e.message, error=e.error)
+
+    def get_wishlist_by_uuid_buyer(self, uuid: str, role: str, limit: int, offset: int) -> ProductsPaginationEntity:
+        if role == 'buyer':
+            try:
+                user_id = self.utils_db.get_user_by_uuid_user(uuid).id
+                query = self.session.query(Product)\
+                    .join(WishList, Product.id == WishList.product_id)\
+                    .filter(WishList.user_id == user_id)
+
+                total = query.from_self().count()
+                list_objects = query.offset(offset).limit(limit).all()
+                total_pages = get_total_pages(total, int(limit))
+                for p in list_objects:
+                    p.check_use_like(uuid)
+                return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
+                                                total_pages=total_pages)
+            finally:
+                self.session.close()
+        else:
+            current_app.logger.error(f"Role {role} can't list wishlist")
+            e = api_error('RoleWithoutPermission')
+            abort(code=e.status_code, message=e.message, error=e.error)
+

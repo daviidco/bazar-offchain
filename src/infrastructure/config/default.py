@@ -9,9 +9,10 @@
 # All Rights Reserved.
 #
 
-from os import environ
-
+import pytz
 from dotenv import load_dotenv
+
+from src.infrastructure.config.config_parameters import put_parameter_s_k, _get_env_variable
 
 #
 # This file contains basic default configuration
@@ -21,16 +22,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def _get_env_variable(name):
-    try:
-        return environ[name]
-    except KeyError:
-        message = "Expected environment variable '{}' not set.".format(name)
-        raise Exception(message)
-
-
 # Environment flask-env
 ENV = _get_env_variable("ENV").upper()
+AWS_REGION = _get_env_variable("AWS_DEFAULT_REGION")
+
+# Secret key
+SECRET_KEY = put_parameter_s_k()
 
 # Flask
 PROPAGATE_EXCEPTIONS = False
@@ -38,6 +35,17 @@ PROPAGATE_EXCEPTIONS = False
 # Flask-Restx
 BUNDLE_ERRORS = False
 ERROR_404_HELP = True
+UTC_TIME_ZONE = pytz.timezone('America/Bogota')
+
+# External services
+EMAIL_BAZAR_ADMIN = 'pcordoba@cafetosoftware.com'
+URL_EMAIL_LAMBDA = 'https://30mtgv2761.execute-api.us-east-2.amazonaws.com/dev/create'
+URL_MS_BAZAR_AUTH = 'https://meerkat-auth.herokuapp.com/api/v1/user'
+URL_MS_BAZAR_AUTH = 'https://auth.bazar.network/api/v1/user'
+# AUTH0
+AUTH0_DOMAIN = 'dev-bazarnetwork.us.auth0.com'
+AUTH0_API_AUDIENCE = 'https://dev-bazarnetwork.us.auth0.com/api/v2/'
+
 
 AUTH0_ALGORITHMS = ["RS256"]
 

@@ -18,11 +18,12 @@ from flask_restx.reqparse import request
 
 from src.application.product.product_uc import CreateProduct, \
     GetAllProducts
-from src.application.wishlist.wishlist_uc import CreateWishProduct, DeleteWishProduct
-from src.domain.entities.product_entity import ProductNewEntity
+from src.application.wishlist.wishlist_uc import CreateWishProduct, DeleteWishProduct, GetWishList
+from src.domain.entities.common_entity import InputPaginationEntity
+from src.domain.entities.product_entity import ProductNewEntity, ProductsPaginationEntity
 from src.domain.entities.wishlist_entity import WishProductNewEntity, WishProductEntity
 from src.infrastructure.adapters.auth0.auth0_service import requires_auth
-from src.infrastructure.adapters.flask.app.utils.ultils import get_schema
+from src.infrastructure.adapters.flask.app.utils.ultils import get_schema, is_valid_uuid_input
 
 #
 # This file contains the wishlist endpoints Api-rest
@@ -60,3 +61,30 @@ class ProductResource(Resource):
         entity = WishProductNewEntity.parse_obj(request.args)
         result = self.delete_wish_product.execute(role, entity)
         return json.loads(result.json()), 200
+
+
+@api.route("/<string:user_uuid>")
+class ProductsByUserResource(Resource):
+    # Swagger
+    response_schema = ProductsPaginationEntity.schema()
+    response_model = api.schema_model(response_schema['title'], response_schema)
+    success_code = 200
+
+    @inject.autoparams('get_wishlist')
+    def __init__(self, app: None, get_wishlist: GetWishList):
+        self.api = api
+        self.get_wishlist = get_wishlist
+
+    @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
+    @api.response(success_code, 'Success', response_model)
+    @cross_origin(["Content-Type", "Authorization"])
+    @requires_auth
+    def get(self, user_uuid, *args, **kwargs):
+        """Get wishlist by buyer"""
+        role = kwargs.get('role', None)
+        limit = request.args.get('limit', 10)
+        offset = request.args.get('offset', 0)
+        is_valid_uuid_input(user_uuid)
+        result = self.get_wishlist.execute(user_uuid, role, limit, offset)
+        return json.loads(result.json()), self.success_code
+

@@ -11,6 +11,7 @@
 
 from datetime import datetime
 
+from flask import current_app
 from flask_restx import abort
 from sqlalchemy.orm import Session
 
@@ -21,8 +22,8 @@ from src.infrastructure.adapters.database.models.company import Company, Profile
 from src.infrastructure.adapters.database.repositories.utils import send_email, build_url_bd, build_url_storage, \
     get_total_pages, build_urls_from_profile_image
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
-from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
-from src.infrastructure.config.default_infra import AWS_BUCKET_NAME, AWS_REGION
+from src.infrastructure.config.config_parameters import get_parameter_value
+from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN, AWS_REGION
 from src.infrastructure.templates_email import TemplateAdminReview
 
 
@@ -31,16 +32,18 @@ from src.infrastructure.templates_email import TemplateAdminReview
 # @author David Córdoba
 #
 
+AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
+
+
 class CompanyRepository(ICompanyRepository):
 
-    def __init__(self, logger, adapter_db, storage_repository):
-        self.logger = logger
+    def __init__(self, adapter_db, storage_repository):
         self.engine = adapter_db.engine
         self.session = Session(adapter_db.engine)
         self.__storage_repository = storage_repository
 
     def new_company(self, jwt: str, role: str, company_entity: CompanyNewEntity, objects_cloud: list) -> CompanyEntity:
-        self.logger.info(f"Creating new company: {company_entity.company_name}")
+        current_app.logger.info(f"Creating new company: {company_entity.company_name}")
         global user_rol
         global prefix
         prefix = None
@@ -52,7 +55,7 @@ class CompanyRepository(ICompanyRepository):
             )
             self.session.add(user_to_save)
             self.session.commit()
-            self.logger.info(f"User {user_to_save} saved")
+            current_app.logger.info(f"User {user_to_save} saved")
 
         user_id = user.id if user is not None else user_to_save.id
         user_rol = user.rol if user is not None else user_to_save.rol
@@ -99,7 +102,7 @@ class CompanyRepository(ICompanyRepository):
                     session_trans.close()
                     self.__storage_repository.delete_objects(key=prefix + "/")
                     e = api_error('CompanySavingError')
-                    self.logger.error(f"{e.error['message']}")
+                    current_app.logger.error(f"{e.error['message']}")
                     abort(code=e.status_code, message=e.message, error=e.error)
                 except Exception as e:
                     session_trans.rollback()
@@ -108,12 +111,12 @@ class CompanyRepository(ICompanyRepository):
                     error_detail = str(e)
                     e = api_error('UndefendedError')
                     e.error['message'] = error_detail
-                    self.logger.error(f"{e.error['message']}")
+                    current_app.logger.error(f"{e.error['message']}")
                     abort(code=e.status_code, message=e.message, error=e.error)
 
                 else:
                     session_trans.commit()
-                    self.logger.info(f"Company {object_to_save} saved")
+                    current_app.logger.info(f"Company {object_to_save} saved")
                     res_company = CompanyEntity.from_orm(object_to_save)
                     res_company.profile_images = list_profile_images
                     session_trans.close()
@@ -131,16 +134,18 @@ class CompanyRepository(ICompanyRepository):
                                    destination=[EMAIL_BAZAR_ADMIN],
                                    is_html=True)
                     return res_company
+                finally:
+                    session_trans.close()
 
         else:
             e = api_error('CompanyExistingError')
             description = e.error.get('description', 'Not description')
-            self.logger.error(f"{description}")
+            current_app.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_company_by_uuid(self, uuid: str) -> CompanyEntity:
         try:
-            self.logger.error(f"Get company by uuid: {uuid}")
+            current_app.logger.error(f"Get company by uuid: {uuid}")
             found_object = self.session.query(Company).filter_by(uuid=uuid).first()
             result_object = CompanyEntity.from_orm(found_object) if found_object is not None else None
             profile_image = self.session.query(ProfileImage).filter_by(id=found_object.profile_image_id).first()
@@ -149,13 +154,13 @@ class CompanyRepository(ICompanyRepository):
             return result_object
 
         except Exception as e:
-            self.logger.error(f"Error undefended {str(e)}")
+            current_app.logger.error(f"Error undefended {str(e)}")
             raise Exception(f'Error: {str(e)}')
 
     def get_companies_count(self) -> int:
         count = self.session.query(Company).count()
         count = count if count is not None else 0
-        self.logger.info(f"OK - Get total number companies")
+        current_app.logger.info(f"OK - Get total number companies")
         return count
 
     def get_all_companies(self, limit: int, offset: int) -> CompaniesPaginationEntity:
@@ -165,5 +170,5 @@ class CompanyRepository(ICompanyRepository):
         response = CompaniesPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                              total_pages=total_pages)
         response.results = [x.dict(exclude={'profile_images'}) for x in response.results]
-        self.logger.info(f"OK - Get all companies")
+        current_app.logger.info(f"OK - Get all companies")
         return response

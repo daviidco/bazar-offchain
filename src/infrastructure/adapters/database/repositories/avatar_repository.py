@@ -11,6 +11,7 @@
 
 from typing import Union
 
+from flask import current_app
 from sqlalchemy.orm import Session
 
 from src.domain.entities.avatar_entity import AvatarsPaginationEntity, AvatarEntity, AvatarNewEntity, AvatarsListEntity
@@ -26,8 +27,7 @@ from src.infrastructure.adapters.database.repositories.utils import get_total_pa
 
 class AvatarRepository(IAvatarRepository):
 
-    def __init__(self, logger, adapter_db):
-        self.logger = logger
+    def __init__(self, adapter_db):
         self.engine = adapter_db.engine
         self.session = Session(adapter_db.engine)
 
@@ -38,8 +38,10 @@ class AvatarRepository(IAvatarRepository):
         pass
 
     def get_avatars_count(self) -> int:
+        current_app.logger.info(f"Getting number of avatars")
         count = self.session.query(ProfileImage).count()
         count = count if count is not None else 0
+        current_app.logger.info(f"Number of avatars {count}")
         return count
 
     def get_all_avatars(self, limit: int = None, offset: int = None) -> \

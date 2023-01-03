@@ -12,13 +12,14 @@
 import sqlalchemy.ext.declarative as dec
 from sqlalchemy import MetaData
 
-from src.infrastructure.config.default_infra import DB_SCHEMA
+from src.infrastructure.config.config_parameters import get_database_connection
 
 #
 # This code is to let works with postgresql schemas or with public schema default. Check file .env of Alembic
 # @author David Córdoba
 #
 
+conn, db_schema = get_database_connection()
 base = dec.declarative_base()
-if DB_SCHEMA != "public":
-    base = dec.declarative_base(metadata=MetaData(schema=DB_SCHEMA))
+if db_schema != "public":
+    base = dec.declarative_base(metadata=MetaData(schema=db_schema))

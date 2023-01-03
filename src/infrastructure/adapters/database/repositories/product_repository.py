@@ -35,8 +35,8 @@ from src.infrastructure.adapters.database.models.product import Product, BasicPr
 from src.infrastructure.adapters.database.repositories.utils import send_email, get_user_names, build_url_storage, \
     build_url_bd, get_total_pages, validate_num_certifications_vs_num_files
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
-from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN
-from src.infrastructure.config.default_infra import AWS_REGION, AWS_BUCKET_NAME
+from src.infrastructure.config.config_parameters import get_parameter_value
+from src.infrastructure.config.default import EMAIL_BAZAR_ADMIN, AWS_REGION
 from src.infrastructure.templates_email import TemplateAdminProduct
 
 
@@ -44,6 +44,9 @@ from src.infrastructure.templates_email import TemplateAdminProduct
 # This repository contains logic main related with product.
 # @author David Córdoba
 #
+
+AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
+
 
 def send_email_to_admin(jwt, uuid_user, product, prefix_files):
     # Build html to send email
@@ -64,8 +67,7 @@ def send_email_to_admin(jwt, uuid_user, product, prefix_files):
 
 class ProductRepository(IProductRepository):
 
-    def __init__(self, logger, adapter_db, storage_repository, utils_db):
-        self.logger = logger
+    def __init__(self, adapter_db, storage_repository, utils_db):
         self.engine = adapter_db.engine
         self.session = Session(adapter_db.engine)
         self.utils_db = utils_db
@@ -127,7 +129,7 @@ class ProductRepository(IProductRepository):
         else:
             e = api_error('BasicProductNotExists')
             description = e.error.get('description', 'Not description')
-            self.logger.error(f"{description}")
+            current_app.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_product_type_id_by_uuid(self, uuid: str) -> ProductTypeEntity:
@@ -138,7 +140,7 @@ class ProductRepository(IProductRepository):
         else:
             e = api_error('ProductTypeNotExists')
             description = e.error.get('description', 'Not description')
-            self.logger.error(f"{description}")
+            current_app.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_variety_id_by_uuid(self, uuid: str) -> VarietyEntity:
@@ -149,7 +151,7 @@ class ProductRepository(IProductRepository):
         else:
             e = api_error('VarietyNotExists')
             description = e.error.get('description', 'Not description')
-            self.logger.error(f"{description}")
+            current_app.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_minimum_order_id_by_uuid(self, uuid: str) -> MinimumOrderEntity:
@@ -160,7 +162,7 @@ class ProductRepository(IProductRepository):
         else:
             e = api_error('MinimumOrderNotExists')
             description = e.error.get('description', 'Not description')
-            self.logger.error(f"{description}")
+            current_app.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_incoterm_id_by_uuid(self, uuid: str) -> IncotermEntity:
@@ -171,7 +173,7 @@ class ProductRepository(IProductRepository):
         else:
             e = api_error('IncotermNotExists')
             description = e.error.get('description', 'Not description')
-            self.logger.error(f"{description}")
+            current_app.logger.error(f"{description}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_sustainability_certifications_id_by_uuid(self, uuid: str) -> IncotermEntity:
@@ -194,8 +196,7 @@ class ProductRepository(IProductRepository):
     def new_product(self, jwt: str, role: str, product_entity: ProductNewEntity,
                     objects_cloud: list, images: list) -> ProductEntity:
 
-        self.logger.info(f"Creating new product of user: {product_entity.uuid_user}")
-
+        current_app.logger.info(f"Creating new product of user: {product_entity.uuid_user}")
         validate_num_certifications_vs_num_files(len(product_entity.sustainability_certifications_uuid),
                                                  len(objects_cloud))
 
@@ -243,7 +244,7 @@ class ProductRepository(IProductRepository):
 
                 # Save files in cloud and urls in database
                 if objects_cloud:
-                    self.logger.info(f"Uploading files to cloud")
+                    current_app.logger.info(f"Uploading files to cloud")
                     prefix_files = f"{prefix_base}/documents_product/{path_datetime}"
                     for idx, o in enumerate(objects_cloud):
                         key_bd = build_url_bd(prefix_files, o.filename)
@@ -271,7 +272,7 @@ class ProductRepository(IProductRepository):
 
                 # Save images in cloud and urls in database
                 if images:
-                    self.logger.info(f"Uploading images to cloud")
+                    current_app.logger.info(f"Uploading images to cloud")
                     prefix_images = f"{prefix_base}/product_images/{path_datetime}"
                     for i in images:
                         key_bd = build_url_bd(prefix_images, i.filename)
@@ -282,12 +283,13 @@ class ProductRepository(IProductRepository):
                 session_trans.flush()
 
             except AssertionError as e:
+                session_trans.close()
                 if objects_cloud:
                     self.__storage_repository.delete_objects(key=prefix_files + "/")
                 if images:
                     self.__storage_repository.delete_objects(key=prefix_images + "/")
                 e = api_error('ProductSavingError')
-                self.logger.error(f"{e.error['description']}")
+                current_app.logger.error(f"{e.error['description']}")
                 abort(code=e.status_code, message=e.message, error=e.error)
             except Exception as e:
                 session_trans.rollback()
@@ -299,7 +301,7 @@ class ProductRepository(IProductRepository):
                 error_detail = str(e)
                 e = api_error('UndefendedError')
                 e.error['description'] = error_detail
-                self.logger.error(f"{e.error['description']}")
+                current_app.logger.error(f"{e.error['description']}")
                 abort(code=e.status_code, message=e.message, error=e.error)
             else:
                 session_trans.commit()
@@ -308,14 +310,16 @@ class ProductRepository(IProductRepository):
                 res_product = ProductEntity.from_orm(object_to_save)
                 res_product.url_images = url_images
                 res_product.url_files = url_files
-                self.logger.info(f"{object_to_save} saved")
+                current_app.logger.info(f"{object_to_save} saved")
                 session_trans.close()
 
                 if prefix_files is not None:
-                    self.logger.info(f"Sending email to bazar admin")
+                    current_app.logger.info(f"Sending email to bazar admin")
                     send_email_to_admin(jwt, product_entity.uuid_user, object_to_save, prefix_files)
-                    self.logger.info(f"Email sent")
+                    current_app.logger.info(f"Email sent")
                 return res_product
+            finally:
+                session_trans.close()
 
     def get_product_by_uuid(self, uuid: str) -> ProductEntity:
         product = self.session.query(Product).filter_by(uuid=uuid).first()
@@ -359,7 +363,7 @@ class ProductRepository(IProductRepository):
         else:
             e = api_error('RoleNotFound')
             e.error['description'] = e.error['description'] + f' <role: {role}>'
-            self.logger.error(f"{e.error['description']}")
+            current_app.logger.error(f"{e.error['description']}")
             abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_all_basic_products(self) -> BasicProductsListEntity:
@@ -402,7 +406,7 @@ class ProductRepository(IProductRepository):
             abort(code=e.status_code, message=e.message, error=e.error)
         product.available_for_sale = entity.available_for_sale
         self.session.commit()
-        self.logger.info(f"{product} availability edited")
+        current_app.logger.info(f"{product} availability edited")
         return entity
 
     def get_detail_product_by_uuid(self, uuid: str) -> ProductEntity:
@@ -422,13 +426,13 @@ class ProductRepository(IProductRepository):
             abort(code=e.status_code, message=e.message, error=e.error)
         product.status_id = state.id
         self.session.commit()
-        self.logger.info(f"{product} state edited")
+        current_app.logger.info(f"{product} state edited")
         return ProductEntity.from_orm(product)
 
     def edit_product(self, jwt: str, role: str, uuid_product: str, product_entity: ProductEditEntity,
                      objects_cloud: list, images: list) -> ProductEntity:
 
-        self.logger.info(f"Editing product: {uuid_product}")
+        current_app.logger.info(f"Editing product: {uuid_product}")
 
         if product_entity.change_files:
             validate_num_certifications_vs_num_files(len(product_entity.sustainability_certifications_uuid),
@@ -472,7 +476,7 @@ class ProductRepository(IProductRepository):
 
                 # Save new files in cloud and urls in database
                 if product_entity.change_files:
-                    self.logger.info(f"Removing old file relationships product")
+                    current_app.logger.info(f"Removing old file relationships product")
                     # Remove old product files (certifications)
                     subquery_certifications = session_trans.query(ProductSustainabilityCertification).filter(
                         ProductSustainabilityCertification.product_id == product_to_edit.id).subquery()
@@ -486,12 +490,12 @@ class ProductRepository(IProductRepository):
                         subquery_certifications.c.file_id == ProductFile.id)).delete(synchronize_session=False)
 
                     # Remove old objects from cloud
-                    self.logger.info(f"Remove old files from cloud")
+                    current_app.logger.info(f"Remove old files from cloud")
                     self.__storage_repository.delete_objects(key=f'{prefix_base}/documents_product/')
 
                 if objects_cloud:
                     if product_entity.change_files:
-                        self.logger.info(f"Uploading files to cloud")
+                        current_app.logger.info(f"Uploading files to cloud")
                         prefix_files = f"{prefix_base}/documents_product/{path_datetime}"
                         for idx, o in enumerate(objects_cloud):
                             key_bd = build_url_bd(prefix_files, o.filename)
@@ -523,13 +527,13 @@ class ProductRepository(IProductRepository):
                         ProductImage.product_id == product_to_edit.id).delete(synchronize_session=False)
 
                     # Remove old objects from cloud
-                    self.logger.info(f"Remove old images from cloud")
+                    current_app.logger.info(f"Remove old images from cloud")
                     self.__storage_repository.delete_objects(key=f'{prefix_base}/product_images/')
 
                 # Save images in cloud and urls in database
                 if images:
                     if product_entity.change_images:
-                        self.logger.info(f"Uploading images to cloud")
+                        current_app.logger.info(f"Uploading images to cloud")
                         prefix_images = f"{prefix_base}/product_images/{path_datetime}"
                         for i in images:
                             key_bd = build_url_bd(prefix_images, i.filename)
@@ -539,12 +543,13 @@ class ProductRepository(IProductRepository):
                             self.__storage_repository.put_object(body=i, key=key_storage, content_type=i.content_type)
 
             except AssertionError as e:
+                session_trans.close()
                 if objects_cloud:
                     self.__storage_repository.delete_objects(key=prefix_files + "/")
                 if images:
                     self.__storage_repository.delete_objects(key=prefix_images + "/")
                 e = api_error('ProductSavingError')
-                self.logger.error(f"{e.error['description']}")
+                current_app.logger.error(f"{e.error['description']}")
                 abort(code=e.status_code, message=e.message, error=e.error)
             except Exception as e:
                 session_trans.rollback()
@@ -556,7 +561,7 @@ class ProductRepository(IProductRepository):
                 error_detail = str(e)
                 e = api_error('UndefendedError')
                 e.error['description'] = error_detail
-                self.logger.error(f"{e.error['description']}")
+                current_app.logger.error(f"{e.error['description']}")
                 abort(code=e.status_code, message=e.message, error=e.error)
             else:
                 session_trans.commit()
@@ -565,20 +570,47 @@ class ProductRepository(IProductRepository):
                 res_product = ProductEntity.from_orm(product_to_edit)
                 res_product.url_images = url_images
                 res_product.url_files = url_files
-                self.logger.info(f"{product_to_edit} saved")
+                current_app.logger.info(f"{product_to_edit} saved")
                 session_trans.close()
 
                 if prefix_files is not None:
                     send_email_to_admin(jwt, product_entity.uuid_user, product_to_edit, prefix_files)
 
                 return res_product
+            finally:
+                session_trans.close()
 
-    def get_products_filter_seller(self, filter_entity: ProductFilterSellerEntity):
-        self.session.query(Product).filter(Product.status.in_(filter_entity.status),
-                                           Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
-                                           Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
-                                           Product.available_for_sale == filter_entity.available_for_sale,
-                                           Product.assistance_logistic == filter_entity.assistance_logistic)
+    def get_products_filter_seller(self, filter_entity: ProductFilterSellerEntity) -> ProductsListEntity:
+        company_id = self.utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
+        list_objects = self.session.query(Product)\
+            .filter(Product.company_id == company_id,
+                    Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
+                    Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
+                    Product.available_for_sale >= filter_entity.available_for_sale).all()
 
-    def get_products_filter_buyer(self, filter_entity: ProductFilterBuyerEntity):
-        pass
+        list_e_objects = []
+        for p in list_objects:
+            ep = ProductEntity.from_orm(p)
+            ep.url_images = list(p.url_images_ap)
+            ep.url_files = [x.url for x in p.url_files_ap]
+            list_e_objects.append(ep)
+        return ProductsListEntity(results=list_e_objects)
+
+    def get_products_filter_buyer(self, filter_entity: ProductFilterBuyerEntity) -> ProductsPaginationEntity:
+        query = self.session.query(Product) \
+            .filter(Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
+                    Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
+                    Product.available_for_sale >= filter_entity.available_for_sale)
+
+        total = query.from_self().count()
+        list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
+        total_pages = get_total_pages(total, int(filter_entity.limit))
+
+        list_e_objects = []
+        for p in list_objects:
+            ep = ProductEntity.from_orm(p)
+            ep.url_images = list(p.url_images_ap)
+            ep.url_files = [x.url for x in p.url_files_ap]
+            list_e_objects.append(ep)
+        return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
+                                        results=list_e_objects, total_pages=total_pages)

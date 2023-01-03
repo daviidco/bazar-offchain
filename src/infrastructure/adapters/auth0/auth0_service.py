@@ -20,15 +20,14 @@ from requests import request
 
 from jose import jwt
 
-from src.infrastructure.adapters.flask.app.utils.error_handling import  api_error
-from src.infrastructure.config.default_infra import AUTH0_DOMAIN, AUTH0_API_AUDIENCE, AUTH0_ALGORITHMS
+from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
+from src.infrastructure.config.default import AUTH0_ALGORITHMS, AUTH0_DOMAIN, AUTH0_API_AUDIENCE
 
 
 #
 # These methods lets verify the user with Auth0 Service.
 # @author David Córdoba
 #
-
 
 def get_token_auth_header():
     """Obtains the Access Token from the Authorization Header
@@ -63,6 +62,7 @@ def requires_auth(f):
     @wraps(f)
     @inject.autoparams('api_error')
     def decorated(*args, **kwargs):
+
         token = get_token_auth_header()
         url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
         jsonurl = request("GET", url, headers={}, data={})

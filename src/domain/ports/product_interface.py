@@ -117,7 +117,7 @@ class IProductRepository(ABC):
         raise Exception('Not implemented method')
 
     @abstractmethod
-    def get_products_filter_seller(self, filter_entity: ProductFilterSellerEntity):
+    def get_products_filter_seller(self, filter_entity: ProductFilterSellerEntity) -> ProductsListEntity:
         raise Exception('Not implemented method')
 
     @abstractmethod

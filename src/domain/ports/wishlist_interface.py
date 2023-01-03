@@ -11,6 +11,7 @@
 
 from abc import ABC, abstractmethod
 
+from src.domain.entities.product_entity import ProductsPaginationEntity
 from src.domain.entities.wishlist_entity import WishProductNewEntity, WishProductEntity
 
 
@@ -26,4 +27,8 @@ class IWishListRepository(ABC):
 
     @abstractmethod
     def delete_product_from_wishlist(self, role: str, wish_product_entity: WishProductNewEntity):
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_wishlist_by_uuid_buyer(self, uuid: str, role: str, limit: int, offset: int) -> ProductsPaginationEntity:
         raise Exception('Not implemented method')

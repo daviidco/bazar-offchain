@@ -12,22 +12,30 @@
 import boto3
 import inject
 from botocore.exceptions import ClientError
+from flask import current_app
 from flask_restx import abort
 
 from src.domain.ports.object_file_interface import IStorage
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
-from src.infrastructure.config.default_infra import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME
+from src.infrastructure.config.config_parameters import get_parameter_value, _get_env_variable
+
+# from src.infrastructure.config.default_infra import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME
 
 
 #
 # This file contains generic methods of bucket s3 aws
 # @author David Córdoba
 #
+
+AWS_ACCESS_KEY_ID = _get_env_variable("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = _get_env_variable("AWS_SECRET_ACCESS_KEY")
+AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
+
+
 class S3Repository(IStorage):
 
     @inject.autoparams()
-    def __init__(self, logger, bucket_name=None, s3_client=None, session=None):
-        self.logger = logger
+    def __init__(self,  bucket_name=None, s3_client=None, session=None):
         self.bucket_name = bucket_name if bucket_name is not None else AWS_BUCKET_NAME
         self.s3_client = s3_client
         self.session = session
@@ -44,7 +52,7 @@ class S3Repository(IStorage):
 
     def error_s3_service(self, e):
         msj = e.args[0]
-        self.logger.error(f"{msj}")
+        current_app.logger.error(f"{msj}")
         e = api_error('S3Error')
         e.error['description'] = msj
         abort(code=e.status_code, message=None, error=e.error)
@@ -61,7 +69,7 @@ class S3Repository(IStorage):
         bucket_name = self.bucket_name if bucket is None else bucket
         try:
             self.s3_client.put_object(Body=body, Bucket=bucket_name, Key=key, ContentType=content_type)
-            self.logger.info(f"Object uploaded successfully at  {key} - bucket {bucket_name}.")
+            current_app.logger.info(f"Object uploaded successfully at  {key} - bucket {bucket_name}.")
             return True
         except ClientError as e:
             self.error_s3_service(e)
@@ -85,12 +93,12 @@ class S3Repository(IStorage):
                 res = self.s3_client.delete_objects(Bucket=bucket_name, Delete=delete_keys)
                 errors = res.get('Errors', None)
                 if errors is None:
-                    self.logger.info(f"All objects from  {key} were delete from bucket {bucket_name}.")
+                    current_app.logger.info(f"All objects from  {key} were delete from bucket {bucket_name}.")
                     return True
                 else:
                     raise Exception(f'Error trying delete objects s3 from {key} bucket {bucket_name}')
             else:
-                self.logger.info(f"Not exists objects at {key} from bucket {bucket_name} to delete.")
+                current_app.logger.info(f"Not exists objects at {key} from bucket {bucket_name} to delete.")
             return True
 
         except ClientError as e:
@@ -158,7 +166,7 @@ class S3Repository(IStorage):
                                 Key=destination_key)
 
         except ClientError as e:
-            self.logger.info("Error copying object -> %s", str(e))
+            current_app.logger.info("Error copying object -> %s", str(e))
             error = e.response['Error']['Code']
         return error
 
@@ -168,7 +176,7 @@ class S3Repository(IStorage):
             self.s3_client.get_object(Bucket=self.bucket_source, Key=key)
             # return response["Body"].read()
         except ClientError as e:
-            self.logger.info("Error uploading object -> %s", str(e))
+            current_app.logger.info("Error uploading object -> %s", str(e))
             error = e.response['Error']['Code']
         return error
 
@@ -184,7 +192,7 @@ class S3Repository(IStorage):
                 if obj['Key'] == key:
                     return obj['Size']
         except ClientError as e:
-            self.logger.info("Error uploading object -> %s", str(e))
+            current_app.logger.info("Error uploading object -> %s", str(e))
             error = True
         return error
 
@@ -193,7 +201,7 @@ class S3Repository(IStorage):
         try:
             self.s3_client.upload_file(filename, self.bucket_source, key)
         except ClientError as e:
-            self.logger.info("Error uploading object -> %s", str(e))
+            current_app.logger.info("Error uploading object -> %s", str(e))
             error = True
         return error
 
@@ -218,7 +226,7 @@ class S3Repository(IStorage):
             self.s3_resource.Object(self.bucket_source, file_key).load()
             validation = True
         except ClientError as e:
-            self.logger.error(
+            current_app.logger.error(
                 "Object '{}' doesn't exists in bucket '{}'. Error {}".format(
                     file_key, self.bucket_source, e.response["Error"]["Code"]
                 )
@@ -235,13 +243,13 @@ class S3Repository(IStorage):
             self.s3_resource.Object(self.bucket_source, actual_file_key).delete()
             validation = True
 
-            self.logger.info(
+            current_app.logger.info(
                 "Object '{}' updated in S3 correctly by '{}'.".format(
                     actual_file_key, new_file_key
                 )
             )
         except ClientError as e:
-            self.logger.error(
+            current_app.logger.error(
                 "Could not update object '{}' by '{}'. {}".format(
                     actual_file_key, new_file_key, e.response
                 )
@@ -254,11 +262,11 @@ class S3Repository(IStorage):
             self.s3_resource.Object(self.bucket_source, file_key).delete()
             validation = True
 
-            self.logger.info(
+            current_app.logger.info(
                 "Object '{}' deleted from S3 successfully.".format(file_key)
             )
         except ClientError as e:
-            self.logger.error(
+            current_app.logger.error(
                 "Failed to delete object '{}' from S3. {}".format(file_key, e.response)
             )
         return validation
@@ -268,6 +276,6 @@ class S3Repository(IStorage):
         try:
             self.s3_client.upload_file_obj(buffer, self.bucket_source)
         except ClientError as e:
-            self.logger.info("Error uploading object -> %s", str(e))
+            current_app.logger.info("Error uploading object -> %s", str(e))
             error = True
         return error

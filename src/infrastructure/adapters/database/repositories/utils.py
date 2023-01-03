@@ -8,8 +8,10 @@ from sqlalchemy.orm import Session
 
 from src.infrastructure.adapters.database.models import User, Company, Product
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
-from src.infrastructure.config.default import URL_MS_BAZAR_AUTH, URL_EMAIL_LAMBDA
-from src.infrastructure.config.default_infra import AWS_BUCKET_NAME, AWS_REGION
+from src.infrastructure.config.config_parameters import get_parameter_value
+from src.infrastructure.config.default import URL_EMAIL_LAMBDA, URL_MS_BAZAR_AUTH, AWS_REGION
+
+AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
 
 
 def default_prefix_cloud():
@@ -144,6 +146,7 @@ def get_total_pages(total_elements: int, limit: int):
 
 
 def validate_num_certifications_vs_num_files(num_certs: int, num_files: int):
+    current_app.logger.info(f"Checking num certifications vs num files uploaded ")
     if num_certs != num_files:
         e = api_error('NumCertificationsVSNumFilesError')
         description = e.error.get('description', 'Not description')
@@ -183,5 +186,3 @@ class UtilsDatabase:
             current_app.logger.error(e.error['description'])
             abort(code=e.status_code, message=e.message, error=e.error)
         return product
-
-

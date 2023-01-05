@@ -26,9 +26,6 @@ load_dotenv()
 ENV = _get_env_variable("ENV").upper()
 AWS_REGION = _get_env_variable("AWS_DEFAULT_REGION")
 
-# Secret key
-SECRET_KEY = put_parameter_s_k()
-
 # Flask
 PROPAGATE_EXCEPTIONS = False
 

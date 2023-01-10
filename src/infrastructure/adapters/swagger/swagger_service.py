@@ -46,7 +46,7 @@ for module in module_managers_folders:
         for file in files:
             if file.endswith("_resources.py"):
                 route = os.path.join(root, file)
-                base = ".".join(route.split('/')[3:-1])
+                base = ".".join(route.split('/')[1:-1])
                 name = file.split('.')[0]
                 imported_module = import_module(f"{base[base.find('.src.')+1:]}.{name}")
                 for attribute_name in dir(imported_module):

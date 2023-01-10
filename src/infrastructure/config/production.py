@@ -18,6 +18,9 @@ from src.infrastructure.config.default import *
 
 APP_ENV = APP_ENV_PRODUCTION
 
+# Secret key
+SECRET_KEY = put_parameter_s_k()
+
 # Basic parameters
 TESTING = False
 DEBUG = False

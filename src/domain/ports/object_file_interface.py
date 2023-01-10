@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 
 
 #
-# This interface or port lets define the methods to implement by S3repository.
+# This interface or port lets define the methods to implement by S3Repository.
 # @author David Córdoba
 #
 class IStorage(ABC):

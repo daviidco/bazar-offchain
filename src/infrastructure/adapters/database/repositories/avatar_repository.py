@@ -12,7 +12,7 @@
 from typing import Union
 
 from flask import current_app
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 
 from src.domain.entities.avatar_entity import AvatarsPaginationEntity, AvatarEntity, AvatarNewEntity, AvatarsListEntity
 from src.domain.ports.avatar_interface import IAvatarRepository
@@ -28,8 +28,7 @@ from src.infrastructure.adapters.database.repositories.utils import get_total_pa
 class AvatarRepository(IAvatarRepository):
 
     def __init__(self, adapter_db):
-        self.engine = adapter_db.engine
-        self.session = Session(adapter_db.engine)
+        self.session_maker = sessionmaker(bind=adapter_db.engine)
 
     def new_avatar(self, avatar_entity: AvatarNewEntity) -> AvatarEntity:
         pass
@@ -38,19 +37,22 @@ class AvatarRepository(IAvatarRepository):
         pass
 
     def get_avatars_count(self) -> int:
-        current_app.logger.info(f"Getting number of avatars")
-        count = self.session.query(ProfileImage).count()
-        count = count if count is not None else 0
-        current_app.logger.info(f"Number of avatars {count}")
-        return count
+        with self.session_maker() as session:
+            current_app.logger.info(f"Getting number of avatars")
+            count = session.query(ProfileImage).count()
+            count = count if count is not None else 0
+            current_app.logger.info(f"Number of avatars {count}")
+            return count
 
     def get_all_avatars(self, limit: int = None, offset: int = None) -> \
             Union[AvatarsListEntity, AvatarsPaginationEntity]:
-        total = self.get_avatars_count()
-        list_objects = self.session.query(ProfileImage).offset(offset).limit(limit).all()
-        if limit is not None and offset is not None:
-            total_pages = get_total_pages(total, int(limit))
-            return AvatarsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
-                                           total_pages=total_pages)
-        else:
-            return AvatarsListEntity(results=list_objects)
+        with self.session_maker() as session:
+            total = self.get_avatars_count()
+            list_objects = session.query(ProfileImage).offset(offset).limit(limit).all()
+            if limit is not None and offset is not None:
+                total_pages = get_total_pages(total, int(limit))
+                return AvatarsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
+                                               total_pages=total_pages)
+            else:
+                return AvatarsListEntity(results=list_objects)
+        

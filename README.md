@@ -16,7 +16,7 @@ There are implemented an API Rest.
 
 It is an **Api-Rest** being developed with **Python** and framework **Flask-Restful**. **Bazar off-chain** administer information of application users bazar that is out blockchain. The information can be: Basic company information, Documents, Products, transaction history trough data models.
 
-**Api-Rest bazar-offchain** not authenticate users and have not domain over all information of main porject bazar.
+**Api-Rest bazar-offchain** not authenticate users and have no domain over all information of main porject bazar.
 
 **Bazar-offchain** uses external services to authenticate and to store objects like AWS s3. 
 

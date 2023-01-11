@@ -23,8 +23,6 @@ class PostgresAdapter:
         SQLALCHEMY_DATABASE_URI, DB_SCHEMA = get_database_connection()
         self.engine = create_engine(SQLALCHEMY_DATABASE_URI,
                                     connect_args={'options': '-csearch_path={}'.format(DB_SCHEMA)})
-        self.session = Session(self.engine)
-        self.session_marker = sessionmaker(self.engine)
 
         @event.listens_for(self.engine, "connect", insert=True)
         def set_current_schema(dbapi_connection, connection_record):

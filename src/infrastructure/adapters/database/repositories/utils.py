@@ -4,12 +4,14 @@ from datetime import datetime
 import requests
 from flask import current_app
 from flask_restx import abort
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 
+from src.domain.entities.product_entity import ProductEntity
 from src.infrastructure.adapters.database.models import User, Company, Product
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
 from src.infrastructure.config.default import URL_EMAIL_LAMBDA, URL_MS_BAZAR_AUTH, AWS_REGION
+from src.infrastructure.templates_email import TemplateAdminProduct
 
 AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
 
@@ -154,35 +156,71 @@ def validate_num_certifications_vs_num_files(num_certs: int, num_files: int):
         abort(code=e.status_code, message=e.message, error=e.error)
 
 
+def send_email_to_admin(jwt, uuid_user, product, prefix_files):
+    # Build html to send email
+    first_name, last_name = get_user_names(jwt, uuid_user)
+    user_name = f"{first_name.title()} {last_name.title()}"
+    url_s3 = f"https://s3.console.aws.amazon.com/s3/buckets/{AWS_BUCKET_NAME}?" \
+             f"region={AWS_REGION}&prefix={prefix_files}/&showversions=false"
+    data_email = TemplateAdminProduct.html.format(product_name=product.basic_product,
+                                                  user_name=user_name,
+                                                  company_name=product.company.company_name,
+                                                  link=url_s3)
+
+    send_email(subject="Review Documents - Product",
+               data=data_email,
+               destination=[current_app.config['EMAIL_BAZAR_ADMIN']],
+               is_html=True)
+
+
+def get_field_is_like(list_objects, user_uuid):
+    for p in list_objects:
+        p.check_use_like(user_uuid)
+    return list_objects
+
+
+def get_urls_files_and_images(list_objects):
+    list_e_objects = []
+    for p in list_objects:
+        ep = ProductEntity.from_orm(p)
+        ep.url_images = list(p.url_images_ap)
+        ep.url_files = [x.url for x in p.url_files_ap]
+        list_e_objects.append(ep)
+    return list_e_objects
+
+
 class UtilsDatabase:
     def __init__(self, adapter_db):
-        self.engine = adapter_db.engine
-        self.session = Session(adapter_db.engine)
+        self.session_maker = sessionmaker(bind=adapter_db.engine)
 
     def get_user_by_uuid_user(self, uuid_user):
-        user = self.session.query(User).filter_by(uuid=uuid_user).first()
-        if user is None:
-            e = api_error('ObjectNotFound')
-            e.error['description'] = e.error['description'] + f' <user uuid_user: {uuid_user}>'
-            current_app.logger.error(e.error['description'])
-            abort(code=e.status_code, message=e.message, error=e.error)
-        return user
+        with self.session_maker() as session:
+            user = session.query(User).filter_by(uuid=uuid_user).first()
+            if user is None:
+                e = api_error('ObjectNotFound')
+                e.error['description'] = e.error['description'] + f' <user uuid_user: {uuid_user}>'
+                current_app.logger.error(e.error['description'])
+                abort(code=e.status_code, message=e.message, error=e.error)
+            return user
 
     def get_company_by_uuid_user(self, uuid_user):
-        user = self.get_user_by_uuid_user(uuid_user)
-        company = self.session.query(Company).filter_by(user_id=user.id).first()
-        if company is None:
-            e = api_error('ObjectNotFound')
-            e.error['description'] = e.error['description'] + f' <company uuid_user: {uuid_user}>'
-            current_app.logger.error(e.error['description'])
-            abort(code=e.status_code, message=e.message, error=e.error)
-        return company
+        with self.session_maker() as session:
+            current_app.logger.error(f"Getting company by user uuid")
+            user = self.get_user_by_uuid_user(uuid_user)
+            company = session.query(Company).filter_by(user_id=user.id).first()
+            if company is None:
+                e = api_error('ObjectNotFound')
+                e.error['description'] = e.error['description'] + f' <company uuid_user: {uuid_user}>'
+                current_app.logger.error(e.error['description'])
+                abort(code=e.status_code, message=e.message, error=e.error)
+            return company
 
     def get_product_by_uuid_product(self, uuid_product):
-        product = self.session.query(Product).filter_by(uuid=uuid_product).first()
-        if product is None:
-            e = api_error('ObjectNotFound')
-            e.error['description'] = e.error['description'] + f' <product uuid_product: {uuid_product}>'
-            current_app.logger.error(e.error['description'])
-            abort(code=e.status_code, message=e.message, error=e.error)
-        return product
+        with self.session_maker() as session:
+            product = session.query(Product).filter_by(uuid=uuid_product).first()
+            if product is None:
+                e = api_error('ObjectNotFound')
+                e.error['description'] = e.error['description'] + f' <product uuid_product: {uuid_product}>'
+                current_app.logger.error(e.error['description'])
+                abort(code=e.status_code, message=e.message, error=e.error)
+            return product

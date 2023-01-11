@@ -417,6 +417,7 @@ class ProductRepository(IProductRepository):
         res_product = ProductEntity.from_orm(product)
         res_product.url_images = url_images
         res_product.url_files = url_files
+        self.utils_db.close_session()
         return res_product
 
     def edit_product_state(self, status: str, uuid: str) -> ProductEntity:

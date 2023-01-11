@@ -81,7 +81,6 @@ class ProductResource(Resource):
 
     @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
     @api.response(success_code_get, 'Success', response_model_get)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets  all products with pagination"""
@@ -93,7 +92,6 @@ class ProductResource(Resource):
     @api.expect(upload_parser)
     @api.doc(security='Private JWT')
     @api.response(success_code_post, 'Success', response_model_post)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
         """Creates a new product"""
@@ -122,7 +120,6 @@ class ProductsByUserResource(Resource):
 
     @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, user_uuid, *args, **kwargs):
         """Gets all user's products by the user uuid. if user is buyer will try to list all products"""
@@ -149,7 +146,6 @@ class BasicProductsResource(Resource):
 
     @api.doc(security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets all basic products"""
@@ -172,7 +168,6 @@ class ProductTypesResource(Resource):
 
     @api.doc(security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, uuid_basic_product, *args, **kwargs):
         """Gets all product types"""
@@ -196,7 +191,6 @@ class VarietiesResource(Resource):
 
     @api.doc(security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, uuid_basic_product, *args, **kwargs):
         """Gets all varieties"""
@@ -221,7 +215,6 @@ class SustainabilityCertificationsResource(Resource):
 
     @api.doc(security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets all sustainability certifications"""
@@ -244,7 +237,6 @@ class IncotermsResource(Resource):
 
     @api.doc(security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets all incoterms"""
@@ -267,7 +259,6 @@ class MinimumOrdersResource(Resource):
 
     @api.doc(security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets all minimum orders"""
@@ -290,7 +281,6 @@ class ProductStatesResource(Resource):
 
     @api.doc(security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets all product states"""
@@ -313,7 +303,6 @@ class ProductAvailabilityEditResource(Resource):
 
     @api.doc(params=get_schema(AvailabilityEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def patch(self, *args, **kwargs):
         """Update product availability for sale"""
@@ -337,7 +326,6 @@ class ProductDetailResource(Resource):
 
     @api.doc(security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, uuid_product, *args, **kwargs):
         """Gets product detail of a specific product by product uuid"""
@@ -361,7 +349,6 @@ class ProductHiddenResource(Resource):
 
     @api.doc(security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def patch(self, uuid_product, *args, **kwargs):
         """Updates state product to hidden"""
@@ -387,7 +374,6 @@ class ProductPublicResource(Resource):
 
     @api.doc(security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def patch(self, uuid_product, *args, **kwargs):
         """Updates state product to public"""
@@ -414,7 +400,6 @@ class ProductDeleteResource(Resource):
 
     @api.doc(security='Private JWT', responses={403: 'Not Authorized'})
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def patch(self, uuid_product, *args, **kwargs):
         """Updates state product to delete"""
@@ -453,7 +438,6 @@ class ProductEditResource(Resource):
     @api.expect(upload_parser)
     @api.doc(security='Private JWT', responses={403: 'Not Authorized'})
     @api.response(success_code_put, 'Success', response_model_put)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def put(self, uuid_product, **kwargs):
         """Updates product. This endpoint has two important boolean keys (change_files, change_images)
@@ -491,7 +475,6 @@ class ProductFilterSellerResource(Resource):
 
     @api.doc(params=get_schema(ProductFilterSellerEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Filter to products by seller"""
@@ -526,7 +509,6 @@ class ProductFilterBuyerResource(Resource):
 
     @api.doc(params=get_schema(ProductFilterBuyerEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Filter to products by buyer"""
@@ -562,7 +544,6 @@ class ProductFilterSellerBasicProductResource(Resource):
 
     @api.doc(params=get_schema(ProductFilterSellerBasicProductEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Filter to products by uuid seller and by name basic product"""
@@ -592,7 +573,6 @@ class ProductFilterBuyerBasicProductResource(Resource):
 
     @api.doc(params=get_schema(ProductFilterBuyerBasicProductEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Filter to products by name basic product to buyers"""
@@ -626,7 +606,6 @@ class ProductFilterSellerSearchBar(Resource):
 
     @api.doc(params=get_schema(ProductFilterSellerBasicProductEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Filter to products by uuid seller and by part name basic product.
@@ -657,7 +636,6 @@ class ProductFilterBuyerSearchBar(Resource):
 
     @api.doc(params=get_schema(ProductFilterBuyerBasicProductEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Filter to products by part of name basic product to buyers.

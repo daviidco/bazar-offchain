@@ -43,7 +43,6 @@ class ProductResource(Resource):
         self.delete_wish_product = delete_wish_product
 
     @api.doc(params=get_schema(WishProductNewEntity), security='Private JWT')
-    @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
         """Append product to user wishlist"""
@@ -53,7 +52,6 @@ class ProductResource(Resource):
         return json.loads(result.json()), 201
 
     @api.doc(params=get_schema(WishProductEntity), security='Private JWT')
-    @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def delete(self, *args, **kwargs):
         """Remove product from user wishlist"""
@@ -77,7 +75,6 @@ class ProductsByUserResource(Resource):
 
     @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
-    @cross_origin(["Content-Type", "Authorization"])
     @requires_auth
     def get(self, user_uuid, *args, **kwargs):
         """Get wishlist by buyer"""

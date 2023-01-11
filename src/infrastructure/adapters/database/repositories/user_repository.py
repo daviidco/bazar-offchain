@@ -17,7 +17,7 @@ from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.user_manage_entity import UserManageEntity
 from src.domain.ports.user_interface import IUserRepository
 from src.domain.entities.user_entity import UserNewEntity, UserEntity, UsersPaginationEntity
-from src.infrastructure.adapters.database.models import Product, CommentApproval, StatusProduct
+from src.infrastructure.adapters.database.models import Product, CommentApproval, StatusProduct, Company
 from src.infrastructure.adapters.database.models.user import User, StatusUser
 from src.infrastructure.adapters.database.repositories.utils import get_user_names, get_total_pages, \
     build_urls_from_url_image
@@ -72,7 +72,7 @@ class UserRepository(IUserRepository):
         with self.session_maker() as session:
             total = self.get_users_count()
             total_pages = get_total_pages(total, int(limit))
-            list_objects = session.query(User).offset(offset).limit(limit).all()
+            list_objects = session.query(User).join(User.company).order_by(Company.company_name).offset(offset).limit(limit).all()
             response = UsersPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                              total_pages=total_pages)
 
@@ -87,7 +87,6 @@ class UserRepository(IUserRepository):
                         response.results[idx_r].company[0] = y.dict(exclude={'profile_images'})
                     except Exception as e:
                         continue
-
             return response
 
     def user_states(self) -> BasicEntity:

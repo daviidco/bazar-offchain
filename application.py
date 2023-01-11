@@ -35,7 +35,7 @@ application.config.from_pyfile(f'{path_config_file}')
 configure_logging(application)
 application.logger.info(f'Environment: {config_env}')
 application.logger.info(f'Environment configuration file: {path_config_file}')
-configure_inject(application.logger)
+configure_inject()
 
 # Disable strict mode when URL ends with /
 application.url_map.strict_slashes = False

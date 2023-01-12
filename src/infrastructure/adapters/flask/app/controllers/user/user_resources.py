@@ -42,7 +42,6 @@ class UsersResource(Resource):
         self.create_user = create_user
 
     @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
-    @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets all users with pagination"""
@@ -54,7 +53,6 @@ class UsersResource(Resource):
         return json.loads(result.json()), 200
 
     @api.doc(security='Private JWT')
-    @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
         """Creates a new user. Note: Just in bazar-offchain"""
@@ -72,7 +70,6 @@ class UserByUuidResource(Resource):
         self.get_user = get_user
 
     @api.doc(security='Private JWT')
-    @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, user_uuid, *args, **kwargs):
         """Gets a specific user by user uuid"""
@@ -91,7 +88,6 @@ class UserResource(Resource):
         self.get_user_states = get_user_states
 
     @api.doc(security='Private JWT')
-    @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets all user states"""
@@ -116,7 +112,6 @@ class UserApprovalResource(Resource):
 
     @api.doc(security='Private JWT')
     @api.expect(product_model, user_model)
-    @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def put(self, *args, **kwargs):
         """Approves user and product or only product or only user"""

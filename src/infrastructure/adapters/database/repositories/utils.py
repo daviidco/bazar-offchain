@@ -4,10 +4,10 @@ from datetime import datetime
 import requests
 from flask import current_app
 from flask_restx import abort
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, joinedload, Session
 
 from src.domain.entities.product_entity import ProductEntity
-from src.infrastructure.adapters.database.models import User, Company, Product
+from src.infrastructure.adapters.database.models import User, Company, Product, ProductImage
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
 from src.infrastructure.config.default import URL_EMAIL_LAMBDA, URL_MS_BAZAR_AUTH, AWS_REGION
@@ -192,6 +192,7 @@ def get_urls_files_and_images(list_objects):
 class UtilsDatabase:
     def __init__(self, adapter_db):
         self.session_maker = sessionmaker(bind=adapter_db.engine)
+        self.session = sessionmaker(bind=adapter_db.engine, expire_on_commit=False)()
 
     def get_user_by_uuid_user(self, uuid_user):
         with self.session_maker() as session:
@@ -216,11 +217,13 @@ class UtilsDatabase:
             return company
 
     def get_product_by_uuid_product(self, uuid_product):
-        with self.session_maker() as session:
-            product = session.query(Product).filter_by(uuid=uuid_product).first()
-            if product is None:
-                e = api_error('ObjectNotFound')
-                e.error['description'] = e.error['description'] + f' <product uuid_product: {uuid_product}>'
-                current_app.logger.error(e.error['description'])
-                abort(code=e.status_code, message=e.message, error=e.error)
-            return product
+        product = self.session.query(Product).filter_by(uuid=uuid_product).first()
+        if product is None:
+            e = api_error('ObjectNotFound')
+            e.error['description'] = e.error['description'] + f' <product uuid_product: {uuid_product}>'
+            current_app.logger.error(e.error['description'])
+            abort(code=e.status_code, message=e.message, error=e.error)
+        return product
+
+    def close_session(self):
+        self.session.close()

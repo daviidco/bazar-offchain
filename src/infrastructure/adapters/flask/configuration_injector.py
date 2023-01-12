@@ -33,7 +33,7 @@ from src.infrastructure.adapters.storage.s3_service import S3Repository
 #
 
 
-def configure_inject(logger) -> None:
+def configure_inject() -> None:
     def config(binder: inject.Binder) -> None:
         psql_adapter = PostgresAdapter()
         utils_db = UtilsDatabase(psql_adapter)

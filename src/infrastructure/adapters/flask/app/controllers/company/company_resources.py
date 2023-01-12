@@ -51,7 +51,6 @@ class CompaniesResource(Resource):
         self.create_company = create_company
 
     @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
-    @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets  all companies with pagination"""
@@ -62,7 +61,6 @@ class CompaniesResource(Resource):
 
     @api.expect(upload_parser)
     @api.doc(security='Private JWT')
-    @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def post(self, *args, **kwargs):
         """Creates a new company"""
@@ -83,7 +81,6 @@ class CompanyResource(Resource):
         self.get_company = get_company
 
     @api.doc(security='Private JWT')
-    @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, company_uuid, *args, **kwargs):
         """Gets  a specific company by uuid"""

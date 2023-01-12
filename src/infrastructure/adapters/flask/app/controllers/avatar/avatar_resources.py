@@ -39,7 +39,6 @@ class AvatarsResource(Resource):
         self.get_all_avatars = get_all_avatars
 
     @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
-    @cross_origin(headers=["Content-Type", "Authorization"])
     @requires_auth
     def get(self, *args, **kwargs):
         """Gets  all avatars with pagination or without pagination"""

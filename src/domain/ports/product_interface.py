@@ -53,6 +53,11 @@ class IProductRepository(ABC):
                                                                                            ProductsListEntity]:
         raise Exception('Not implemented method')
 
+    @abstractmethod
+    def get_products_user_by_category(self, uuid: str, role: str, basic_product: str, limit: int, offset: int) \
+            -> Union[ProductsPaginationEntity, ProductsListEntity]:
+        raise Exception('Not implemented method')
+
     # ComboBox
     @abstractmethod
     def get_all_basic_products(self) -> BasicProductsListEntity:

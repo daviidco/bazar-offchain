@@ -11,10 +11,10 @@
 
 import uuid
 from datetime import date
-from typing import List
 
 from src.domain.entities.product_entity import ProductEntity, ProductBaseEntity, ProductsPaginationEntity, \
-    ProductNewEntity
+    ProductNewEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity, ProductFilterSellerBasicProductEntity, \
+    ProductFilterBuyerBasicProductEntity, ProductFilterBasicProductEntity, ProductFilterEntity
 from tests.utils import validate_data_entity, validate_instance_properties_entity
 
 
@@ -114,6 +114,20 @@ class TestProductEntity:
                                'results': [data_product_entity_v1, data_product_entity_v2],
                                'total_pages': 10}
 
+    data_product_filter = {'price_per_kg_start': 39.3,
+                           'price_per_kg_end': 100.2,
+                           'available_for_sale': 54,
+                           'user_uuid': generated_uuid
+                           }
+
+    data_product_filter_seller = dict(data_product_filter)
+    data_product_filter_buyer = dict(data_product_filter, **{'limit': 10, 'offset': 1})
+    data_product_filter_basic_product = {'basic_product': 'Coffee',
+                                         'user_uuid': generated_uuid}
+    data_product_filter_seller_basic_product = dict(data_product_filter_basic_product)
+    data_product_filter_buyer_basic_product = dict(data_product_filter_basic_product, **{'limit': 10, 'offset': 1})
+
+
     def test_base_product_entity(self):
         product_1 = ProductBaseEntity.parse_obj(self.data_base_product)
         validate_data_entity([product_1], ProductBaseEntity, [self.data_base_product])
@@ -135,3 +149,35 @@ class TestProductEntity:
         product_pagination = ProductsPaginationEntity.parse_obj(self.data_product_pagination)
         validate_data_entity([product_pagination], ProductsPaginationEntity, [self.data_product_pagination])
         validate_instance_properties_entity([product_pagination], ProductsPaginationEntity)
+
+    def product_filter(self):
+        product_1 = ProductFilterEntity.parse_obj(self.data_product_filter)
+        validate_data_entity([product_1], ProductFilterEntity, [self.data_product_filter])
+        validate_instance_properties_entity([product_1], ProductFilterEntity)
+
+    def test_product_filter_seller(self):
+        product_1 = ProductFilterSellerEntity.parse_obj(self.data_product_filter_seller)
+        validate_data_entity([product_1], ProductFilterSellerEntity, [self.data_product_filter_seller])
+        validate_instance_properties_entity([product_1], ProductFilterSellerEntity)
+
+    def test_product_filter_buyer(self):
+        product_1 = ProductFilterBuyerEntity.parse_obj(self.data_product_filter_buyer)
+        validate_data_entity([product_1], ProductFilterBuyerEntity, [self.data_product_filter_buyer])
+        validate_instance_properties_entity([product_1], ProductFilterBuyerEntity)
+
+    def test_product_filter_basic_product(self):
+        product_1 = ProductFilterBasicProductEntity.parse_obj(self.data_product_filter_basic_product)
+        validate_data_entity([product_1], ProductFilterBasicProductEntity, [self.data_product_filter_basic_product])
+        validate_instance_properties_entity([product_1], ProductFilterBasicProductEntity)
+
+    def test_product_filter_seller_basic_product(self):
+        product_1 = ProductFilterSellerBasicProductEntity.parse_obj(self.data_product_filter_seller_basic_product)
+        validate_data_entity([product_1], ProductFilterSellerBasicProductEntity,
+                             [self.data_product_filter_seller_basic_product])
+        validate_instance_properties_entity([product_1], ProductFilterSellerBasicProductEntity)
+
+    def test_product_filter_buyer_basic_product(self):
+        product_1 = ProductFilterBuyerBasicProductEntity.parse_obj(self.data_product_filter_buyer_basic_product)
+        validate_data_entity([product_1], ProductFilterBuyerBasicProductEntity,
+                             [self.data_product_filter_buyer_basic_product])
+        validate_instance_properties_entity([product_1], ProductFilterBuyerBasicProductEntity)

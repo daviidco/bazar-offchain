@@ -12,7 +12,7 @@
 import pytz
 from dotenv import load_dotenv
 
-from src.infrastructure.config.config_parameters import put_parameter_s_k, _get_env_variable
+from src.infrastructure.config.config_parameters import _get_env_variable
 
 #
 # This file contains basic default configuration

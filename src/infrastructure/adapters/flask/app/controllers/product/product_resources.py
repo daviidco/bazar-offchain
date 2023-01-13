@@ -14,7 +14,6 @@ import typing
 
 import inject
 from flask import current_app
-from flask_cors import cross_origin
 from flask_restx import Resource, Namespace, reqparse
 from flask_restx.reqparse import request
 from werkzeug.datastructures import FileStorage
@@ -23,7 +22,8 @@ from src.application.product.product_uc import GetAllBasicProducts, GetProductTy
     GetSustainabilityCertifications, GetInconterms, GetMinimumOrders, CreateProduct, \
     GetAllProducts, GetProductsByUser, GetProductStates, EditProductAvailability, GetDetailProduct, EditStateProduct, \
     EditProduct, GetProductsFilterSeller, GetProductsFilterBuyer, GetProductsFilterSellerAndBasicProduct, \
-    GetProductsFilterBuyerAndBasicProduct, GetProductsFilterBuyerSearchBar, GetProductsFilterSellerSearchBar
+    GetProductsFilterBuyerAndBasicProduct, GetProductsFilterBuyerSearchBar, GetProductsFilterSellerSearchBar, \
+    GetProductsBuyerByCategory
 from src.domain.entities.basic_product_entity import BasicProductsListEntity
 from src.domain.entities.common_entity import InputPaginationEntity, BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity
@@ -130,6 +130,31 @@ class ProductsByUserResource(Resource):
         result = self.get_products.execute(user_uuid, role, limit, offset)
         return json.loads(result.json()), self.success_code
 
+
+@api.route("/products-user-category/<string:user_uuid>/<string:basic_product>")
+class ProductsUserByCategoryResource(Resource):
+    # Swagger
+    response_schema = ProductsPaginationEntity.schema()
+    response_model = api.schema_model(response_schema['title'], response_schema)
+    success_code = 200
+
+    @inject.autoparams('get_products')
+    def __init__(self, app: current_app, get_products: GetProductsBuyerByCategory, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api = app
+        self.get_products = get_products
+
+    @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
+    @api.response(success_code, 'Success', response_model)
+    @requires_auth
+    def get(self, user_uuid, basic_product, *args, **kwargs):
+        """Gets all user's products by the user uuid and by category. if user is buyer will try to list all products"""
+        role = kwargs.get('role', None)
+        limit = request.args.get('limit', 10)
+        offset = request.args.get('offset', 0)
+        is_valid_uuid_input(user_uuid)
+        result = self.get_products.execute(user_uuid, role, basic_product, limit, offset)
+        return json.loads(result.json()), self.success_code
 
 @api.route("/basic-products")
 class BasicProductsResource(Resource):

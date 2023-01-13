@@ -344,12 +344,42 @@ class ProductRepository(IProductRepository):
                 total_pages = get_total_pages(total, int(limit))
                 list_objects = session.query(Product).offset(offset).limit(limit).all()
                 list_objects = get_field_is_like(list_objects, uuid)
+                list_objects = get_urls_files_and_images(list_objects)
                 return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                                 total_pages=total_pages)
 
             elif role == 'seller':
                 company_id = self.utils_db.get_company_by_uuid_user(uuid).id
                 list_objects = session.query(Product).filter_by(company_id=company_id).all()
+                list_e_objects = get_urls_files_and_images(list_objects)
+                return ProductsListEntity(results=list_e_objects)
+
+            else:
+                e = api_error('RoleNotFound')
+                e.error['description'] = e.error['description'] + f' <role: {role}>'
+                current_app.logger.error(f"{e.error['description']}")
+                abort(code=e.status_code, message=e.message, error=e.error)
+
+    def get_products_user_by_category(self, uuid: str, role: str, basic_product, limit: str, offset: int) \
+            -> Union[ProductsPaginationEntity, ProductsListEntity]:
+        with self.session_maker() as session:
+            if role == 'buyer':
+                total = self.get_products_count()
+                total_pages = get_total_pages(total, int(limit))
+                list_objects = session.query(Product).\
+                    join(BasicProduct, Product.basic_product_id == BasicProduct.id)\
+                    .filter_by(basic_product=basic_product)\
+                    .offset(offset).limit(limit).all()
+                list_objects = get_field_is_like(list_objects, uuid)
+                list_objects = get_urls_files_and_images(list_objects)
+                return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
+                                                total_pages=total_pages)
+            elif role == 'seller':
+                company_id = self.utils_db.get_company_by_uuid_user(uuid).id
+                list_objects = session.query(Product).filter_by(company_id=company_id)\
+                    .join(BasicProduct, Product.basic_product_id == BasicProduct.id)\
+                    .filter_by(basic_product=basic_product)\
+                    .offset(offset).limit(limit).all()
                 list_e_objects = get_urls_files_and_images(list_objects)
                 return ProductsListEntity(results=list_e_objects)
 
@@ -412,11 +442,8 @@ class ProductRepository(IProductRepository):
 
     def get_detail_product_by_uuid(self, uuid: str) -> ProductEntity:
         product = self.utils_db.get_product_by_uuid_product(uuid)
-        url_images = [x.url for x in product.product_images]
-        url_files = [x.files.url for x in product.product_sustainability_certifications]
+        product = get_urls_files_and_images([product])[0]
         res_product = ProductEntity.from_orm(product)
-        res_product.url_images = url_images
-        res_product.url_files = url_files
         self.utils_db.close_session()
         return res_product
 

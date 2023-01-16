@@ -27,8 +27,8 @@ class CreateWishProduct:
     def __init__(self, wishlist_repository: IWishListRepository):
         self.__wishlist_repository = wishlist_repository
 
-    def execute(self, role: str, wish_product_entity: WishProductNewEntity) -> WishProductEntity:
-        return self.__wishlist_repository.new_product_on_wishlist(role, wish_product_entity)
+    def execute(self, wish_product_entity: WishProductNewEntity) -> WishProductEntity:
+        return self.__wishlist_repository.new_product_on_wishlist(wish_product_entity)
 
 
 class DeleteWishProduct:
@@ -36,8 +36,8 @@ class DeleteWishProduct:
     def __init__(self, wishlist_repository: IWishListRepository):
         self.__wishlist_repository = wishlist_repository
 
-    def execute(self, role: str, wish_product_entity: WishProductNewEntity) -> WishProductEntity:
-        return self.__wishlist_repository.delete_product_from_wishlist(role, wish_product_entity)
+    def execute(self, wish_product_entity: WishProductNewEntity) -> WishProductEntity:
+        return self.__wishlist_repository.delete_product_from_wishlist(wish_product_entity)
 
 
 class GetWishList:
@@ -45,7 +45,7 @@ class GetWishList:
     def __init__(self, wishlist_repository: IWishListRepository):
         self.__wishlist_repository = wishlist_repository
 
-    def execute(self, uid: str, role: str, limit: int, offset: int) -> ProductsPaginationEntity:
-        return self.__wishlist_repository.get_wishlist_by_uuid_buyer(uid, role, limit, offset)
+    def execute(self, uid: str, limit: int, offset: int) -> ProductsPaginationEntity:
+        return self.__wishlist_repository.get_wishlist_by_uuid_buyer(uid, limit, offset)
 
 

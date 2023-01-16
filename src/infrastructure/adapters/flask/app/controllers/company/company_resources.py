@@ -20,7 +20,7 @@ from werkzeug.datastructures import FileStorage
 from src.application.company.company_uc import GetCompany, GetAllCompanies, CreateCompany
 from src.domain.entities.common_entity import InputPaginationEntity
 from src.domain.entities.company_entity import CompanyNewEntity
-from src.infrastructure.adapters.auth0.auth0_service import requires_auth
+from src.infrastructure.adapters.auth0.auth0_service import requires_auth, requires_role
 from src.infrastructure.adapters.flask.app.utils.ultils import get_help_schema, get_schema, is_valid_uuid_input
 
 #
@@ -62,13 +62,14 @@ class CompaniesResource(Resource):
     @api.expect(upload_parser)
     @api.doc(security='Private JWT')
     @requires_auth
+    @requires_role(["seller", "buyer"])
     def post(self, *args, **kwargs):
         """Creates a new company"""
         jwt = dict(request.headers).get('Authorization', None)
-        role = kwargs.get('role', None)
+        roles = kwargs.get('role', None)
         entity = CompanyNewEntity.parse_obj(json.loads(request.form['body']))
         files = request.files.getlist('files[]')
-        result = self.create_company.execute(jwt, role, entity, files)
+        result = self.create_company.execute(jwt, roles, entity, files)
         return json.loads(result.json()), 201
 
 

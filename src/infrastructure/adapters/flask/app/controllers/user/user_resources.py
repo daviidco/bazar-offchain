@@ -21,7 +21,7 @@ from src.application.user.user_uc import GetUser, GetAllUsers, CreateUser, PutSt
 from src.domain.entities.common_entity import InputPaginationEntity, JwtEntity
 from src.domain.entities.user_entity import UserNewEntity
 from src.domain.entities.user_manage_entity import UserManageEntity, ProductManageEntity
-from src.infrastructure.adapters.auth0.auth0_service import requires_auth
+from src.infrastructure.adapters.auth0.auth0_service import requires_auth, requires_role
 from src.infrastructure.adapters.flask.app.utils.ultils import get_schema, is_valid_uuid_input
 
 #
@@ -54,6 +54,7 @@ class UsersResource(Resource):
 
     @api.doc(security='Private JWT')
     @requires_auth
+    @requires_role(["admin"])
     def post(self, *args, **kwargs):
         """Creates a new user. Note: Just in bazar-offchain"""
         entity = UserNewEntity.parse_obj(request.json)
@@ -113,6 +114,7 @@ class UserApprovalResource(Resource):
     @api.doc(security='Private JWT')
     @api.expect(product_model, user_model)
     @requires_auth
+    @requires_role(["admin"])
     def put(self, *args, **kwargs):
         """Approves user and product or only product or only user"""
         entity = UserManageEntity.parse_obj(request.json)

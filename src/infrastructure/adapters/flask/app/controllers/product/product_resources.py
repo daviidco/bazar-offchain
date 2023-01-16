@@ -34,7 +34,7 @@ from src.domain.entities.product_entity import ProductNewEntity, AvailabilityEnt
 from src.domain.entities.product_type_entity import ProductTypesListEntity
 from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity
 from src.domain.entities.variety_entity import VarietiesListEntity
-from src.infrastructure.adapters.auth0.auth0_service import requires_auth
+from src.infrastructure.adapters.auth0.auth0_service import requires_auth, requires_role
 from src.infrastructure.adapters.flask.app.utils.ultils import get_help_schema, get_schema, is_valid_uuid_input, \
     compare_nums
 from tests.utils import generate_data_entity
@@ -93,14 +93,14 @@ class ProductResource(Resource):
     @api.doc(security='Private JWT')
     @api.response(success_code_post, 'Success', response_model_post)
     @requires_auth
+    @requires_role(["seller"])
     def post(self, *args, **kwargs):
         """Creates a new product"""
         jwt = dict(request.headers).get('Authorization', None)
-        role = kwargs.get('role', None)
         entity = ProductNewEntity.parse_obj(json.loads(request.form['body']))
         files = request.files.getlist('files[]')
         images = request.files.getlist('images[]')
-        result = self.create_product.execute(jwt, role, entity, files, images)
+        result = self.create_product.execute(jwt, entity, files, images)
         return json.loads(result.json()), self.success_code_post
 
 
@@ -123,11 +123,11 @@ class ProductsByUserResource(Resource):
     @requires_auth
     def get(self, user_uuid, *args, **kwargs):
         """Gets all user's products by the user uuid. if user is buyer will try to list all products"""
-        role = kwargs.get('role', None)
+        roles = kwargs.get('role', None)
         limit = request.args.get('limit', 10)
         offset = request.args.get('offset', 0)
         is_valid_uuid_input(user_uuid)
-        result = self.get_products.execute(user_uuid, role, limit, offset)
+        result = self.get_products.execute(user_uuid, roles, limit, offset)
         return json.loads(result.json()), self.success_code
 
 
@@ -149,12 +149,13 @@ class ProductsUserByCategoryResource(Resource):
     @requires_auth
     def get(self, user_uuid, basic_product, *args, **kwargs):
         """Gets all user's products by the user uuid and by category. if user is buyer will try to list all products"""
-        role = kwargs.get('role', None)
+        roles = kwargs.get('role', None)
         limit = request.args.get('limit', 10)
         offset = request.args.get('offset', 0)
         is_valid_uuid_input(user_uuid)
-        result = self.get_products.execute(user_uuid, role, basic_product, limit, offset)
+        result = self.get_products.execute(user_uuid, roles, basic_product, limit, offset)
         return json.loads(result.json()), self.success_code
+
 
 @api.route("/basic-products")
 class BasicProductsResource(Resource):
@@ -464,6 +465,7 @@ class ProductEditResource(Resource):
     @api.doc(security='Private JWT', responses={403: 'Not Authorized'})
     @api.response(success_code_put, 'Success', response_model_put)
     @requires_auth
+    @requires_role(["seller"])
     def put(self, uuid_product, **kwargs):
         """Updates product. This endpoint has two important boolean keys (change_files, change_images)
         when one is true delete relationships and delete object from cloud repository respectively.
@@ -476,12 +478,11 @@ class ProductEditResource(Resource):
 
         When the request has not a certification (file) product state will be (hidden)"""
         jwt = dict(request.headers).get('Authorization', None)
-        role = kwargs.get('role', None)
         entity = ProductEditEntity.parse_obj(json.loads(request.form['body']))
         files = request.files.getlist('files[]')
         images = request.files.getlist('images[]')
         is_valid_uuid_input(uuid_product)
-        result = self.edit_product.execute(jwt, role, uuid_product, entity, files, images)
+        result = self.edit_product.execute(jwt, uuid_product, entity, files, images)
         return json.loads(result.json()), self.success_code_put
 
 

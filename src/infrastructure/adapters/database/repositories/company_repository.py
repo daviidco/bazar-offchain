@@ -40,9 +40,13 @@ class CompanyRepository(ICompanyRepository):
         self.session_maker = sessionmaker(bind=adapter_db.engine)
         self.__storage_repository = storage_repository
 
-    def new_company(self, jwt: str, role: str, company_entity: CompanyNewEntity, objects_cloud: list) -> CompanyEntity:
+    def new_company(self, jwt: str, roles: list, company_entity: CompanyNewEntity, objects_cloud: list) -> CompanyEntity:
         with self.session_maker() as session:
             current_app.logger.info(f"Creating new company: {company_entity.company_name}")
+            if 'seller' in roles:
+                role = 'seller'
+            else:
+                role = 'buyer'
             global user_rol
             global prefix
             prefix = None

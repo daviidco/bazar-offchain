@@ -22,7 +22,7 @@ from src.domain.entities.company_entity import CompanyEntity, CompanyNewEntity, 
 class ICompanyRepository(ABC):
 
     @abstractmethod
-    def new_company(self, jwt: str, role: str, company_entity: CompanyNewEntity,
+    def new_company(self, jwt: str, roles: list, company_entity: CompanyNewEntity,
                     objects_cloud: list) -> CompanyEntity:
         raise Exception('Not implemented method')
 

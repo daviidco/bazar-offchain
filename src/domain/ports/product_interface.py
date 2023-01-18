@@ -50,7 +50,7 @@ class IProductRepository(ABC):
 
     @abstractmethod
     def get_products_by_user(self, uuid: str, roles: list, limit: int, offset: int) -> Union[ProductsPaginationEntity,
-                                                                                           ProductsListEntity]:
+                                                                                             ProductsListEntity]:
         raise Exception('Not implemented method')
 
     @abstractmethod
@@ -148,6 +148,3 @@ class IProductRepository(ABC):
     def get_products_filter_buyer_search_bar(self, filter_entity: ProductFilterBuyerBasicProductEntity) \
             -> ProductsPaginationEntity:
         raise Exception('Not implemented method')
-
-
-

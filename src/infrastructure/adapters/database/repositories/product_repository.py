@@ -340,9 +340,10 @@ class ProductRepository(IProductRepository):
 
         with self.session_maker() as session:
             if 'buyer' in roles:
-                total = self.get_products_count()
+                query = session.query(Product).filter_by(status="Approved")
+                list_objects = query.offset(offset).limit(limit).all()
+                total = query.from_self().count()
                 total_pages = get_total_pages(total, int(limit))
-                list_objects = session.query(Product).offset(offset).limit(limit).all()
                 list_objects = get_field_is_like(list_objects, uuid)
                 list_objects = get_urls_files_and_images(list_objects)
                 return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
@@ -350,7 +351,8 @@ class ProductRepository(IProductRepository):
 
             elif 'seller' in roles:
                 company_id = self.utils_db.get_company_by_uuid_user(uuid).id
-                list_objects = session.query(Product).filter_by(company_id=company_id).all()
+                list_objects = session.query(Product).filter(Product.status == "Approved",
+                                                             Product.company_id == company_id).all()
                 list_e_objects = get_urls_files_and_images(list_objects)
                 return ProductsListEntity(results=list_e_objects)
 
@@ -364,12 +366,15 @@ class ProductRepository(IProductRepository):
             -> Union[ProductsPaginationEntity, ProductsListEntity]:
         with self.session_maker() as session:
             if 'buyer' in roles:
-                total = self.get_products_count()
-                total_pages = get_total_pages(total, int(limit))
-                list_objects = session.query(Product). \
+
+                query = session.query(Product). \
                     join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
-                    .filter_by(basic_product=basic_product) \
-                    .offset(offset).limit(limit).all()
+                    .filter(Product.basic_product == basic_product, Product.status == "Approved")
+
+                total = query.from_self().count()
+                list_objects = query.offset(offset).limit(limit).all()
+                total_pages = get_total_pages(total, int(limit))
+
                 list_objects = get_field_is_like(list_objects, uuid)
                 list_objects = get_urls_files_and_images(list_objects)
                 return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
@@ -630,7 +635,8 @@ class ProductRepository(IProductRepository):
             query = session.query(Product) \
                 .filter(Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
                         Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
-                        Product.available_for_sale >= filter_entity.available_for_sale)
+                        Product.available_for_sale >= filter_entity.available_for_sale,
+                        Product.status == 'Approved')
 
             total = query.from_self().count()
             list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
@@ -657,7 +663,8 @@ class ProductRepository(IProductRepository):
         with self.session_maker() as session:
             query = session.query(Product) \
                 .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
-                .filter(BasicProduct.basic_product == filter_entity.basic_product)
+                .filter(BasicProduct.basic_product == filter_entity.basic_product) \
+                .filter(Product.status == 'Approved')
 
             total = query.from_self().count()
             list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
@@ -686,7 +693,8 @@ class ProductRepository(IProductRepository):
         with self.session_maker() as session:
             query = session.query(Product) \
                 .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
-                .filter(BasicProduct.basic_product.ilike('%' + filter_entity.basic_product + '%'))
+                .filter(BasicProduct.basic_product.ilike('%' + filter_entity.basic_product + '%')) \
+                .filter(Product.status == 'Approved')
 
             total = query.from_self().count()
             list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()

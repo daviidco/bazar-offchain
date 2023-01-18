@@ -35,9 +35,9 @@ class CreateProduct:
     def __init__(self, product_repository: IProductRepository):
         self.__product_repository = product_repository
 
-    def execute(self, jwt: str, role: str, product_entity: ProductNewEntity,
+    def execute(self, jwt: str, product_entity: ProductNewEntity,
                 objects_cloud: list, images: list) -> ProductEntity:
-        return self.__product_repository.new_product(jwt, role, product_entity, objects_cloud, images)
+        return self.__product_repository.new_product(jwt, product_entity, objects_cloud, images)
 
 
 class GetProduct:
@@ -63,8 +63,8 @@ class GetProductsByUser:
     def __init__(self, product_repository: IProductRepository):
         self.__product_repository = product_repository
 
-    def execute(self, uuid: str, role: str, limit: int, offset: int) -> ProductsPaginationEntity:
-        return self.__product_repository.get_products_by_user(uuid, role, limit, offset)
+    def execute(self, uuid: str, roles: list, limit: int, offset: int) -> ProductsPaginationEntity:
+        return self.__product_repository.get_products_by_user(uuid, roles, limit, offset)
 
 
 class GetProductsBuyerByCategory:
@@ -72,8 +72,8 @@ class GetProductsBuyerByCategory:
     def __init__(self, product_repository: IProductRepository):
         self.__product_repository = product_repository
 
-    def execute(self, uuid: str, role: str, basic_product:str, limit: int, offset: int) -> ProductsPaginationEntity:
-        return self.__product_repository.get_products_user_by_category(uuid, role, basic_product, limit, offset)
+    def execute(self, uuid: str, roles: list, basic_product:str, limit: int, offset: int) -> ProductsPaginationEntity:
+        return self.__product_repository.get_products_user_by_category(uuid, roles, basic_product, limit, offset)
 
 
 class GetAllBasicProducts:
@@ -171,9 +171,9 @@ class EditProduct:
     def __init__(self, product_repository: IProductRepository):
         self.__product_repository = product_repository
 
-    def execute(self, jwt: str, role: str, uuid_product: str, product_entity: ProductNewEntity,
+    def execute(self, jwt: str, uuid_product: str, product_entity: ProductNewEntity,
                 objects_cloud: list, images: list) -> ProductEntity:
-        return self.__product_repository.edit_product(jwt, role, uuid_product, product_entity, objects_cloud, images)
+        return self.__product_repository.edit_product(jwt, uuid_product, product_entity, objects_cloud, images)
 
 
 class GetProductsFilterSeller:

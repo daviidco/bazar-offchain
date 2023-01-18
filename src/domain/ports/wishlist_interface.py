@@ -22,13 +22,13 @@ from src.domain.entities.wishlist_entity import WishProductNewEntity, WishProduc
 class IWishListRepository(ABC):
 
     @abstractmethod
-    def new_product_on_wishlist(self, role: str, wish_product_entity: WishProductNewEntity) -> WishProductEntity:
+    def new_product_on_wishlist(self, wish_product_entity: WishProductNewEntity) -> WishProductEntity:
         raise Exception('Not implemented method')
 
     @abstractmethod
-    def delete_product_from_wishlist(self, role: str, wish_product_entity: WishProductNewEntity):
+    def delete_product_from_wishlist(self, wish_product_entity: WishProductNewEntity):
         raise Exception('Not implemented method')
 
     @abstractmethod
-    def get_wishlist_by_uuid_buyer(self, uuid: str, role: str, limit: int, offset: int) -> ProductsPaginationEntity:
+    def get_wishlist_by_uuid_buyer(self, uuid: str, limit: int, offset: int) -> ProductsPaginationEntity:
         raise Exception('Not implemented method')

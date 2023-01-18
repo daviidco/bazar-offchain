@@ -188,7 +188,7 @@ class ProductRepository(IProductRepository):
                     e.error['description'] = e.error['description'] + f' <uuid_certification> {c}'
                     abort(code=e.status_code, message=e.message, error=e.error)
 
-    def new_product(self, jwt: str, role: str, product_entity: ProductNewEntity,
+    def new_product(self, jwt: str, product_entity: ProductNewEntity,
                     objects_cloud: list, images: list) -> ProductEntity:
         with self.session_maker() as session:
             current_app.logger.info(f"Creating new product of user: {product_entity.uuid_user}")
@@ -235,7 +235,7 @@ class ProductRepository(IProductRepository):
                     session_trans.flush()
 
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                    prefix_base = f"{role}/{product_entity.uuid_user}/{object_to_save.uuid}"
+                    prefix_base = f"seller/{product_entity.uuid_user}/{object_to_save.uuid}"
 
                     # Save files in cloud and urls in database
                     if objects_cloud:
@@ -335,11 +335,11 @@ class ProductRepository(IProductRepository):
             return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                             total_pages=total_pages)
 
-    def get_products_by_user(self, uuid: str, role: str, limit: int, offset: int) -> Union[ProductsPaginationEntity,
-                                                                                           ProductsListEntity]:
+    def get_products_by_user(self, uuid: str, roles: list, limit: int, offset: int) -> Union[ProductsPaginationEntity,
+                                                                                             ProductsListEntity]:
 
         with self.session_maker() as session:
-            if role == 'buyer':
+            if 'buyer' in roles:
                 total = self.get_products_count()
                 total_pages = get_total_pages(total, int(limit))
                 list_objects = session.query(Product).offset(offset).limit(limit).all()
@@ -348,7 +348,7 @@ class ProductRepository(IProductRepository):
                 return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                                 total_pages=total_pages)
 
-            elif role == 'seller':
+            elif 'seller' in roles:
                 company_id = self.utils_db.get_company_by_uuid_user(uuid).id
                 list_objects = session.query(Product).filter_by(company_id=company_id).all()
                 list_e_objects = get_urls_files_and_images(list_objects)
@@ -356,36 +356,36 @@ class ProductRepository(IProductRepository):
 
             else:
                 e = api_error('RoleNotFound')
-                e.error['description'] = e.error['description'] + f' <role: {role}>'
+                e.error['description'] = e.error['description'] + f' <roles: {roles}>'
                 current_app.logger.error(f"{e.error['description']}")
                 abort(code=e.status_code, message=e.message, error=e.error)
 
-    def get_products_user_by_category(self, uuid: str, role: str, basic_product, limit: str, offset: int) \
+    def get_products_user_by_category(self, uuid: str, roles: list, basic_product, limit: str, offset: int) \
             -> Union[ProductsPaginationEntity, ProductsListEntity]:
         with self.session_maker() as session:
-            if role == 'buyer':
+            if 'buyer' in roles:
                 total = self.get_products_count()
                 total_pages = get_total_pages(total, int(limit))
-                list_objects = session.query(Product).\
-                    join(BasicProduct, Product.basic_product_id == BasicProduct.id)\
-                    .filter_by(basic_product=basic_product)\
+                list_objects = session.query(Product). \
+                    join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
+                    .filter_by(basic_product=basic_product) \
                     .offset(offset).limit(limit).all()
                 list_objects = get_field_is_like(list_objects, uuid)
                 list_objects = get_urls_files_and_images(list_objects)
                 return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                                 total_pages=total_pages)
-            elif role == 'seller':
+            elif 'seller' in roles:
                 company_id = self.utils_db.get_company_by_uuid_user(uuid).id
-                list_objects = session.query(Product).filter_by(company_id=company_id)\
-                    .join(BasicProduct, Product.basic_product_id == BasicProduct.id)\
-                    .filter_by(basic_product=basic_product)\
+                list_objects = session.query(Product).filter_by(company_id=company_id) \
+                    .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
+                    .filter_by(basic_product=basic_product) \
                     .offset(offset).limit(limit).all()
                 list_e_objects = get_urls_files_and_images(list_objects)
                 return ProductsListEntity(results=list_e_objects)
 
             else:
                 e = api_error('RoleNotFound')
-                e.error['description'] = e.error['description'] + f' <role: {role}>'
+                e.error['description'] = e.error['description'] + f' <roles: {roles}>'
                 current_app.logger.error(f"{e.error['description']}")
                 abort(code=e.status_code, message=e.message, error=e.error)
 
@@ -459,7 +459,7 @@ class ProductRepository(IProductRepository):
             current_app.logger.info(f"{product} state edited")
             return ProductEntity.from_orm(product)
 
-    def edit_product(self, jwt: str, role: str, uuid_product: str, product_entity: ProductEditEntity,
+    def edit_product(self, jwt: str, uuid_product: str, product_entity: ProductEditEntity,
                      objects_cloud: list, images: list) -> ProductEntity:
 
         with self.session_maker() as session:
@@ -503,7 +503,7 @@ class ProductRepository(IProductRepository):
                     session_trans.flush()
 
                     path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-                    prefix_base = f"{role}/{product_entity.uuid_user}/{product_to_edit.uuid}"
+                    prefix_base = f"seller/{product_entity.uuid_user}/{product_to_edit.uuid}"
 
                     # Save new files in cloud and urls in database
                     if product_entity.change_files:

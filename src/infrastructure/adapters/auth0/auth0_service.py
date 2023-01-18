@@ -108,7 +108,7 @@ def requires_auth(f):
                 domain = AUTH0_API_AUDIENCE.split('.')[0]
                 domain_roles = f'{domain}/roles'
                 if domain_roles in payload:
-                    kwargs['role'] = payload[domain_roles][0]
+                    kwargs['role'] = payload[domain_roles]
             except Exception:
                 e = api_error('RoleAccessTokenError')
                 abort(code=e.status_code, message=e.message, error=e.error)
@@ -119,3 +119,18 @@ def requires_auth(f):
         abort(code=e.status_code, message=e.message, error=e.error)
 
     return decorated
+
+
+def requires_role(allowed_roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            user_roles = kwargs.get('role', None)
+            check = any(item in user_roles for item in allowed_roles)
+            if user_roles is not None and check:
+                return f(*args, **kwargs)
+            else:
+                e = api_error('RoleWithoutPermission')
+                abort(code=e.status_code, message=e.message, error=e.error)
+        return decorated
+    return decorator

@@ -32,13 +32,8 @@ class WishListRepository(IWishListRepository):
         self.session_maker = sessionmaker(bind=adapter_db.engine)
         self.utils_db = utils_db
 
-    def new_product_on_wishlist(self, role: str, wish_product_entity: WishProductNewEntity) -> WishProductEntity:
+    def new_product_on_wishlist(self, wish_product_entity: WishProductNewEntity) -> WishProductEntity:
         with self.session_maker() as session:
-            if role != 'buyer':
-                current_app.logger.info(f"Can't do action because the role is not buyer")
-                e = api_error('RoleWithoutPermission')
-                abort(code=e.status_code, message=e.message, error=e.error)
-
             user = self.utils_db.get_user_by_uuid_user(wish_product_entity.user_uuid)
             product = self.utils_db.get_product_by_uuid_product(wish_product_entity.product_uuid)
             object_to_save = WishList(
@@ -58,12 +53,8 @@ class WishListRepository(IWishListRepository):
             current_app.logger.info(f"Wish product {object_to_save} saved")
             return response
 
-    def delete_product_from_wishlist(self, role: str, wish_product_entity: WishProductNewEntity):
+    def delete_product_from_wishlist(self, wish_product_entity: WishProductNewEntity):
         with self.session_maker() as session:
-            if role != 'buyer':
-                current_app.logger.info(f"Can't do action because the role is not buyer")
-                e = api_error('RoleWithoutPermission')
-                abort(code=e.status_code, message=e.message, error=e.error)
             user = self.utils_db.get_user_by_uuid_user(wish_product_entity.user_uuid)
             product = self.utils_db.get_product_by_uuid_product(wish_product_entity.product_uuid)
             object_to_delete = session.query(WishList).filter_by(user_id=user.id, product_id=product.id)
@@ -73,12 +64,8 @@ class WishListRepository(IWishListRepository):
             current_app.logger.info(f"Wish product {object_to_delete} deleted")
             return response
 
-    def get_wishlist_by_uuid_buyer(self, uuid: str, role: str, limit: int, offset: int) -> ProductsPaginationEntity:
+    def get_wishlist_by_uuid_buyer(self, uuid: str, limit: int, offset: int) -> ProductsPaginationEntity:
         with self.session_maker() as session:
-            if role != 'buyer':
-                current_app.logger.error(f"Role {role} can't list wishlist")
-                e = api_error('RoleWithoutPermission')
-                abort(code=e.status_code, message=e.message, error=e.error)
             user_id = self.utils_db.get_user_by_uuid_user(uuid).id
             query = session.query(Product)\
                 .join(WishList, Product.id == WishList.product_id)\

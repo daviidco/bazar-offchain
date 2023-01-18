@@ -22,7 +22,7 @@ from src.application.wishlist.wishlist_uc import CreateWishProduct, DeleteWishPr
 from src.domain.entities.common_entity import InputPaginationEntity
 from src.domain.entities.product_entity import ProductNewEntity, ProductsPaginationEntity
 from src.domain.entities.wishlist_entity import WishProductNewEntity, WishProductEntity
-from src.infrastructure.adapters.auth0.auth0_service import requires_auth
+from src.infrastructure.adapters.auth0.auth0_service import requires_auth, requires_role
 from src.infrastructure.adapters.flask.app.utils.ultils import get_schema, is_valid_uuid_input
 
 #
@@ -44,20 +44,20 @@ class ProductResource(Resource):
 
     @api.doc(params=get_schema(WishProductNewEntity), security='Private JWT')
     @requires_auth
+    @requires_role(["buyer"])
     def post(self, *args, **kwargs):
         """Append product to user wishlist"""
-        role = kwargs.get('role', None)
         entity = WishProductNewEntity.parse_obj(request.args)
-        result = self.create_wish_product.execute(role, entity)
+        result = self.create_wish_product.execute(entity)
         return json.loads(result.json()), 201
 
     @api.doc(params=get_schema(WishProductEntity), security='Private JWT')
     @requires_auth
+    @requires_role(["buyer"])
     def delete(self, *args, **kwargs):
         """Remove product from user wishlist"""
-        role = kwargs.get('role', None)
         entity = WishProductNewEntity.parse_obj(request.args)
-        result = self.delete_wish_product.execute(role, entity)
+        result = self.delete_wish_product.execute(entity)
         return json.loads(result.json()), 200
 
 
@@ -76,12 +76,12 @@ class ProductsByUserResource(Resource):
     @api.doc(params=get_schema(InputPaginationEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @requires_auth
+    @requires_role(["buyer"])
     def get(self, user_uuid, *args, **kwargs):
         """Get wishlist by buyer"""
-        role = kwargs.get('role', None)
         limit = request.args.get('limit', 10)
         offset = request.args.get('offset', 0)
         is_valid_uuid_input(user_uuid)
-        result = self.get_wishlist.execute(user_uuid, role, limit, offset)
+        result = self.get_wishlist.execute(user_uuid, limit, offset)
         return json.loads(result.json()), self.success_code
 

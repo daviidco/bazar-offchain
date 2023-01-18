@@ -32,7 +32,7 @@ from src.domain.entities.variety_entity import VarietiesListEntity, VarietyEntit
 class IProductRepository(ABC):
 
     @abstractmethod
-    def new_product(self, jwt: str, role: str, product_entity: ProductNewEntity,
+    def new_product(self, jwt: str, product_entity: ProductNewEntity,
                     objects_cloud: list, images: list) -> ProductEntity:
         raise Exception('Not implemented method')
 
@@ -49,12 +49,12 @@ class IProductRepository(ABC):
         raise Exception('Not implemented method')
 
     @abstractmethod
-    def get_products_by_user(self, uuid: str, role: str, limit: int, offset: int) -> Union[ProductsPaginationEntity,
+    def get_products_by_user(self, uuid: str, roles: list, limit: int, offset: int) -> Union[ProductsPaginationEntity,
                                                                                            ProductsListEntity]:
         raise Exception('Not implemented method')
 
     @abstractmethod
-    def get_products_user_by_category(self, uuid: str, role: str, basic_product: str, limit: int, offset: int) \
+    def get_products_user_by_category(self, uuid: str, roles: list, basic_product: str, limit: int, offset: int) \
             -> Union[ProductsPaginationEntity, ProductsListEntity]:
         raise Exception('Not implemented method')
 
@@ -118,7 +118,7 @@ class IProductRepository(ABC):
         raise Exception('Not implemented method')
 
     @abstractmethod
-    def edit_product(self, jwt: str, role: str, uuid_product: str, product_entity: ProductNewEntity,
+    def edit_product(self, jwt: str, uuid_product: str, product_entity: ProductNewEntity,
                      objects_cloud: list, images: list) -> ProductEntity:
         raise Exception('Not implemented method')
 

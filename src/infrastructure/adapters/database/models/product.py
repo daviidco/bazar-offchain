@@ -229,7 +229,7 @@ class Product(base):
 
     def check_use_like(self, uuid_user):
         for u in self.product_wish_list:
-            if uuid_user == u.user.uuid:
+            if str(uuid_user) == str(u.user.uuid):
                 self.is_liked = True
                 return self.is_liked
         return self.is_liked

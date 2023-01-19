@@ -17,7 +17,7 @@ from src.domain.entities.product_entity import ProductsPaginationEntity
 from src.domain.entities.wishlist_entity import WishProductNewEntity, WishProductEntity
 from src.domain.ports.wishlist_interface import IWishListRepository
 from src.infrastructure.adapters.database.models import WishList, Product
-from src.infrastructure.adapters.database.repositories.utils import get_total_pages
+from src.infrastructure.adapters.database.repositories.utils import get_total_pages, get_urls_files_and_images
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
@@ -76,5 +76,7 @@ class WishListRepository(IWishListRepository):
             total_pages = get_total_pages(total, int(limit))
             for p in list_objects:
                 p.check_use_like(uuid)
-            return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
+
+            list_e_objects = get_urls_files_and_images(list_objects)
+            return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_e_objects,
                                             total_pages=total_pages)

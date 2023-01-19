@@ -190,6 +190,7 @@ class Product(base):
     product_images = relationship("ProductImage", backref='products')
 
     # Association Proxy
+    company_name = association_proxy("company", "company_name")
     status = association_proxy("status_product", "status_product")
     basic_product = association_proxy("basic_product_r", "basic_product")
     basic_product_uuid = association_proxy("basic_product_r", "uuid")

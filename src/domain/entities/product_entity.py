@@ -72,6 +72,7 @@ class ProductEntity(ProductOptionsEntity, ProductBaseEntity, UuidEntity):
     sustainability_certifications: List[SustainabilityCertificationEntity] = None
     url_avatar: AnyHttpUrl = None
     is_liked: bool = False
+    company_name: str
 
 
 class ProductsListEntity(BaseModel):

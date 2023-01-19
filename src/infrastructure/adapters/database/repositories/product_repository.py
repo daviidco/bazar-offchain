@@ -349,10 +349,9 @@ class ProductRepository(IProductRepository):
                 return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                                 total_pages=total_pages)
 
-            elif 'seller' in roles:
+            elif 'seller' in roles or 'admin' in roles:
                 company_id = self.utils_db.get_company_by_uuid_user(uuid).id
-                list_objects = session.query(Product).filter(Product.status == "Approved",
-                                                             Product.company_id == company_id).all()
+                list_objects = session.query(Product).filter(Product.company_id == company_id).all()
                 list_e_objects = get_urls_files_and_images(list_objects)
                 return ProductsListEntity(results=list_e_objects)
 

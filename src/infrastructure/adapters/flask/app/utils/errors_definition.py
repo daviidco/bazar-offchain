@@ -14,7 +14,6 @@
 # This file contains a dictionary where are defined application errors
 # @author David Córdoba
 #
-
 APIErrors = {
     # Errors Auth0 E2000 - E2100
     'AuthorizationHeaderMissing': {"error": {"code": "E2000",
@@ -156,6 +155,12 @@ APIErrors = {
                                "message": "Values compared are not right",
                                "description": "Undefined.",
                                "status_code": 406}},
+
+    'ApproveProductError': {"error": {"code": "E2221",
+                                      "message": "Previous state is not valid to publish product",
+                                      "description": "Product must be previously Approved or Hidden to be published "
+                                                     "but its ",
+                                      "status_code": 400}},
 
     # Errors Flask E2200 - E2300
 

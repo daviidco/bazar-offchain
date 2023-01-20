@@ -378,15 +378,14 @@ class ProductHiddenResource(Resource):
     @requires_auth
     def patch(self, uuid_product, *args, **kwargs):
         """Updates state product to hidden"""
-        state = 'Hide'
+        state = 'Hidden'
         is_valid_uuid_input(uuid_product)
         result = self.edit_product_state.execute(state, uuid_product)
         return json.loads(result.json()), self.success_code
 
 
-@api.route("/update-public/<string:uuid_product>")
 @api.route("/update-approve/<string:uuid_product>")
-class ProductPublicResource(Resource):
+class ProductApproveResource(Resource):
     # Swagger
     response_schema = ProductEntity.schema()
     response_model = api.schema_model(response_schema['title'], response_schema)
@@ -404,6 +403,31 @@ class ProductPublicResource(Resource):
     def patch(self, uuid_product, *args, **kwargs):
         """Updates state product to public"""
         state = 'Approved'
+        is_valid_uuid_input(uuid_product)
+        result = self.edit_product_state.execute(state, uuid_product)
+        return json.loads(result.json()), self.success_code
+
+
+@api.route("/update-publish/<string:uuid_product>")
+class ProductPublishResource(Resource):
+    # Swagger
+    response_schema = ProductEntity.schema()
+    response_model = api.schema_model(response_schema['title'], response_schema)
+    success_code = 200
+
+    @inject.autoparams('edit_product_state')
+    def __init__(self, app: current_app, edit_product_state: EditStateProduct, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api = app
+        self.edit_product_state = edit_product_state
+
+    @api.doc(security='Private JWT')
+    @api.response(success_code, 'Success', response_model)
+    @requires_auth
+    @requires_role(["seller"])
+    def patch(self, uuid_product, *args, **kwargs):
+        """Updates state product to published"""
+        state = 'Published'
         is_valid_uuid_input(uuid_product)
         result = self.edit_product_state.execute(state, uuid_product)
         return json.loads(result.json()), self.success_code
@@ -427,6 +451,7 @@ class ProductDeleteResource(Resource):
     @api.doc(security='Private JWT', responses={403: 'Not Authorized'})
     @api.response(success_code, 'Success', response_model)
     @requires_auth
+    @requires_role(["admin", "seller"])
     def patch(self, uuid_product, *args, **kwargs):
         """Updates state product to delete"""
         state = 'Deleted'

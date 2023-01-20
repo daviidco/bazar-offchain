@@ -36,7 +36,7 @@ from src.infrastructure.adapters.database.models.product import Product, BasicPr
     ProductImage, StatusProduct, ProductIncoterm
 from src.infrastructure.adapters.database.repositories.utils import build_url_storage, \
     build_url_bd, get_total_pages, validate_num_certifications_vs_num_files, send_email_to_admin, get_field_is_like, \
-    get_urls_files_and_images
+    get_urls_files_and_images, get_product_by_uuid_product
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
 
@@ -318,7 +318,7 @@ class ProductRepository(IProductRepository):
 
     def get_product_by_uuid(self, uuid: str) -> ProductEntity:
         with self.session_maker() as session:
-            product = session.query(Product).filter_by(uuid=uuid).first()
+            product = get_product_by_uuid_product(session, uuid)
             return product
 
     def get_products_count(self) -> int:
@@ -340,7 +340,7 @@ class ProductRepository(IProductRepository):
 
         with self.session_maker() as session:
             if 'buyer' in roles:
-                query = session.query(Product).filter_by(status="Approved")
+                query = session.query(Product).filter_by(status="Published")
                 list_objects = query.offset(offset).limit(limit).all()
                 total = query.from_self().count()
                 total_pages = get_total_pages(total, int(limit))
@@ -368,7 +368,7 @@ class ProductRepository(IProductRepository):
 
                 query = session.query(Product). \
                     join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
-                    .filter(Product.basic_product == basic_product, Product.status == "Approved")
+                    .filter(Product.basic_product == basic_product, Product.status == "Published")
 
                 total = query.from_self().count()
                 list_objects = query.offset(offset).limit(limit).all()
@@ -433,31 +433,36 @@ class ProductRepository(IProductRepository):
 
     def edit_product_availability(self, entity: AvailabilityEntity) -> AvailabilityEntity:
         with self.session_maker() as session:
-            product = session.query(Product).filter_by(uuid=entity.uuid_product).first()
-            if product is None:
-                e = api_error('ObjectNotFound')
-                e.error['description'] = e.error['description'] + f' <product uuid_product: {entity.uuid_product}>'
-                current_app.logger.error(e.error['description'])
-                abort(code=e.status_code, message=e.message, error=e.error)
+            product = get_product_by_uuid_product(session, entity.uuid_product)
             product.available_for_sale = entity.available_for_sale
             session.commit()
             current_app.logger.info(f"{product} availability edited")
             return entity
 
     def get_detail_product_by_uuid(self, uuid: str) -> ProductEntity:
-        product = self.utils_db.get_product_by_uuid_product(uuid)
-        product = get_urls_files_and_images([product])[0]
-        res_product = ProductEntity.from_orm(product)
-        self.utils_db.close_session()
-        return res_product
+        with self.session_maker() as session:
+            product = get_product_by_uuid_product(session, uuid)
+            product = get_urls_files_and_images([product])[0]
+            res_product = ProductEntity.from_orm(product)
+            return res_product
 
     def edit_product_state(self, status: str, uuid: str) -> ProductEntity:
         with self.session_maker() as session:
-            product = self.utils_db.get_product_by_uuid_product(uuid)
+            product = get_product_by_uuid_product(session, uuid)
             state = session.query(StatusProduct).filter_by(status_product=status).first()
             if state is None:
                 e = api_error('ObjectNotFound')
                 abort(code=e.status_code, message=e.message, error=e.error)
+
+            # Flow to Publish Product - Check previous state in (Approved or Hidden)
+            elif status == 'Published':
+                if product.status not in ['Approved', 'Hidden']:
+                    current_app.logger.info(f"Product must be previously Approved or Hidden to be published but its "
+                                            f"{product.status}")
+                    e = api_error('ApproveProductError')
+                    e.error['description'] = e.error['description'] + f'{product.status}'
+                    abort(code=e.status_code, message=e.message, error=e.error)
+
             product.status_id = state.id
             session.commit()
             current_app.logger.info(f"{product} state edited")
@@ -476,7 +481,7 @@ class ProductRepository(IProductRepository):
             if len(product_entity.sustainability_certifications_uuid):
                 self.validate_exists_certifications(product_entity.sustainability_certifications_uuid)
 
-            product_to_edit = self.utils_db.get_product_by_uuid_product(uuid_product)
+            product_to_edit = get_product_by_uuid_product(session, uuid_product)
             product_to_edit.capacity_per_year = product_entity.capacity_per_year
             product_to_edit.date_in_port = product_entity.date_in_port
             product_to_edit.guild_or_association = product_entity.guild_or_association
@@ -635,7 +640,7 @@ class ProductRepository(IProductRepository):
                 .filter(Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
                         Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
                         Product.available_for_sale >= filter_entity.available_for_sale,
-                        Product.status == 'Approved')
+                        Product.status == 'Published')
 
             total = query.from_self().count()
             list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
@@ -663,7 +668,7 @@ class ProductRepository(IProductRepository):
             query = session.query(Product) \
                 .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
                 .filter(BasicProduct.basic_product == filter_entity.basic_product) \
-                .filter(Product.status == 'Approved')
+                .filter(Product.status == 'Published')
 
             total = query.from_self().count()
             list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
@@ -693,7 +698,7 @@ class ProductRepository(IProductRepository):
             query = session.query(Product) \
                 .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
                 .filter(BasicProduct.basic_product.ilike('%' + filter_entity.basic_product + '%')) \
-                .filter(Product.status == 'Approved')
+                .filter(Product.status == 'Published')
 
             total = query.from_self().count()
             list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()

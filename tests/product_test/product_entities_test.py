@@ -37,6 +37,7 @@ class TestProductEntity:
                          'expected_price_per_kg': 435.3,
                          'assistance_logistic': True,
                          'additional_description': 'Description test',
+                         'company_name': 'Distri SAS'
                          }
 
     data_new_product_aux = {

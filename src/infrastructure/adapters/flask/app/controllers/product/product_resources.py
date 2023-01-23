@@ -330,6 +330,7 @@ class ProductAvailabilityEditResource(Resource):
     @api.doc(params=get_schema(AvailabilityEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @requires_auth
+    @requires_role(["seller"])
     def patch(self, *args, **kwargs):
         """Update product availability for sale"""
         entity = AvailabilityEntity.parse_obj(request.args)
@@ -376,6 +377,7 @@ class ProductHiddenResource(Resource):
     @api.doc(security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @requires_auth
+    @requires_role(["seller"])
     def patch(self, uuid_product, *args, **kwargs):
         """Updates state product to hidden"""
         state = 'Hidden'
@@ -400,8 +402,9 @@ class ProductApproveResource(Resource):
     @api.doc(security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @requires_auth
+    @requires_role(["admin"])
     def patch(self, uuid_product, *args, **kwargs):
-        """Updates state product to public"""
+        """Updates state product to approve"""
         state = 'Approved'
         is_valid_uuid_input(uuid_product)
         result = self.edit_product_state.execute(state, uuid_product)
@@ -527,6 +530,7 @@ class ProductFilterSellerResource(Resource):
     @api.doc(params=get_schema(ProductFilterSellerEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @requires_auth
+    @requires_role(["seller"])
     def get(self, *args, **kwargs):
         """Filter to products by seller"""
         user_uuid = request.args.get("user_uuid", 0)
@@ -561,19 +565,23 @@ class ProductFilterBuyerResource(Resource):
     @api.doc(params=get_schema(ProductFilterBuyerEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @requires_auth
+    @requires_role(["buyer"])
     def get(self, *args, **kwargs):
         """Filter to products by buyer"""
         limit = request.args.get('limit', 10)
         offset = request.args.get('offset', 0)
         price_per_kg_start = request.args.get("price_per_kg_start", 0)
         price_per_kg_end = request.args.get("price_per_kg_end", 0)
+        compare_nums(price_per_kg_start, price_per_kg_end, '<')
         available_for_sale = request.args.get("available_for_sale", 0)
+        user_uuid = request.args.get("user_uuid", 0)
 
         entity = ProductFilterBuyerEntity(limit=limit,
                                           offset=offset,
                                           price_per_kg_start=price_per_kg_start,
                                           price_per_kg_end=price_per_kg_end,
-                                          available_for_sale=available_for_sale)
+                                          available_for_sale=available_for_sale,
+                                          user_uuid=user_uuid)
         result = self.get_products_filter_buyer.execute(entity)
         return json.loads(result.json()), self.success_code
 
@@ -596,6 +604,7 @@ class ProductFilterSellerBasicProductResource(Resource):
     @api.doc(params=get_schema(ProductFilterSellerBasicProductEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @requires_auth
+    @requires_role(["seller"])
     def get(self, *args, **kwargs):
         """Filter to products by uuid seller and by name basic product"""
         user_uuid = request.args.get("user_uuid", 0)
@@ -625,6 +634,7 @@ class ProductFilterBuyerBasicProductResource(Resource):
     @api.doc(params=get_schema(ProductFilterBuyerBasicProductEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @requires_auth
+    @requires_role(["buyer"])
     def get(self, *args, **kwargs):
         """Filter to products by name basic product to buyers"""
         user_uuid = request.args.get("user_uuid", 0)
@@ -658,6 +668,7 @@ class ProductFilterSellerSearchBar(Resource):
     @api.doc(params=get_schema(ProductFilterSellerBasicProductEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @requires_auth
+    @requires_role(["seller"])
     def get(self, *args, **kwargs):
         """Filter to products by uuid seller and by part name basic product.
         It doesn't matter if part name is uppercase or lowercase."""
@@ -688,6 +699,7 @@ class ProductFilterBuyerSearchBar(Resource):
     @api.doc(params=get_schema(ProductFilterBuyerBasicProductEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @requires_auth
+    @requires_role(["buyer"])
     def get(self, *args, **kwargs):
         """Filter to products by part of name basic product to buyers.
         It doesn't matter if part name is uppercase or lowercase."""

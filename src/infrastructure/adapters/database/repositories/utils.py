@@ -199,6 +199,16 @@ def get_product_by_uuid_product(session, uuid_product):
     return product
 
 
+def get_user_by_uuid_user(session, uuid_user):
+    user = session.query(User).filter_by(uuid=uuid_user).first()
+    if user is None:
+        e = api_error('ObjectNotFound')
+        e.error['description'] = e.error['description'] + f' <user uuid_user: {uuid_user}>'
+        current_app.logger.error(e.error['description'])
+        abort(code=e.status_code, message=e.message, error=e.error)
+    return user
+
+
 class UtilsDatabase:
     def __init__(self, adapter_db):
         self.session_maker = sessionmaker(bind=adapter_db.engine)

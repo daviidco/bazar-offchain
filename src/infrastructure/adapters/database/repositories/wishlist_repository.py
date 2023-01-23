@@ -13,11 +13,13 @@ from flask_restx import abort
 from sqlalchemy.orm import sessionmaker
 
 from src.domain.entities.common_entity import DeleteEntity
-from src.domain.entities.product_entity import ProductsPaginationEntity
+from src.domain.entities.product_entity import ProductsPaginationEntity, ProductFilterBuyerBasicProductEntity, \
+    ProductFilterBuyerEntity
 from src.domain.entities.wishlist_entity import WishProductNewEntity, WishProductEntity
 from src.domain.ports.wishlist_interface import IWishListRepository
-from src.infrastructure.adapters.database.models import WishList, Product
-from src.infrastructure.adapters.database.repositories.utils import get_total_pages, get_urls_files_and_images
+from src.infrastructure.adapters.database.models import WishList, Product, BasicProduct
+from src.infrastructure.adapters.database.repositories.utils import get_total_pages, get_urls_files_and_images, \
+    get_field_is_like, get_user_by_uuid_user
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
@@ -80,3 +82,62 @@ class WishListRepository(IWishListRepository):
             list_e_objects = get_urls_files_and_images(list_objects)
             return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_e_objects,
                                             total_pages=total_pages)
+
+    def get_wishlist_by_uuid_buyer_and_basic_product(self, filter_entity: ProductFilterBuyerBasicProductEntity) \
+            -> ProductsPaginationEntity:
+        with self.session_maker() as session:
+            user = get_user_by_uuid_user(session, filter_entity.user_uuid)
+            query = session.query(Product) \
+                .join(WishList, WishList.product_id == Product.id) \
+                .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
+                .filter(WishList.user_id == user.id) \
+                .filter(BasicProduct.basic_product == filter_entity.basic_product) \
+
+            total = query.from_self().count()
+            list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
+            total_pages = get_total_pages(total, int(filter_entity.limit))
+
+            list_objects = get_field_is_like(list_objects, filter_entity.user_uuid)
+
+            list_e_objects = get_urls_files_and_images(list_objects)
+            return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
+                                            results=list_e_objects, total_pages=total_pages)
+
+    def get_wishlist_by_uuid_buyer_and_search_bar(self, filter_entity: ProductFilterBuyerBasicProductEntity) \
+            -> ProductsPaginationEntity:
+        with self.session_maker() as session:
+            user = get_user_by_uuid_user(session, filter_entity.user_uuid)
+            query = session.query(Product) \
+                .join(WishList, WishList.product_id == Product.id) \
+                .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
+                .filter(WishList.user_id == user.id) \
+                .filter(BasicProduct.basic_product.ilike('%' + filter_entity.basic_product + '%')) \
+
+            total = query.from_self().count()
+            list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
+            total_pages = get_total_pages(total, int(filter_entity.limit))
+
+            list_objects = get_field_is_like(list_objects, filter_entity.user_uuid)
+            list_e_objects = get_urls_files_and_images(list_objects)
+
+            return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
+                                            results=list_e_objects, total_pages=total_pages)
+
+    def get_wishlist_filter(self, filter_entity: ProductFilterBuyerEntity) -> ProductsPaginationEntity:
+        with self.session_maker() as session:
+            user = get_user_by_uuid_user(session, filter_entity.user_uuid)
+            query = session.query(Product) \
+                .join(WishList, WishList.product_id == Product.id) \
+                .filter(WishList.user_id == user.id) \
+                .filter(Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
+                        Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
+                        Product.available_for_sale >= filter_entity.available_for_sale)
+
+            total = query.from_self().count()
+            list_objects = query.offset(filter_entity.offset).limit(filter_entity.limit).all()
+            total_pages = get_total_pages(total, int(filter_entity.limit))
+
+            list_objects = get_field_is_like(list_objects, filter_entity.user_uuid)
+            list_e_objects = get_urls_files_and_images(list_objects)
+            return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
+                                            results=list_e_objects, total_pages=total_pages)

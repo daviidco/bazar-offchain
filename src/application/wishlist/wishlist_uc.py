@@ -11,7 +11,8 @@
 
 import inject
 
-from src.domain.entities.product_entity import ProductsPaginationEntity
+from src.domain.entities.product_entity import ProductsPaginationEntity, ProductFilterBuyerBasicProductEntity, \
+    ProductFilterBuyerEntity
 from src.domain.entities.wishlist_entity import WishProductNewEntity, WishProductEntity
 from src.domain.ports.wishlist_interface import IWishListRepository
 
@@ -47,5 +48,38 @@ class GetWishList:
 
     def execute(self, uid: str, limit: int, offset: int) -> ProductsPaginationEntity:
         return self.__wishlist_repository.get_wishlist_by_uuid_buyer(uid, limit, offset)
+
+
+class GetWishListByUuidBuyerAndBasicProduct:
+    @inject.autoparams('wishlist_repository')
+    def __init__(self, wishlist_repository: IWishListRepository):
+        self.__wishlist_repository = wishlist_repository
+
+    def execute(self, product_filter_buyer_basic_product_entity: ProductFilterBuyerBasicProductEntity) \
+            -> ProductsPaginationEntity:
+        return self.__wishlist_repository.get_wishlist_by_uuid_buyer_and_basic_product(
+            product_filter_buyer_basic_product_entity)
+
+
+class GetWishListByUuidBuyerAndSearchBar:
+    @inject.autoparams('wishlist_repository')
+    def __init__(self, wishlist_repository: IWishListRepository):
+        self.__wishlist_repository = wishlist_repository
+
+    def execute(self, search_bar_filter: ProductFilterBuyerBasicProductEntity) \
+            -> ProductsPaginationEntity:
+        return self.__wishlist_repository.get_wishlist_by_uuid_buyer_and_search_bar(search_bar_filter)
+
+
+class GetWishlistFilter:
+    @inject.autoparams('wishlist_repository')
+    def __init__(self, wishlist_repository: IWishListRepository):
+        self.__wishlist_repository = wishlist_repository
+
+    def execute(self, product_filter_buyer_entity: ProductFilterBuyerEntity) \
+            -> ProductsPaginationEntity:
+        return self.__wishlist_repository.get_wishlist_filter(product_filter_buyer_entity)
+
+
 
 

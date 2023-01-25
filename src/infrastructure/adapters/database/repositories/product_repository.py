@@ -335,8 +335,7 @@ class ProductRepository(IProductRepository):
             return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                             total_pages=total_pages)
 
-    def get_products_by_user(self, uuid: str, roles: list, limit: int, offset: int) -> Union[ProductsPaginationEntity,
-                                                                                             ProductsListEntity]:
+    def get_products_by_user(self, uuid: str, roles: list, limit: int, offset: int) -> ProductsPaginationEntity:
 
         with self.session_maker() as session:
             if 'buyer' in roles:
@@ -351,9 +350,13 @@ class ProductRepository(IProductRepository):
 
             elif 'seller' in roles or 'admin' in roles:
                 company_id = self.utils_db.get_company_by_uuid_user(uuid).id
-                list_objects = session.query(Product).filter(Product.company_id == company_id).all()
-                list_e_objects = get_urls_files_and_images(list_objects)
-                return ProductsListEntity(results=list_e_objects)
+                query = session.query(Product).filter(Product.company_id == company_id)
+                list_objects = query.offset(offset).limit(limit).all()
+                total = query.from_self().count()
+                total_pages = get_total_pages(total, int(limit))
+                list_objects = get_urls_files_and_images(list_objects)
+                return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
+                                                total_pages=total_pages)
 
             else:
                 e = api_error('RoleNotFound')
@@ -362,7 +365,7 @@ class ProductRepository(IProductRepository):
                 abort(code=e.status_code, message=e.message, error=e.error)
 
     def get_products_user_by_category(self, uuid: str, roles: list, basic_product, limit: str, offset: int) \
-            -> Union[ProductsPaginationEntity, ProductsListEntity]:
+            -> ProductsPaginationEntity:
         with self.session_maker() as session:
             if 'buyer' in roles:
 
@@ -380,12 +383,17 @@ class ProductRepository(IProductRepository):
                                                 total_pages=total_pages)
             elif 'seller' in roles:
                 company_id = self.utils_db.get_company_by_uuid_user(uuid).id
-                list_objects = session.query(Product).filter_by(company_id=company_id) \
+                query = session.query(Product).filter_by(company_id=company_id) \
                     .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
-                    .filter_by(basic_product=basic_product) \
-                    .offset(offset).limit(limit).all()
-                list_e_objects = get_urls_files_and_images(list_objects)
-                return ProductsListEntity(results=list_e_objects)
+                    .filter_by(basic_product=basic_product)
+
+                total = query.from_self().count()
+                list_objects = query.offset(offset).limit(limit).all()
+                total_pages = get_total_pages(total, int(limit))
+
+                list_objects = get_urls_files_and_images(list_objects)
+                return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
+                                                total_pages=total_pages)
 
             else:
                 e = api_error('RoleNotFound')

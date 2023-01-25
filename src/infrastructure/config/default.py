@@ -31,7 +31,6 @@ PROPAGATE_EXCEPTIONS = False
 
 # Flask-Restx
 BUNDLE_ERRORS = False
-ERROR_404_HELP = True
 UTC_TIME_ZONE = pytz.timezone('America/Bogota')
 
 # External services

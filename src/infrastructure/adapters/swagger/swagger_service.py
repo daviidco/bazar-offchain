@@ -37,6 +37,8 @@ api = Api(service_swagger, title="bazar-offchain Api - Documentation",
 # Recursive import of controllers app as Namespaces
 if os.getcwd().endswith('flask'):
     os.chdir('../../../../')
+elif os.getcwd().endswith('_test'):
+    os.chdir('../../')
 base_dir = os.getcwd()+"/src/infrastructure/adapters/flask/app/controllers"
 module_managers_folders = os.listdir(base_dir)
 list_name_spaces = []

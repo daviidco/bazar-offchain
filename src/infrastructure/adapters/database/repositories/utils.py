@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 
 import requests
 from flask import current_app
@@ -16,11 +15,12 @@ from src.infrastructure.templates_email import TemplateAdminProduct
 AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
 
 
-def default_prefix_cloud():
-    path_datetime = str(datetime.today().strftime('%Y/month-%m/day-%d/%I-%M-%S'))
-
-
 def build_urls_from_profile_image(profile_image):
+    """
+    Build urls to profile images
+    :param profile_image: profile image
+    :return: list of urls profile images
+    """
     # Urls profile images
     profile_images = []
     if profile_image is not None:
@@ -35,6 +35,11 @@ def build_urls_from_profile_image(profile_image):
 
 
 def build_urls_from_url_image(url_image):
+    """
+    Build urls from one url image
+    :param url_image: url image
+    :return: list of urls profile images
+    """
     profile_images = []
     if url_image is None:
         return []
@@ -48,17 +53,36 @@ def build_urls_from_url_image(url_image):
 
 
 def build_url_bd(prefix, name):
+    """
+    Function return complete url where will be saved the objet
+    :param prefix: prefix url
+    :param name: name object
+    :return: url to bd
+    """
     file_name = name.replace('+', '%2B').replace(' ', '+')
     key_bd = f"https://{AWS_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{prefix}/{file_name}"
     return key_bd
 
 
 def build_url_storage(prefix, name):
+    """
+    Function return partial url where will be saved the object
+    :param prefix: prefix url
+    :param name: name object
+    :return: key storage
+    """
     key_storage = f"{prefix}/{name}"
     return key_storage
 
 
 def request_to_ms_auth(jwt, uuid_user, get_person=False):
+    """
+    Function that do request to bazar-auth
+    :param jwt: json web token to get username of bazar-auth
+    :param uuid_user: uuid user to get username of bazar-auth
+    :param get_person: boolean flag determines call endpoint user o endpoint person
+    :return: response data from bazar-auth
+    """
     base_url = URL_MS_BAZAR_AUTH
     headers = {
         'accept': '*/*',
@@ -81,6 +105,12 @@ def request_to_ms_auth(jwt, uuid_user, get_person=False):
 
 
 def get_user_names(jwt, uuid_user) -> tuple:
+    """
+    Function to get email from bazar-auth
+    :param jwt: json web token to get username of bazar-auth
+    :param uuid_user: uuid user to get username of bazar-auth
+    :return: firstname and lastname like tuple
+    """
     first_name = 'undefined'
     last_name = 'undefined'
     data_response = request_to_ms_auth(jwt, uuid_user)
@@ -91,6 +121,12 @@ def get_user_names(jwt, uuid_user) -> tuple:
 
 
 def get_email(jwt, uuid_user) -> str:
+    """
+    Function to get email from bazar-auth
+    :param jwt: json web token to get username of bazar-auth
+    :param uuid_user: uuid user to get username of bazar-auth
+    :return: email in format str
+    """
     email = 'undefined'
     data_response = request_to_ms_auth(jwt, uuid_user, True)
     if data_response is not None:
@@ -99,6 +135,14 @@ def get_email(jwt, uuid_user) -> str:
 
 
 def send_email(subject: str, data: str, destination: list, is_html: bool = False) -> bool:
+    """
+    Generic function to send email
+    :param subject: subject of email
+    :param data: data of email
+    :param destination: list of recipients
+    :param is_html: boolean flag to determinate type of content email
+    :return: boolean True if email sending was successful else False
+    """
     try:
         type_content = "Html" if is_html else "Text"
         url = URL_EMAIL_LAMBDA
@@ -140,6 +184,12 @@ def send_email(subject: str, data: str, destination: list, is_html: bool = False
 
 
 def get_total_pages(total_elements: int, limit: int):
+    """
+    Function to get total number pages of endpoints with pagination
+    :param total_elements: total elements from query
+    :param limit: limit elements specified by client
+    :return: total number pages
+    """
     if total_elements == limit:
         return 1
     elif total_elements == 0:
@@ -148,6 +198,12 @@ def get_total_pages(total_elements: int, limit: int):
 
 
 def validate_num_certifications_vs_num_files(num_certs: int, num_files: int):
+    """
+    Function to validate tha the number certifications checked is equal to number files will be uploaded
+    :param num_certs: number certifications
+    :param num_files: number files to upload to storage
+    :return: abort application if they are not equals
+    """
     current_app.logger.info(f"Checking num certifications vs num files uploaded ")
     if num_certs != num_files:
         e = api_error('NumCertificationsVSNumFilesError')
@@ -157,6 +213,13 @@ def validate_num_certifications_vs_num_files(num_certs: int, num_files: int):
 
 
 def send_email_to_admin(jwt, uuid_user, product, prefix_files):
+    """
+    Function to send email to admin like notification when a product was registered with certifications
+    :param jwt: json web token to get username of bazar-auth
+    :param uuid_user: uuid user to get username of bazar-auth
+    :param product: product with information to email body
+    :param prefix_files: path in storage
+    """
     # Build html to send email
     first_name, last_name = get_user_names(jwt, uuid_user)
     user_name = f"{first_name.title()} {last_name.title()}"
@@ -174,12 +237,23 @@ def send_email_to_admin(jwt, uuid_user, product, prefix_files):
 
 
 def get_field_is_like(list_objects, user_uuid):
+    """
+    Function to determinate if products has like
+    :param list_objects: list of products
+    :param user_uuid: uuid user to validate if this user liked product
+    :return: list products
+    """
     for p in list_objects:
         p.check_use_like(user_uuid)
     return list_objects
 
 
 def get_urls_files_and_images(list_objects):
+    """
+    Function to fill data about urls files and urls images
+    :param list_objects: list of products
+    :return: list of products with extra information
+    """
     list_e_objects = []
     for p in list_objects:
         ep = ProductEntity.from_orm(p)
@@ -190,6 +264,12 @@ def get_urls_files_and_images(list_objects):
 
 
 def get_product_by_uuid_product(session, uuid_product):
+    """
+    Function to get a specific product by uuid
+    :param session: session sqlalchemy
+    :param uuid_product: uuid product
+    :return: product
+    """
     product = session.query(Product).filter_by(uuid=uuid_product).first()
     if product is None:
         e = api_error('ObjectNotFound')
@@ -200,6 +280,12 @@ def get_product_by_uuid_product(session, uuid_product):
 
 
 def get_user_by_uuid_user(session, uuid_user):
+    """
+    Function to get a specific user by uuid
+    :param session: session sqlalchemy
+    :param uuid_user: uuid user
+    :return: user
+    """
     user = session.query(User).filter_by(uuid=uuid_user).first()
     if user is None:
         e = api_error('ObjectNotFound')

@@ -49,13 +49,12 @@ class IProductRepository(ABC):
         raise Exception('Not implemented method')
 
     @abstractmethod
-    def get_products_by_user(self, uuid: str, roles: list, limit: int, offset: int) -> Union[ProductsPaginationEntity,
-                                                                                             ProductsListEntity]:
+    def get_products_by_user(self, uuid: str, roles: list, limit: int, offset: int) -> ProductsPaginationEntity:
         raise Exception('Not implemented method')
 
     @abstractmethod
     def get_products_user_by_category(self, uuid: str, roles: list, basic_product: str, limit: int, offset: int) \
-            -> Union[ProductsPaginationEntity, ProductsListEntity]:
+            -> ProductsPaginationEntity:
         raise Exception('Not implemented method')
 
     # ComboBox

@@ -19,7 +19,7 @@ from src.domain.entities.wishlist_entity import WishProductNewEntity, WishProduc
 from src.domain.ports.wishlist_interface import IWishListRepository
 from src.infrastructure.adapters.database.models import WishList, Product, BasicProduct
 from src.infrastructure.adapters.database.repositories.utils import get_total_pages, get_urls_files_and_images, \
-    get_field_is_like, get_user_by_uuid_user
+    get_field_is_like, get_user_by_uuid_user, get_product_by_uuid_product
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
@@ -36,8 +36,8 @@ class WishListRepository(IWishListRepository):
 
     def new_product_on_wishlist(self, wish_product_entity: WishProductNewEntity) -> WishProductEntity:
         with self.session_maker() as session:
-            user = self.utils_db.get_user_by_uuid_user(wish_product_entity.user_uuid)
-            product = self.utils_db.get_product_by_uuid_product(wish_product_entity.product_uuid)
+            user = get_user_by_uuid_user(session, wish_product_entity.user_uuid)
+            product = get_product_by_uuid_product(session, wish_product_entity.product_uuid)
             object_to_save = WishList(
                 user_id=user.id,
                 product_id=product.id,
@@ -57,8 +57,8 @@ class WishListRepository(IWishListRepository):
 
     def delete_product_from_wishlist(self, wish_product_entity: WishProductNewEntity):
         with self.session_maker() as session:
-            user = self.utils_db.get_user_by_uuid_user(wish_product_entity.user_uuid)
-            product = self.utils_db.get_product_by_uuid_product(wish_product_entity.product_uuid)
+            user = get_user_by_uuid_user(session, wish_product_entity.user_uuid)
+            product = get_product_by_uuid_product(session, wish_product_entity.product_uuid)
             object_to_delete = session.query(WishList).filter_by(user_id=user.id, product_id=product.id)
             object_to_delete.delete()
             session.commit()

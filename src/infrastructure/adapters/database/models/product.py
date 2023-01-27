@@ -176,6 +176,10 @@ class Product(base):
 
     created_at = Column(TIMESTAMP(timezone=True), default=datetime.now(UTC_TIME_ZONE), nullable=False)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
+    transaction_id = Column(String(500), comment='Field is filled when seller publish a product in the blockchain')
+    comment_approval = Column(String(350), comment='Comment by admin when approve product. '
+                                                   'This comment is sent like notification to seller user')
+    level_approval = Column(Integer, comment='Level approved (1, 2, 3) by admin. Depending for certifications')
 
     # Relationship
     company = relationship("Company", backref="products")

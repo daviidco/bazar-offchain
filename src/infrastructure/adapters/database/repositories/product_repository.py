@@ -454,7 +454,7 @@ class ProductRepository(IProductRepository):
             res_product = ProductEntity.from_orm(product)
             return res_product
 
-    def edit_product_state(self, status: str, uuid: str) -> ProductEntity:
+    def edit_product_state(self, status: str, uuid: str, transaction_id: str = None) -> ProductEntity:
         with self.session_maker() as session:
             product = get_product_by_uuid_product(session, uuid)
             state = session.query(StatusProduct).filter_by(status_product=status).first()
@@ -472,6 +472,9 @@ class ProductRepository(IProductRepository):
                     abort(code=e.status_code, message=e.message, error=e.error)
 
             product.status_id = state.id
+            if transaction_id is not None:
+                current_app.logger.info(f"{product} going to edit with transaction_id - blockchain")
+                product.transaction_id = transaction_id
             session.commit()
             current_app.logger.info(f"{product} state edited")
             return ProductEntity.from_orm(product)

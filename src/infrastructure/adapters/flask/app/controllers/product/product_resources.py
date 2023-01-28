@@ -424,7 +424,7 @@ class ProductPublishResource(Resource):
         self.api = app
         self.edit_product_state = edit_product_state
 
-    @api.doc(security='Private JWT')
+    @api.doc(params={"transaction_id": 'transaction id - blockchain'}, security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @requires_auth
     @requires_role(["seller"])
@@ -432,7 +432,8 @@ class ProductPublishResource(Resource):
         """Updates state product to published"""
         state = 'Published'
         is_valid_uuid_input(uuid_product)
-        result = self.edit_product_state.execute(state, uuid_product)
+        transaction_id = request.args.get("transaction_id", None)
+        result = self.edit_product_state.execute(state, uuid_product, transaction_id)
         return json.loads(result.json()), self.success_code
 
 

@@ -162,8 +162,8 @@ class EditStateProduct:
     def __init__(self, product_repository: IProductRepository):
         self.__product_repository = product_repository
 
-    def execute(self, state: str, uuid: str) -> ProductEntity:
-        return self.__product_repository.edit_product_state(state, uuid)
+    def execute(self, state: str, uuid: str, transaction_id: str = None) -> ProductEntity:
+        return self.__product_repository.edit_product_state(state, uuid, transaction_id)
 
 
 class EditProduct:

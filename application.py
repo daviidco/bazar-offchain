@@ -8,7 +8,6 @@
 # 2022: Bazar Network S.A.S.
 # All Rights Reserved.
 #
-import os
 import time
 
 from flask import Flask, jsonify, request, g

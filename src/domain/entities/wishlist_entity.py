@@ -18,7 +18,7 @@ from src.domain.entities.common_entity import PaginationEntity
 
 
 #
-# These classes lets define the product type entities of domain.
+# These classes lets define the wishlist entities of domain.
 # @author David Córdoba
 #
 

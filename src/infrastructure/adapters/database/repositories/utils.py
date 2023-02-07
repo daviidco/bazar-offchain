@@ -3,16 +3,37 @@ import json
 import requests
 from flask import current_app
 from flask_restx import abort
-from sqlalchemy.orm import sessionmaker, joinedload, Session
+from flask_restx.reqparse import request
+from sqlalchemy.orm import sessionmaker
 
 from src.domain.entities.product_entity import ProductEntity
-from src.infrastructure.adapters.database.models import User, Company, Product, ProductImage
+from src.infrastructure.adapters.database.models import User, Company, Product
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
-from src.infrastructure.config.default import URL_EMAIL_LAMBDA, URL_MS_BAZAR_AUTH, AWS_REGION
-from src.infrastructure.templates_email import TemplateAdminProduct
+from src.infrastructure.config.default import URL_EMAIL_LAMBDA, URL_MS_BAZAR_AUTH, AWS_REGION, LINK_BAZAR, ORIGIN_EMAIL
+from src.infrastructure.templates_email import TemplateAdminProduct, TemplateAdminUserApproved, \
+    TemplateAdminUserRejected, TemplateAdminProductApproved, TemplateAdminProductRejected
+
+#
+# This file contains utils functions to be used to global level
+# @author David Córdoba
+#
 
 AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
+
+
+def truncate_name(name: str, max_len: int = 20) -> str:
+    """
+    Function to truncate long names with extension.
+    When is a name file to concatenate as URL is advisable a max_len of 16 characters
+    :param max_len: len max of result
+    :param name: origin name
+    :return: new name truncated
+    """
+    list_name = name.split('.')
+    list_name[0] = list_name[0][:max_len]
+    result_name = '.'.join(list_name)
+    return result_name
 
 
 def build_urls_from_profile_image(profile_image):
@@ -150,8 +171,8 @@ def send_email(subject: str, data: str, destination: list, is_html: bool = False
         payload = json.dumps({
             "user_id": "123456",
             "noti_data": {
-                "email": "systems@bazar.network",
-                "source": "systems@bazar.network",
+                "email": ORIGIN_EMAIL,
+                "source": ORIGIN_EMAIL,
                 "destination": destination,
                 "subject": {
                     "Data": subject,

@@ -10,17 +10,18 @@
 #
 
 from abc import ABC, abstractmethod
-from typing import Union
+from uuid import UUID
 
 from src.domain.entities.basic_product_entity import BasicProductsListEntity, BasicProductEntity
 from src.domain.entities.common_entity import BasicEntity
-from src.domain.entities.incoterm_entity import IncotermsListEntity
+from src.domain.entities.incoterm_entity import IncotermsListEntity, IncotermEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
 from src.domain.entities.product_entity import ProductNewEntity, ProductEntity, ProductsPaginationEntity, \
     AvailabilityEntity, ProductsListEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity, \
     ProductFilterBuyerBasicProductEntity, ProductFilterSellerBasicProductEntity
 from src.domain.entities.product_type_entity import ProductTypesListEntity, ProductTypeEntity
-from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity
+from src.domain.entities.sustainability_certifications_entity import SustainabilityCertificationsListEntity, \
+    SustainabilityCertificationEntity
 from src.domain.entities.variety_entity import VarietiesListEntity, VarietyEntity
 
 
@@ -80,6 +81,7 @@ class IProductRepository(ABC):
     def get_all_incoterms(self) -> IncotermsListEntity:
         raise Exception('Not implemented method')
 
+    @abstractmethod
     def get_all_minimum_order(self) -> MinimumOrderListEntity:
         raise Exception('Not implemented method')
 
@@ -98,6 +100,42 @@ class IProductRepository(ABC):
 
     @abstractmethod
     def get_minimum_order_by_uuid(self, uuid: str) -> MinimumOrderEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_incoterm_by_uuid(self, uuid: str) -> IncotermEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_sustainability_certifications_by_uuid(self, uuid: str) -> SustainabilityCertificationEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_basic_product_id_by_uuid(self, uuid: str) -> BasicProductEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_product_type_id_by_uuid(self, uuid: UUID) -> ProductTypeEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_variety_id_by_uuid(self, uuid: UUID) -> VarietyEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_minimum_order_id_by_uuid(self, uuid: UUID) -> MinimumOrderEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_incoterm_id_by_uuid(self, uuid: str) -> IncotermEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_sustainability_certifications_id_by_uuid(self, uuid: str) -> IncotermEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def validate_exists_certifications(self, certifications):
         raise Exception('Not implemented method')
 
     @abstractmethod
@@ -139,6 +177,7 @@ class IProductRepository(ABC):
             -> ProductsPaginationEntity:
         raise Exception('Not implemented method')
 
+    @abstractmethod
     def get_products_filter_seller_search_bar(self, filter_entity: ProductFilterSellerBasicProductEntity) \
             -> ProductsListEntity:
         raise Exception('Not implemented method')

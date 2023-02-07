@@ -9,6 +9,10 @@ from src.infrastructure.adapters.database.repositories.avatar_repository import 
 class TestAvatarRepository:
 
     def test_avatar_repository_implementation(self):
+        """
+        Function to check all methods are implemented
+        :return: Error when doesn't pass the test
+        """
         # Create an instance of the AvatarRepository class
         adapter_db = MagicMock()
         repository = AvatarRepository(adapter_db)

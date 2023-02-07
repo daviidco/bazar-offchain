@@ -36,6 +36,8 @@ UTC_TIME_ZONE = pytz.timezone('America/Bogota')
 # External services
 EMAIL_BAZAR_ADMIN = 'pcordoba@cafetosoftware.com'
 URL_EMAIL_LAMBDA = 'https://30mtgv2761.execute-api.us-east-2.amazonaws.com/dev/create'
+ORIGIN_EMAIL = 'systems@bazar.network'
+LINK_BAZAR = 'https://release.d322hj1tfg0bso.amplifyapp.com/auth/login'
 URL_MS_BAZAR_AUTH = 'https://meerkat-auth.herokuapp.com/api/v1/user'
 URL_MS_BAZAR_AUTH = 'https://auth.bazar.network/api/v1/user'
 # AUTH0

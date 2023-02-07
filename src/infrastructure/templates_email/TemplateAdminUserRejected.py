@@ -13,7 +13,6 @@
 # This file contains a template email
 # @author David Córdoba
 #
-
 html = '''
 <!DOCTYPE html>
 <html lang="en">

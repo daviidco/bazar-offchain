@@ -21,7 +21,7 @@ from src.domain.entities.sustainability_certifications_entity import Sustainabil
 
 
 #
-# These classes lets define the product type entities of domain.
+# These classes lets define the product entities of domain.
 # @author David Córdoba
 #
 

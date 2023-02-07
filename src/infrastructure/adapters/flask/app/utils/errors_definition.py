@@ -156,7 +156,7 @@ APIErrors = {
                                "description": "Undefined.",
                                "status_code": 406}},
 
-    'ApproveProductError': {"error": {"code": "E2221",
+    'PublishProductError': {"error": {"code": "E2221",
                                       "message": "Previous state is not valid to publish product",
                                       "description": "Product must be previously Approved or Hidden to be published "
                                                      "but its ",

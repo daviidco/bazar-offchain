@@ -20,7 +20,7 @@ from src.domain.ports.company_interface import ICompanyRepository
 from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.company import Company, ProfileImage, File
 from src.infrastructure.adapters.database.repositories.utils import send_email, build_url_bd, build_url_storage, \
-    get_total_pages, build_urls_from_profile_image
+    get_total_pages, build_urls_from_profile_image, truncate_name
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
 from src.infrastructure.config.default import AWS_REGION
@@ -92,10 +92,11 @@ class CompanyRepository(ICompanyRepository):
                             prefix = f"{role}/{company_entity.uuid_user}/documents_company/{path_datetime}"
 
                             for o in objects_cloud:
-                                key_bd = build_url_bd(prefix, o.filename)
-                                key_storage = build_url_storage(prefix, o.filename)
+                                name_truncated = truncate_name(o.filename)
+                                key_bd = build_url_bd(prefix, name_truncated)
+                                key_storage = build_url_storage(prefix, name_truncated)
 
-                                file_to_save = File(name=o.filename,
+                                file_to_save = File(name=name_truncated,
                                                     url=key_bd)
                                 object_to_save.files.append(file_to_save)
                                 self.__storage_repository.put_object(body=o, key=key_storage,

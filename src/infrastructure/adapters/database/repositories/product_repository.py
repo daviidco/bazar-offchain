@@ -36,7 +36,7 @@ from src.infrastructure.adapters.database.models.product import Product, BasicPr
     ProductImage, StatusProduct, ProductIncoterm
 from src.infrastructure.adapters.database.repositories.utils import build_url_storage, \
     build_url_bd, get_total_pages, validate_num_certifications_vs_num_files, send_email_to_admin, get_field_is_like, \
-    get_urls_files_and_images, get_product_by_uuid_product
+    get_urls_files_and_images, get_product_by_uuid_product, truncate_name
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
 
@@ -52,7 +52,7 @@ class ProductRepository(IProductRepository):
 
     def __init__(self, adapter_db, storage_repository, utils_db):
         self.session_maker = sessionmaker(bind=adapter_db.engine)
-        self.utils_db = utils_db
+        self.__utils_db = utils_db
         self.__storage_repository = storage_repository
 
     def get_basic_product_by_uuid(self, uuid: UUID) -> BasicProduct:
@@ -198,7 +198,7 @@ class ProductRepository(IProductRepository):
             if len(product_entity.sustainability_certifications_uuid):
                 self.validate_exists_certifications(product_entity.sustainability_certifications_uuid)
 
-            company = self.utils_db.get_company_by_uuid_user(product_entity.uuid_user)
+            company = self.__utils_db.get_company_by_uuid_user(product_entity.uuid_user)
             session.query(User).filter_by(uuid=product_entity.uuid_user).first()
 
             basic_product = self.get_basic_product_by_uuid(product_entity.basic_product_uuid)
@@ -242,10 +242,12 @@ class ProductRepository(IProductRepository):
                         current_app.logger.info(f"Uploading files to cloud")
                         prefix_files = f"{prefix_base}/documents_product/{path_datetime}"
                         for idx, o in enumerate(objects_cloud):
-                            key_bd = build_url_bd(prefix_files, o.filename)
-                            key_storage = build_url_storage(prefix_files, o.filename)
+                            # todo truncate name file
+                            name_truncated = truncate_name(o.filename)
+                            key_bd = build_url_bd(prefix_files, name_truncated)
+                            key_storage = build_url_storage(prefix_files, name_truncated)
 
-                            file_to_save = ProductFile(name=o.filename, url=key_bd)
+                            file_to_save = ProductFile(name=name_truncated, url=key_bd)
                             session_trans.add(file_to_save)
                             session_trans.flush()
 
@@ -270,9 +272,11 @@ class ProductRepository(IProductRepository):
                         current_app.logger.info(f"Uploading images to cloud")
                         prefix_images = f"{prefix_base}/product_images/{path_datetime}"
                         for i in images:
-                            key_bd = build_url_bd(prefix_images, i.filename)
-                            key_storage = build_url_storage(prefix_images, i.filename)
-                            image_to_save = ProductImage(name=i.filename, product_id=object_to_save.id, url=key_bd)
+                            # todo truncate name image
+                            name_truncated = truncate_name(i.filename)
+                            key_bd = build_url_bd(prefix_images, name_truncated)
+                            key_storage = build_url_storage(prefix_images, name_truncated)
+                            image_to_save = ProductImage(name=name_truncated, product_id=object_to_save.id, url=key_bd)
                             object_to_save.product_images.append(image_to_save)
                             self.__storage_repository.put_object(body=i, key=key_storage, content_type=i.content_type)
                     session_trans.flush()
@@ -349,7 +353,7 @@ class ProductRepository(IProductRepository):
                                                 total_pages=total_pages)
 
             elif 'seller' in roles or 'admin' in roles:
-                company_id = self.utils_db.get_company_by_uuid_user(uuid).id
+                company_id = self.__utils_db.get_company_by_uuid_user(uuid).id
                 query = session.query(Product).filter(Product.company_id == company_id)
                 list_objects = query.offset(offset).limit(limit).all()
                 total = query.from_self().count()
@@ -382,7 +386,7 @@ class ProductRepository(IProductRepository):
                 return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                                 total_pages=total_pages)
             elif 'seller' in roles:
-                company_id = self.utils_db.get_company_by_uuid_user(uuid).id
+                company_id = self.__utils_db.get_company_by_uuid_user(uuid).id
                 query = session.query(Product).filter_by(company_id=company_id) \
                     .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
                     .filter_by(basic_product=basic_product)
@@ -467,7 +471,7 @@ class ProductRepository(IProductRepository):
                 if product.status not in ['Approved', 'Hidden']:
                     current_app.logger.info(f"Product must be previously Approved or Hidden to be published but its "
                                             f"{product.status}")
-                    e = api_error('ApproveProductError')
+                    e = api_error('PublishProductError')
                     e.error['description'] = e.error['description'] + f'{product.status}'
                     abort(code=e.status_code, message=e.message, error=e.error)
 
@@ -549,10 +553,12 @@ class ProductRepository(IProductRepository):
                             current_app.logger.info(f"Uploading files to cloud")
                             prefix_files = f"{prefix_base}/documents_product/{path_datetime}"
                             for idx, o in enumerate(objects_cloud):
-                                key_bd = build_url_bd(prefix_files, o.filename)
-                                key_storage = build_url_storage(prefix_files, o.filename)
+                                # todo truncate name file
+                                name_truncated = truncate_name(o.filename)
+                                key_bd = build_url_bd(prefix_files, name_truncated)
+                                key_storage = build_url_storage(prefix_files, name_truncated)
 
-                                file_to_save = ProductFile(name=o.filename, url=key_bd)
+                                file_to_save = ProductFile(name=name_truncated, url=key_bd)
                                 session_trans.add(file_to_save)
                                 session_trans.flush()
 
@@ -588,9 +594,11 @@ class ProductRepository(IProductRepository):
                             current_app.logger.info(f"Uploading images to cloud")
                             prefix_images = f"{prefix_base}/product_images/{path_datetime}"
                             for i in images:
-                                key_bd = build_url_bd(prefix_images, i.filename)
-                                key_storage = build_url_storage(prefix_images, i.filename)
-                                image_to_save = ProductImage(name=i.filename, product_id=product_to_edit.id, url=key_bd)
+                                # todo truncate name file
+                                name_truncated = truncate_name(i.filename)
+                                key_bd = build_url_bd(prefix_images, name_truncated)
+                                key_storage = build_url_storage(prefix_images, name_truncated)
+                                image_to_save = ProductImage(name=name_truncated, product_id=product_to_edit.id, url=key_bd)
                                 product_to_edit.product_images.append(image_to_save)
                                 self.__storage_repository.put_object(body=i, key=key_storage,
                                                                      content_type=i.content_type)
@@ -635,7 +643,7 @@ class ProductRepository(IProductRepository):
 
     def get_products_filter_seller(self, filter_entity: ProductFilterSellerEntity) -> ProductsListEntity:
         with self.session_maker() as session:
-            company_id = self.utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
+            company_id = self.__utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
             list_objects = session.query(Product) \
                 .filter(Product.company_id == company_id,
                         Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
@@ -665,7 +673,7 @@ class ProductRepository(IProductRepository):
     def get_products_filter_seller_basic_product(self, filter_entity: ProductFilterSellerBasicProductEntity) \
             -> ProductsListEntity:
         with self.session_maker() as session:
-            company_id = self.utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
+            company_id = self.__utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
             list_objects = session.query(Product) \
                 .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
                 .filter(Product.company_id == company_id,
@@ -694,7 +702,7 @@ class ProductRepository(IProductRepository):
     def get_products_filter_seller_search_bar(self, filter_entity: ProductFilterSellerBasicProductEntity) \
             -> ProductsListEntity:
         with self.session_maker() as session:
-            company_id = self.utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
+            company_id = self.__utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
             list_objects = session.query(Product) \
                 .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
                 .filter(Product.company_id == company_id,

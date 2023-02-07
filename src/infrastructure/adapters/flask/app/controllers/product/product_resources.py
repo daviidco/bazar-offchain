@@ -330,6 +330,7 @@ class ProductAvailabilityEditResource(Resource):
     @api.doc(params=get_schema(AvailabilityEntity), security='Private JWT')
     @api.response(success_code, 'Success', response_model)
     @requires_auth
+    @requires_role(["seller", "buyer"])
     def patch(self, *args, **kwargs):
         """Update product availability for sale"""
         entity = AvailabilityEntity.parse_obj(request.args)

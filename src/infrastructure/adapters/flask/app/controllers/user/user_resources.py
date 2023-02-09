@@ -13,11 +13,11 @@ import json
 
 import inject
 from flask import current_app
-from flask_cors import cross_origin
 from flask_restx import Resource, Namespace
 from flask_restx.reqparse import request
 
-from src.application.user.user_uc import GetUser, GetAllUsers, CreateUser, PutStatesApproval, GetUserStates
+from src.application.user.user_uc import GetUser, GetAllUsers, CreateUser, PutStatesApproval, GetUserStates, \
+    GetWhatsappLink
 from src.domain.entities.common_entity import InputPaginationEntity, JwtEntity
 from src.domain.entities.user_entity import UserNewEntity
 from src.domain.entities.user_manage_entity import UserManageEntity, ProductManageEntity
@@ -120,3 +120,22 @@ class UserApprovalResource(Resource):
         entity = UserManageEntity.parse_obj(request.json)
         result = self.put_states_approval.execute(entity)
         return json.loads(result.json()), 200
+
+
+@api.route("/whatsapp-link/<string:user_uuid>")
+class UserWhatsappLinkResource(Resource):
+
+    @inject.autoparams('get_whatsapp_link')
+    def __init__(self, api: None, get_whatsapp_link: GetWhatsappLink):
+        self.api = api
+        self.get_whatsapp_link = get_whatsapp_link
+
+    @api.doc(security='Private JWT')
+    @requires_auth
+    @requires_role(["buyer"])
+    def get(self, user_uuid, *args, **kwargs):
+        """Gets whatsapp link with uuid user"""
+        jwt = dict(request.headers).get('Authorization', None)
+        is_valid_uuid_input(user_uuid)
+        result = self.get_whatsapp_link.execute(jwt, user_uuid)
+        return result, 200

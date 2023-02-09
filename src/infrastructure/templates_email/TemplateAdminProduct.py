@@ -45,7 +45,7 @@ html = '''
             <p>
             <div>
                 <div style="float: left; margin-right: 1%;">
-                    <img src="./assets/coffebeans.png" alt="">
+                    <img src="https://s3-offchain-test.s3.us-east-2.amazonaws.com/email_images/assets/coffebeans.png" alt="">
                 </div>
                 <div style="color: #023047">
                     <h2>{product_name}</h2>

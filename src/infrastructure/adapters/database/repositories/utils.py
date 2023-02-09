@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+#
+# This source code is the confidential, proprietary information of
+# Bazar Network S.A.S., you may not disclose such Information,
+# and may only use it in accordance with the terms of the license
+# agreement you entered into with Bazar Network S.A.S.
+#
+# 2022: Bazar Network S.A.S.
+# All Rights Reserved.
+#
+
 import json
 
 import requests
@@ -106,9 +117,9 @@ def request_to_ms_auth(jwt, uuid_user, get_person=False):
     """
     base_url = URL_MS_BAZAR_AUTH
     headers = {
-        'accept': '*/*',
         'Authorization': f'{jwt}'
     }
+
     url = f"{base_url}/person/uuid/{uuid_user}"
 
     response_auth = requests.request("GET", url, headers=headers)
@@ -153,6 +164,19 @@ def get_email(jwt, uuid_user) -> str:
     if data_response is not None:
         email = data_response['email']
     return email
+
+
+def get_whatsapp_phone(jwt, uuid_user) -> tuple:
+    """
+    Function to get whatsapp phone from bazar-auth. Bazar-auth check phone number was checked as whatsapp phone
+    :param jwt: json web token to get username of bazar-auth
+    :param uuid_user: uuid user to get username of bazar-auth
+    :return: whatsapp phone
+    """
+    data_response = request_to_ms_auth(jwt, uuid_user)
+    if data_response is not None:
+        whatsapp_phone = data_response['phoneNumber']
+    return whatsapp_phone
 
 
 def send_email(subject: str, data: str, destination: list, is_html: bool = False) -> bool:
@@ -257,6 +281,47 @@ def send_email_to_admin(jwt, uuid_user, product, prefix_files):
                is_html=True)
 
 
+def send_email_to_seller(uuid_seller, type_email, comment=None):
+    """
+    Function to send email to seller
+    :param uuid_seller: uid user to get username and email of bazar-auth
+    :param type_email: type email to seller. It can be ["User-Approved", "User-Rejected", "Product-Approved",
+    :param comment: comment by user-admin when profile or product were rejected
+    "Product-Rejected"]
+    """
+    allowed_types = ["User-Approved", "User-Rejected", "Product-Approved", "Product-Rejected"]
+    if type_email not in allowed_types:
+        current_app.logger.error(f"type email: {type_email} to seller not recognized")
+        return False
+
+    jwt = dict(request.headers).get('Authorization', None)
+    # Build html to send email
+    first_name, last_name = get_user_names(jwt, uuid_seller)
+    seller_email = get_email(jwt, uuid_seller)
+    user_name = f"{first_name.title()} {last_name.title()}"
+    if type_email == 'User-Approved':
+        subject = 'Review User - Approved'
+        data_email = TemplateAdminUserApproved.html.format(user_name=user_name, link_bazar=LINK_BAZAR)
+
+    elif type_email == 'User-Rejected':
+        subject = 'Review User - Rejected'
+        data_email = TemplateAdminUserRejected.html.format(user_name=user_name,
+                                                           comment=comment,
+                                                           link_bazar=LINK_BAZAR)
+
+    elif type_email == 'Product-Approved':
+        subject = 'Review Product - Approved'
+        data_email = TemplateAdminProductApproved.html.format(user_name=user_name, link_bazar=LINK_BAZAR)
+
+    elif type_email == 'Product-Rejected':
+        subject = 'Review Product - Rejected'
+        data_email = TemplateAdminProductRejected.html.format(user_name=user_name,
+                                                              comment=comment,
+                                                              link_bazar=LINK_BAZAR)
+    seller_email = 'daviidco@hotmail.com'
+    return send_email(subject=subject, data=data_email, destination=[seller_email], is_html=True)
+
+
 def get_field_is_like(list_objects, user_uuid):
     """
     Function to determinate if products has like
@@ -333,7 +398,7 @@ class UtilsDatabase:
 
     def get_company_by_uuid_user(self, uuid_user):
         with self.session_maker() as session:
-            current_app.logger.error(f"Getting company by user uuid")
+            current_app.logger.info(f"Getting company by user uuid")
             user = self.get_user_by_uuid_user(uuid_user)
             company = session.query(Company).filter_by(user_id=user.id).first()
             if company is None:

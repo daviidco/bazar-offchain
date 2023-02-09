@@ -20,7 +20,7 @@ from src.domain.entities.user_entity import UserNewEntity, UserEntity, UsersPagi
 from src.infrastructure.adapters.database.models import Product, CommentApproval, StatusProduct, Company
 from src.infrastructure.adapters.database.models.user import User, StatusUser
 from src.infrastructure.adapters.database.repositories.utils import get_user_names, get_total_pages, \
-    build_urls_from_url_image
+    build_urls_from_url_image, send_email_to_seller, get_whatsapp_phone
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
@@ -32,7 +32,7 @@ class UserRepository(IUserRepository):
 
     def __init__(self, adapter_db, utils_db):
         self.session_maker = sessionmaker(bind=adapter_db.engine)
-        self.utils_db = utils_db
+        self.__utils_db = utils_db
 
     def new_user(self, user_entity: UserNewEntity) -> UserEntity:
         with self.session_maker() as session:
@@ -72,7 +72,8 @@ class UserRepository(IUserRepository):
         with self.session_maker() as session:
             total = self.get_users_count()
             total_pages = get_total_pages(total, int(limit))
-            list_objects = session.query(User).join(User.company).order_by(Company.company_name).offset(offset).limit(limit).all()
+            list_objects = session.query(User).join(User.company).order_by(Company.company_name).offset(offset)\
+                .limit(limit).all()
             response = UsersPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                              total_pages=total_pages)
 
@@ -99,8 +100,8 @@ class UserRepository(IUserRepository):
         with self.session_maker() as session_trans:
             session_trans.begin()
             try:
-                current_app.logger.error(f"Editing with user-approval")
-                company_id = self.utils_db.get_company_by_uuid_user(user_manage.uuid_user).id
+                current_app.logger.info(f"Editing with user-approval")
+                company_id = self.__utils_db.get_company_by_uuid_user(user_manage.uuid_user).id
 
                 # Add comment
                 if len(user_manage.comment_approval):
@@ -119,6 +120,7 @@ class UserRepository(IUserRepository):
                     e = api_error('ObjectNotFound')
                     e.error['description'] = e.error['description'] + f' <status_user> {user_manage.user_status}'
                     abort(code=e.status_code, message=e.message, error=e.error)
+
                 user.status_id = status.id
 
                 # Modify product state
@@ -143,7 +145,9 @@ class UserRepository(IUserRepository):
                                         e.error['description'] = e.error['description'] \
                                                                  + f' <status_product> {u_m_entity.product_status}'
                                         abort(code=e.status_code, message=e.message, error=e.error)
+
                                     p.status_id = status_product.id
+
                     else:
                         e = api_error('ObjectNotFound')
                         e.error['description'] = e.error['description'] + f' <uuid_product> {missing}'
@@ -158,4 +162,24 @@ class UserRepository(IUserRepository):
 
             else:
                 session_trans.commit()
+                # Send to email when user was approval or rejected by user-admin
+                if status.status_user == 'Approved' or status.status_user == 'Rejected':
+                    send_email_to_seller(uuid_seller=user_manage.uuid_user,
+                                         type_email="User-"+status.status_user,
+                                         comment=user_manage.comment_approval)
+
+                # Send to email each product if product was approved or rejected by user-admin
+                if user_manage.products is not None:
+                    for u_m_entity in user_manage.products:
+                        if u_m_entity.product_status == 'Approved' or u_m_entity.product_status == 'Rejected':
+                            send_email_to_seller(uuid_seller=user_manage.uuid_user,
+                                                 type_email="Product-"+u_m_entity.product_status,
+                                                 comment=user_manage.comment_approval)
                 return user_manage
+
+    def get_whatsapp_link(self, jwt, uuid) -> str:
+        whatsapp_phone = get_whatsapp_phone(jwt, uuid)
+        link_whatsapp = f"https://wa.me/+{whatsapp_phone}?text=I'm%20interested%20in%20your%20bazar%20product"
+        dict_response = {"whatsapp_phone": link_whatsapp}
+        return dict_response
+

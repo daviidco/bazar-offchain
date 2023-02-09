@@ -44,3 +44,7 @@ class IUserRepository(ABC):
     @abstractmethod
     def put_states_approval(self, user_manage: UserManageEntity) -> UserManageEntity:
         raise Exception('Not implemented method')
+
+    @abstractmethod
+    def get_whatsapp_link(self, jwt: str, uuid: str) -> str:
+        raise Exception('Not implemented method')

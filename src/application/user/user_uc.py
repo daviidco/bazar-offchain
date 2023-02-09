@@ -66,3 +66,12 @@ class PutStatesApproval:
 
     def execute(self, user_manage: UserManageEntity) -> UserManageEntity:
         return self.__user_repository.put_states_approval(user_manage)
+
+
+class GetWhatsappLink:
+    @inject.autoparams('user_repository')
+    def __init__(self, user_repository: IUserRepository):
+        self.__user_repository = user_repository
+
+    def execute(self, jwt: str, uuid: str) -> str:
+        return self.__user_repository.get_whatsapp_link(jwt, uuid)

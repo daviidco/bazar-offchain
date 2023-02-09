@@ -32,7 +32,7 @@ class WishListRepository(IWishListRepository):
 
     def __init__(self, adapter_db, utils_db):
         self.session_maker = sessionmaker(bind=adapter_db.engine)
-        self.utils_db = utils_db
+        self.__utils_db = utils_db
 
     def new_product_on_wishlist(self, wish_product_entity: WishProductNewEntity) -> WishProductEntity:
         with self.session_maker() as session:
@@ -68,7 +68,7 @@ class WishListRepository(IWishListRepository):
 
     def get_wishlist_by_uuid_buyer(self, uuid: str, limit: int, offset: int) -> ProductsPaginationEntity:
         with self.session_maker() as session:
-            user_id = self.utils_db.get_user_by_uuid_user(uuid).id
+            user_id = self.__utils_db.get_user_by_uuid_user(uuid).id
             query = session.query(Product)\
                 .join(WishList, Product.id == WishList.product_id)\
                 .filter(WishList.user_id == user_id)

@@ -354,7 +354,7 @@ class ProductRepository(IProductRepository):
 
             elif 'seller' in roles or 'admin' in roles:
                 company_id = self.__utils_db.get_company_by_uuid_user(uuid).id
-                query = session.query(Product).filter(Product.company_id == company_id)
+                query = session.query(Product).filter(Product.company_id == company_id, Product.status != 'Deleted')
                 list_objects = query.offset(offset).limit(limit).all()
                 total = query.from_self().count()
                 total_pages = get_total_pages(total, int(limit))
@@ -389,7 +389,7 @@ class ProductRepository(IProductRepository):
                 company_id = self.__utils_db.get_company_by_uuid_user(uuid).id
                 query = session.query(Product).filter_by(company_id=company_id) \
                     .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
-                    .filter_by(basic_product=basic_product)
+                    .filter(Product.basic_product == basic_product, Product.status != 'Deleted')
 
                 total = query.from_self().count()
                 list_objects = query.offset(offset).limit(limit).all()
@@ -646,6 +646,7 @@ class ProductRepository(IProductRepository):
             company_id = self.__utils_db.get_company_by_uuid_user(filter_entity.user_uuid).id
             list_objects = session.query(Product) \
                 .filter(Product.company_id == company_id,
+                        Product.status != 'Deleted',
                         Product.expected_price_per_kg >= filter_entity.price_per_kg_start,
                         Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
                         Product.available_for_sale >= filter_entity.available_for_sale).all()
@@ -677,6 +678,7 @@ class ProductRepository(IProductRepository):
             list_objects = session.query(Product) \
                 .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
                 .filter(Product.company_id == company_id,
+                        Product.status != 'Deleted',
                         Product.basic_product == filter_entity.basic_product).all()
             list_e_objects = get_urls_files_and_images(list_objects)
             return ProductsListEntity(results=list_e_objects)
@@ -706,6 +708,7 @@ class ProductRepository(IProductRepository):
             list_objects = session.query(Product) \
                 .join(BasicProduct, Product.basic_product_id == BasicProduct.id) \
                 .filter(Product.company_id == company_id,
+                        Product.status != 'Deleted',
                         Product.basic_product.ilike('%' + filter_entity.basic_product + '%')).all()
 
             list_e_objects = get_urls_files_and_images(list_objects)

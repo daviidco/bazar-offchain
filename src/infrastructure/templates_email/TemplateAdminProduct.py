@@ -60,7 +60,7 @@ html = '''
         </section>
         <footer style="font-size: 11.7px; text-align: center;">
             <p>
-                Copyright © 2022
+                Copyright © 2023
             </p>
         </footer>
     </div>

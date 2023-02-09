@@ -318,7 +318,6 @@ def send_email_to_seller(uuid_seller, type_email, comment=None):
         data_email = TemplateAdminProductRejected.html.format(user_name=user_name,
                                                               comment=comment,
                                                               link_bazar=LINK_BAZAR)
-    seller_email = 'daviidco@hotmail.com'
     return send_email(subject=subject, data=data_email, destination=[seller_email], is_html=True)
 
 

@@ -74,6 +74,9 @@ application.logger.info("Blueprints Registered")
 # Initialize swagger
 application.register_blueprint(src.infrastructure.adapters.swagger.swagger_service.service_swagger)
 
+application.template_folder = 'src/infrastructure/templates_email'
+
+
 # Catch errors 404
 api = Api(application, catch_all_404s=True)
 

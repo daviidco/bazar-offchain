@@ -23,11 +23,12 @@ from src.application.product.product_uc import GetAllBasicProducts, GetProductTy
     GetAllProducts, GetProductsByUser, GetProductStates, EditProductAvailability, GetDetailProduct, EditStateProduct, \
     EditProduct, GetProductsFilterSeller, GetProductsFilterBuyer, GetProductsFilterSellerAndBasicProduct, \
     GetProductsFilterBuyerAndBasicProduct, GetProductsFilterBuyerSearchBar, GetProductsFilterSellerSearchBar, \
-    GetProductsBuyerByCategory
+    GetProductsBuyerByCategory, SendProductOrderEmailBuyer, SendProductOrderEmailSeller
 from src.domain.entities.basic_product_entity import BasicProductsListEntity
 from src.domain.entities.common_entity import InputPaginationEntity, BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderListEntity
+from src.domain.entities.order_entity import SuccessfulOrderBuyerEntity, SuccessfulOrderSellerEntity
 from src.domain.entities.product_entity import ProductNewEntity, AvailabilityEntity, ProductEntity, \
     ProductsPaginationEntity, ProductEditEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity, \
     ProductsListEntity, ProductFilterBuyerBasicProductEntity, ProductFilterSellerBasicProductEntity
@@ -83,7 +84,7 @@ class ProductResource(Resource):
     @api.response(success_code_get, 'Success', response_model_get)
     @requires_auth
     def get(self, *args, **kwargs):
-        """Gets  all products with pagination"""
+        """Gets all products with pagination"""
         limit = request.args.get('limit', 10)
         offset = request.args.get('offset', 0)
         result = self.get_all_products.execute(limit, offset)
@@ -715,3 +716,54 @@ class ProductFilterBuyerSearchBar(Resource):
                                                       basic_product=basic_product)
         result = self.get_products_filter_buyer_search_bar.execute(entity)
         return json.loads(result.json()), self.success_code
+
+
+@api.route("/order/seller-email")
+class ProductOrderEmailSeller(Resource):
+    # Swagger
+    successful_order_seller_schema = SuccessfulOrderSellerEntity.schema()
+    successful_order_seller_model = api.schema_model("SuccessfulOrderSellerEntity", successful_order_seller_schema)
+
+    @inject.autoparams('send_product_order_email_seller')
+    def __init__(self, app: current_app,
+                 send_product_order_email_seller: SendProductOrderEmailSeller,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api = app
+        self.send_product_order_email_seller = send_product_order_email_seller
+
+    @api.doc(security='Private JWT')
+    @api.expect(successful_order_seller_model)
+    @requires_auth
+    @requires_role(["buyer"])
+    def post(self, *args, **kwargs):
+        """Sends email to seller with summary order"""
+        entity = SuccessfulOrderSellerEntity.parse_obj(request.json)
+        result = self.send_product_order_email_seller.execute(entity)
+        return json.loads(result.json()), 200
+
+
+@api.route("/order/buyer-email")
+class ProductOrderEmailBuyer(Resource):
+    # Swagger
+    successful_order_seller_schema = SuccessfulOrderBuyerEntity.schema()
+    successful_order_seller_model = api.schema_model("SuccessfulOrderBuyerEntity",
+                                                     successful_order_seller_schema)
+
+    @inject.autoparams('send_product_order_email_buyer')
+    def __init__(self, app: current_app,
+                 send_product_order_email_buyer: SendProductOrderEmailBuyer,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api = app
+        self.send_product_order_email_buyer = send_product_order_email_buyer
+
+    @api.doc(security='Private JWT')
+    @api.expect(successful_order_seller_model)
+    @requires_auth
+    # @requires_role(["buyer"])
+    def post(self, *args, **kwargs):
+        """Sends email to buyer with summary order"""
+        entity = SuccessfulOrderBuyerEntity.parse_obj(request.json)
+        result = self.send_product_order_email_buyer.execute(entity)
+        return json.loads(result.json()), 200

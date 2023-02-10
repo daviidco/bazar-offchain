@@ -16,6 +16,7 @@ from src.domain.entities.basic_product_entity import BasicProductsListEntity, Ba
 from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity, IncotermEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
+from src.domain.entities.order_entity import SuccessfulOrderBuyerEntity, SuccessfulOrderSellerEntity
 from src.domain.entities.product_entity import ProductNewEntity, ProductEntity, ProductsPaginationEntity, \
     AvailabilityEntity, ProductsListEntity, ProductFilterSellerEntity, ProductFilterBuyerEntity, \
     ProductFilterBuyerBasicProductEntity, ProductFilterSellerBasicProductEntity
@@ -155,7 +156,7 @@ class IProductRepository(ABC):
         raise Exception('Not implemented method')
 
     @abstractmethod
-    def edit_product(self, jwt: str, uuid_product: str, product_entity: ProductNewEntity,
+    def edit_product(self, uuid_product: str, product_entity: ProductNewEntity,
                      objects_cloud: list, images: list) -> ProductEntity:
         raise Exception('Not implemented method')
 
@@ -185,4 +186,12 @@ class IProductRepository(ABC):
     @abstractmethod
     def get_products_filter_buyer_search_bar(self, filter_entity: ProductFilterBuyerBasicProductEntity) \
             -> ProductsPaginationEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def send_product_order_email_seller(self, order_entity) -> SuccessfulOrderSellerEntity:
+        raise Exception('Not implemented method')
+
+    @abstractmethod
+    def send_product_order_email_buyer(self, order_entity) -> SuccessfulOrderBuyerEntity:
         raise Exception('Not implemented method')

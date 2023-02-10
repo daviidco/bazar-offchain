@@ -22,6 +22,7 @@ from src.domain.entities.basic_product_entity import BasicProductsListEntity, Ba
 from src.domain.entities.common_entity import BasicEntity
 from src.domain.entities.incoterm_entity import IncotermsListEntity, IncotermEntity
 from src.domain.entities.minimum_order_entity import MinimumOrderEntity, MinimumOrderListEntity
+from src.domain.entities.order_entity import SuccessfulOrderSellerEntity, SuccessfulOrderBuyerEntity
 from src.domain.entities.product_entity import ProductEntity, ProductsPaginationEntity, ProductNewEntity, \
     ProductsListEntity, AvailabilityEntity, ProductEditEntity, ProductFilterBuyerEntity, ProductFilterSellerEntity, \
     ProductFilterSellerBasicProductEntity, ProductFilterBuyerBasicProductEntity
@@ -30,13 +31,13 @@ from src.domain.entities.sustainability_certifications_entity import Sustainabil
     SustainabilityCertificationEntity
 from src.domain.entities.variety_entity import VarietiesListEntity, VarietyEntity
 from src.domain.ports.product_interface import IProductRepository
-from src.infrastructure.adapters.database.models import User
+from src.infrastructure.adapters.database.models import User, Company
 from src.infrastructure.adapters.database.models.product import Product, BasicProduct, ProductType, Variety, \
     MinimumOrder, Incoterm, SustainabilityCertification, ProductFile, ProductSustainabilityCertification, \
     ProductImage, StatusProduct, ProductIncoterm
 from src.infrastructure.adapters.database.repositories.utils import build_url_storage, \
     build_url_bd, get_total_pages, validate_num_certifications_vs_num_files, send_email_to_admin, get_field_is_like, \
-    get_urls_files_and_images, get_product_by_uuid_product, truncate_name
+    get_urls_files_and_images, get_product_by_uuid_product, truncate_name, send_email_with_template
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
 
@@ -314,7 +315,7 @@ class ProductRepository(IProductRepository):
 
                     if prefix_files is not None:
                         current_app.logger.info(f"Sending email to bazar admin")
-                        send_email_to_admin(jwt, product_entity.uuid_user, object_to_save, prefix_files)
+                        send_email_to_admin(product_entity.uuid_user, object_to_save, prefix_files)
                         current_app.logger.info(f"Email sent")
                     return res_product
                 finally:
@@ -483,7 +484,7 @@ class ProductRepository(IProductRepository):
             current_app.logger.info(f"{product} state edited")
             return ProductEntity.from_orm(product)
 
-    def edit_product(self, jwt: str, uuid_product: str, product_entity: ProductEditEntity,
+    def edit_product(self, uuid_product: str, product_entity: ProductEditEntity,
                      objects_cloud: list, images: list) -> ProductEntity:
 
         with self.session_maker() as session:
@@ -635,7 +636,7 @@ class ProductRepository(IProductRepository):
                     session_trans.close()
 
                     if prefix_files is not None:
-                        send_email_to_admin(jwt, product_entity.uuid_user, product_to_edit, prefix_files)
+                        send_email_to_admin(product_entity.uuid_user, product_to_edit, prefix_files)
 
                     return res_product
                 finally:
@@ -731,3 +732,49 @@ class ProductRepository(IProductRepository):
 
             return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
                                             results=list_e_objects, total_pages=total_pages)
+
+    def send_product_order_email_seller(self, order_entity) -> SuccessfulOrderSellerEntity:
+        render_data = dict(order_entity)
+        seller_uuid = None
+        incoterm = self.get_incoterm_by_uuid(order_entity.uuid_incoterm)
+        with self.session_maker() as session:
+            product = session.query(Product) \
+                .join(Company, Product.company_id == Company.id) \
+                .join(User, Company.user_id == User.id)\
+                .filter(Product.uuid == order_entity.uuid_product).first()
+            render_data['url_product_image'] = product.url_images_ap[0]
+            render_data['basic_product'] = product.basic_product
+            render_data['product_type'] = product.product_type
+            render_data['variety'] = product.variety
+            render_data['certification'] = True if product.sustainability_certifications else False
+            render_data['incoterm'] = incoterm.incoterm
+
+            if product.company.profile_image_url is not None:
+                render_data['profile_image_url'] = product.company.profile_image_url
+            seller_uuid = product.company.user_r.uuid
+
+        if seller_uuid is not None:
+            send_email_with_template(uuid_user=seller_uuid, type_email="TemplateSuccessfulOrderSeller",
+                                     render_data=render_data)
+        return order_entity
+
+    def send_product_order_email_buyer(self, order_entity) -> SuccessfulOrderBuyerEntity:
+        render_data = dict(order_entity)
+        # json.loads(Model().json())
+        with self.session_maker() as session:
+            product = get_product_by_uuid_product(session, order_entity.uuid_product)
+            seller = session.query(Product) \
+                .join(Company, Product.company_id == Company.id) \
+                .join(User, Company.user_id == User.id) \
+                .filter(Product.uuid == order_entity.uuid_product).first()
+
+            render_data['url_product_image'] = product.url_images_ap[0]
+            render_data['basic_product'] = product.basic_product
+            render_data['product_type'] = product.product_type
+            render_data['variety'] = product.variety
+            render_data['certification'] = True if product.sustainability_certifications else False
+
+        send_email_with_template(uuid_user=order_entity.uuid_buyer,
+                                 type_email="TemplateSuccessfulOrderBuyer", render_data=render_data)
+
+        return  order_entity

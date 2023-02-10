@@ -12,7 +12,7 @@
 import json
 
 import requests
-from flask import current_app
+from flask import current_app, render_template
 from flask_restx import abort
 from flask_restx.reqparse import request
 from sqlalchemy.orm import sessionmaker
@@ -22,9 +22,7 @@ from src.infrastructure.adapters.database.models import User, Company, Product
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
 from src.infrastructure.config.default import URL_EMAIL_LAMBDA, URL_MS_BAZAR_AUTH, AWS_REGION, LINK_BAZAR, ORIGIN_EMAIL
-from src.infrastructure.templates_email import TemplateAdminProduct, TemplateAdminUserApproved, \
-    TemplateAdminUserRejected, TemplateAdminProductApproved, TemplateAdminProductRejected
-
+from src.infrastructure.templates_email import TemplateAdminProduct
 #
 # This file contains utils functions to be used to global level
 # @author David Córdoba
@@ -107,7 +105,7 @@ def build_url_storage(prefix, name):
     return key_storage
 
 
-def request_to_ms_auth(jwt, uuid_user, get_person=False):
+def request_to_ms_auth(uuid_user, get_person=False):
     """
     Function that do request to bazar-auth
     :param jwt: json web token to get username of bazar-auth
@@ -115,6 +113,7 @@ def request_to_ms_auth(jwt, uuid_user, get_person=False):
     :param get_person: boolean flag determines call endpoint user o endpoint person
     :return: response data from bazar-auth
     """
+    jwt = dict(request.headers).get('Authorization', None)
     base_url = URL_MS_BAZAR_AUTH
     headers = {
         'Authorization': f'{jwt}'
@@ -136,44 +135,41 @@ def request_to_ms_auth(jwt, uuid_user, get_person=False):
         return None
 
 
-def get_user_names(jwt, uuid_user) -> tuple:
+def get_user_names(uuid_user) -> tuple:
     """
     Function to get email from bazar-auth
-    :param jwt: json web token to get username of bazar-auth
     :param uuid_user: uuid user to get username of bazar-auth
     :return: firstname and lastname like tuple
     """
     first_name = 'undefined'
     last_name = 'undefined'
-    data_response = request_to_ms_auth(jwt, uuid_user)
+    data_response = request_to_ms_auth(uuid_user)
     if data_response is not None:
         first_name = data_response['firstName']
         last_name = data_response['lastName']
     return first_name, last_name
 
 
-def get_email(jwt, uuid_user) -> str:
+def get_email(uuid_user) -> str:
     """
     Function to get email from bazar-auth
-    :param jwt: json web token to get username of bazar-auth
     :param uuid_user: uuid user to get username of bazar-auth
     :return: email in format str
     """
     email = 'undefined'
-    data_response = request_to_ms_auth(jwt, uuid_user, True)
+    data_response = request_to_ms_auth(uuid_user, True)
     if data_response is not None:
         email = data_response['email']
     return email
 
 
-def get_whatsapp_phone(jwt, uuid_user) -> tuple:
+def get_whatsapp_phone(uuid_user) -> tuple:
     """
     Function to get whatsapp phone from bazar-auth. Bazar-auth check phone number was checked as whatsapp phone
-    :param jwt: json web token to get username of bazar-auth
     :param uuid_user: uuid user to get username of bazar-auth
     :return: whatsapp phone
     """
-    data_response = request_to_ms_auth(jwt, uuid_user)
+    data_response = request_to_ms_auth(uuid_user)
     if data_response is not None:
         whatsapp_phone = data_response['phoneNumber']
     return whatsapp_phone
@@ -257,16 +253,15 @@ def validate_num_certifications_vs_num_files(num_certs: int, num_files: int):
         abort(code=e.status_code, message=e.message, error=e.error)
 
 
-def send_email_to_admin(jwt, uuid_user, product, prefix_files):
+def send_email_to_admin(uuid_user, product, prefix_files):
     """
     Function to send email to admin like notification when a product was registered with certifications
-    :param jwt: json web token to get username of bazar-auth
     :param uuid_user: uuid user to get username of bazar-auth
     :param product: product with information to email body
     :param prefix_files: path in storage
     """
     # Build html to send email
-    first_name, last_name = get_user_names(jwt, uuid_user)
+    first_name, last_name = get_user_names(uuid_user)
     user_name = f"{first_name.title()} {last_name.title()}"
     url_s3 = f"https://s3.console.aws.amazon.com/s3/buckets/{AWS_BUCKET_NAME}?" \
              f"region={AWS_REGION}&prefix={prefix_files}/&showversions=false"
@@ -281,43 +276,53 @@ def send_email_to_admin(jwt, uuid_user, product, prefix_files):
                is_html=True)
 
 
-def send_email_to_seller(uuid_seller, type_email, comment=None):
+def send_email_with_template(uuid_user, type_email, render_data: dict = None):
     """
     Function to send email to seller
-    :param uuid_seller: uid user to get username and email of bazar-auth
+    :param uuid_user: uuid user to get username and email of bazar-auth
     :param type_email: type email to seller. It can be ["User-Approved", "User-Rejected", "Product-Approved",
-    :param comment: comment by user-admin when profile or product were rejected
+    :param render_data: data to render
     "Product-Rejected"]
     """
-    allowed_types = ["User-Approved", "User-Rejected", "Product-Approved", "Product-Rejected"]
+    allowed_types = ['TemplateAdminUserApproved',
+                     'TemplateAdminUserRejected',
+                     'TemplateAdminProductApproved',
+                     'TemplateAdminProductRejected',
+                     'TemplateSuccessfulOrderSeller',
+                     'TemplateSuccessfulOrderBuyer']
+    
     if type_email not in allowed_types:
         current_app.logger.error(f"type email: {type_email} to seller not recognized")
         return False
 
-    jwt = dict(request.headers).get('Authorization', None)
     # Build html to send email
-    first_name, last_name = get_user_names(jwt, uuid_seller)
-    seller_email = get_email(jwt, uuid_seller)
+    first_name, last_name = get_user_names(uuid_user)
+    seller_email = get_email(uuid_user)
     user_name = f"{first_name.title()} {last_name.title()}"
-    if type_email == 'User-Approved':
+    if type_email == 'TemplateAdminUserApproved':
         subject = 'Review User - Approved'
-        data_email = TemplateAdminUserApproved.html.format(user_name=user_name, link_bazar=LINK_BAZAR)
+        data_email = render_template(f'{type_email}.html', link_bazar=LINK_BAZAR, **render_data)
 
-    elif type_email == 'User-Rejected':
+    elif type_email == 'TemplateAdminUserRejected':
         subject = 'Review User - Rejected'
-        data_email = TemplateAdminUserRejected.html.format(user_name=user_name,
-                                                           comment=comment,
-                                                           link_bazar=LINK_BAZAR)
+        data_email = render_template(f'{type_email}.html', link_bazar=LINK_BAZAR, **render_data)
 
-    elif type_email == 'Product-Approved':
+    elif type_email == 'TemplateAdminProductApproved':
         subject = 'Review Product - Approved'
-        data_email = TemplateAdminProductApproved.html.format(user_name=user_name, link_bazar=LINK_BAZAR)
+        data_email = render_template(f'{type_email}.html', user_name=user_name, link_bazar=LINK_BAZAR)
 
-    elif type_email == 'Product-Rejected':
+    elif type_email == 'TemplateAdminProductRejected':
         subject = 'Review Product - Rejected'
-        data_email = TemplateAdminProductRejected.html.format(user_name=user_name,
-                                                              comment=comment,
-                                                              link_bazar=LINK_BAZAR)
+        data_email = render_template(f'{type_email}.html', user_name=user_name, link_bazar=LINK_BAZAR, **render_data)
+
+    elif type_email == 'TemplateSuccessfulOrderSeller':
+        subject = 'Bazar sales confirmation'
+        data_email = render_template(f'{type_email}.html', user_name=user_name, **render_data)
+
+    elif type_email == 'TemplateSuccessfulOrderBuyer':
+        subject = 'Bazar purchase confirmation'
+        data_email = render_template(f'{type_email}.html', **render_data)
+
     return send_email(subject=subject, data=data_email, destination=[seller_email], is_html=True)
 
 

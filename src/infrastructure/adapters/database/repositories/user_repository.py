@@ -20,7 +20,7 @@ from src.domain.entities.user_entity import UserNewEntity, UserEntity, UsersPagi
 from src.infrastructure.adapters.database.models import Product, CommentApproval, StatusProduct, Company
 from src.infrastructure.adapters.database.models.user import User, StatusUser
 from src.infrastructure.adapters.database.repositories.utils import get_user_names, get_total_pages, \
-    build_urls_from_url_image, send_email_to_seller, get_whatsapp_phone
+    build_urls_from_url_image, send_email_with_template, get_whatsapp_phone
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
 
@@ -59,7 +59,7 @@ class UserRepository(IUserRepository):
                 abort(code=e.status_code, message=e.message, error=e.error)
             for c in found_object.company:
                 c.profile_images = build_urls_from_url_image(c.profile_image_url)
-            found_object.first_name, found_object.last_name = get_user_names(jwt, uuid)
+            found_object.first_name, found_object.last_name = get_user_names(uuid)
             return found_object
 
     def get_users_count(self) -> int:
@@ -72,14 +72,14 @@ class UserRepository(IUserRepository):
         with self.session_maker() as session:
             total = self.get_users_count()
             total_pages = get_total_pages(total, int(limit))
-            list_objects = session.query(User).join(User.company).order_by(Company.company_name).offset(offset)\
+            list_objects = session.query(User).join(User.company).order_by(Company.company_name).offset(offset) \
                 .limit(limit).all()
             response = UsersPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                              total_pages=total_pages)
 
             for idx_r, x in enumerate(response.results):
                 # Call endpoint to get user_name microservice auth
-                first_name, last_name = get_user_names(jwt, response.results[idx_r].uuid)
+                first_name, last_name = get_user_names(response.results[idx_r].uuid)
                 response.results[idx_r].first_name = first_name
                 response.results[idx_r].last_name = last_name
                 for idx_c, y in enumerate(x.company):
@@ -114,6 +114,8 @@ class UserRepository(IUserRepository):
                     e = api_error('ObjectNotFound')
                     e.error['description'] = e.error['description'] + f' <uuid> {user_manage.uuid_user}'
                     abort(code=e.status_code, message=e.message, error=e.error)
+
+                old_user_status = user.status
 
                 status = session_trans.query(StatusUser).filter_by(status_user=user_manage.user_status).first()
                 if status is None:
@@ -162,24 +164,32 @@ class UserRepository(IUserRepository):
 
             else:
                 session_trans.commit()
+
                 # Send to email when user was approval or rejected by user-admin
-                if status.status_user == 'Approved' or status.status_user == 'Rejected':
-                    send_email_to_seller(uuid_seller=user_manage.uuid_user,
-                                         type_email="User-"+status.status_user,
-                                         comment=user_manage.comment_approval)
+                def send_approved_rejected_user():
+                    data_to_render = {'comment': user_manage.comment_approval}
+                    send_email_with_template(uuid_user=user_manage.uuid_user,
+                                             type_email="TemplateAdminUser" + status.status_user,
+                                             render_data=data_to_render)
+
+                if status.status_user == 'Approved' and old_user_status != 'Approved':
+                    send_approved_rejected_user()
+
+                if status.status_user == 'Rejected' and old_user_status != 'Rejected':
+                    send_approved_rejected_user()
 
                 # Send to email each product if product was approved or rejected by user-admin
                 if user_manage.products is not None:
                     for u_m_entity in user_manage.products:
                         if u_m_entity.product_status == 'Approved' or u_m_entity.product_status == 'Rejected':
-                            send_email_to_seller(uuid_seller=user_manage.uuid_user,
-                                                 type_email="Product-"+u_m_entity.product_status,
-                                                 comment=user_manage.comment_approval)
+                            render_data = {'comment': user_manage.comment_approval}
+                            send_email_with_template(uuid_user=user_manage.uuid_user,
+                                                     type_email="TemplateAdminProduct" + u_m_entity.product_status,
+                                                     render_data=render_data)
                 return user_manage
 
     def get_whatsapp_link(self, jwt, uuid) -> str:
-        whatsapp_phone = get_whatsapp_phone(jwt, uuid)
+        whatsapp_phone = get_whatsapp_phone(uuid)
         link_whatsapp = f"https://wa.me/+{whatsapp_phone}?text=I'm%20interested%20in%20your%20bazar%20product"
         dict_response = {"whatsapp_phone": link_whatsapp}
         return dict_response
-

@@ -171,8 +171,9 @@ def get_whatsapp_phone(uuid_user) -> tuple:
     """
     data_response = request_to_ms_auth(uuid_user)
     if data_response is not None:
-        whatsapp_phone = data_response['phoneNumber']
-    return whatsapp_phone
+        if data_response['user']['active']:
+            whatsapp_phone = data_response['phoneNumber']
+            return whatsapp_phone
 
 
 def send_email(subject: str, data: str, destination: list, is_html: bool = False) -> bool:
@@ -297,7 +298,7 @@ def send_email_with_template(uuid_user, type_email, render_data: dict = None):
 
     # Build html to send email
     first_name, last_name = get_user_names(uuid_user)
-    seller_email = get_email(uuid_user)
+    seller_email = [get_email(uuid_user)]
     user_name = f"{first_name.title()} {last_name.title()}"
     if type_email == 'TemplateAdminUserApproved':
         subject = 'Review User - Approved'
@@ -323,7 +324,7 @@ def send_email_with_template(uuid_user, type_email, render_data: dict = None):
         subject = 'Bazar purchase confirmation'
         data_email = render_template(f'{type_email}.html', **render_data)
 
-    return send_email(subject=subject, data=data_email, destination=[seller_email], is_html=True)
+    return send_email(subject=subject, data=data_email, destination=seller_email, is_html=True)
 
 
 def get_field_is_like(list_objects, user_uuid):
@@ -338,14 +339,15 @@ def get_field_is_like(list_objects, user_uuid):
     return list_objects
 
 
-def get_urls_files_and_images(list_objects):
+def get_extra_product_info(list_objects):
     """
-    Function to fill data about urls files and urls images
+    Function to fill data about urls files, urls images and uuid seller
     :param list_objects: list of products
     :return: list of products with extra information
     """
     list_e_objects = []
     for p in list_objects:
+        p.uuid_seller = p.company.user_r.uuid
         ep = ProductEntity.from_orm(p)
         ep.url_images = list(p.url_images_ap)
         ep.url_files = [x.url for x in p.url_files_ap]

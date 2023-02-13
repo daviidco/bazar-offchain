@@ -190,6 +190,9 @@ class UserRepository(IUserRepository):
 
     def get_whatsapp_link(self, jwt, uuid) -> str:
         whatsapp_phone = get_whatsapp_phone(uuid)
-        link_whatsapp = f"https://wa.me/+{whatsapp_phone}?text=I'm%20interested%20in%20your%20bazar%20product"
-        dict_response = {"whatsapp_phone": link_whatsapp}
+        if whatsapp_phone is not None:
+            link_whatsapp = f"https://wa.me/{whatsapp_phone}?text=I'm%20interested%20in%20your%20bazar%20product"
+            dict_response = {"whatsapp_phone": link_whatsapp}
+        else:
+            dict_response = {"whatsapp_phone": None}
         return dict_response

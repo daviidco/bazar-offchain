@@ -73,6 +73,7 @@ class ProductEntity(ProductOptionsEntity, ProductBaseEntity, UuidEntity):
     url_avatar: AnyHttpUrl = None
     is_liked: bool = False
     company_name: str
+    uuid_seller: UUID = None
 
 
 class ProductsListEntity(BaseModel):

@@ -18,7 +18,7 @@ from src.domain.entities.product_entity import ProductsPaginationEntity, Product
 from src.domain.entities.wishlist_entity import WishProductNewEntity, WishProductEntity
 from src.domain.ports.wishlist_interface import IWishListRepository
 from src.infrastructure.adapters.database.models import WishList, Product, BasicProduct
-from src.infrastructure.adapters.database.repositories.utils import get_total_pages, get_urls_files_and_images, \
+from src.infrastructure.adapters.database.repositories.utils import get_total_pages, get_extra_product_info, \
     get_field_is_like, get_user_by_uuid_user, get_product_by_uuid_product
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 
@@ -79,7 +79,7 @@ class WishListRepository(IWishListRepository):
             for p in list_objects:
                 p.check_use_like(uuid)
 
-            list_e_objects = get_urls_files_and_images(list_objects)
+            list_e_objects = get_extra_product_info(list_objects)
             return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_e_objects,
                                             total_pages=total_pages)
 
@@ -99,7 +99,7 @@ class WishListRepository(IWishListRepository):
 
             list_objects = get_field_is_like(list_objects, filter_entity.user_uuid)
 
-            list_e_objects = get_urls_files_and_images(list_objects)
+            list_e_objects = get_extra_product_info(list_objects)
             return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
                                             results=list_e_objects, total_pages=total_pages)
 
@@ -118,7 +118,7 @@ class WishListRepository(IWishListRepository):
             total_pages = get_total_pages(total, int(filter_entity.limit))
 
             list_objects = get_field_is_like(list_objects, filter_entity.user_uuid)
-            list_e_objects = get_urls_files_and_images(list_objects)
+            list_e_objects = get_extra_product_info(list_objects)
 
             return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
                                             results=list_e_objects, total_pages=total_pages)
@@ -138,6 +138,6 @@ class WishListRepository(IWishListRepository):
             total_pages = get_total_pages(total, int(filter_entity.limit))
 
             list_objects = get_field_is_like(list_objects, filter_entity.user_uuid)
-            list_e_objects = get_urls_files_and_images(list_objects)
+            list_e_objects = get_extra_product_info(list_objects)
             return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
                                             results=list_e_objects, total_pages=total_pages)

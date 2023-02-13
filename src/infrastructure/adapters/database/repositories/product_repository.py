@@ -37,7 +37,7 @@ from src.infrastructure.adapters.database.models.product import Product, BasicPr
     ProductImage, StatusProduct, ProductIncoterm
 from src.infrastructure.adapters.database.repositories.utils import build_url_storage, \
     build_url_bd, get_total_pages, validate_num_certifications_vs_num_files, send_email_to_admin, get_field_is_like, \
-    get_urls_files_and_images, get_product_by_uuid_product, truncate_name, send_email_with_template
+    get_extra_product_info, get_product_by_uuid_product, truncate_name, send_email_with_template
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
 
@@ -243,7 +243,6 @@ class ProductRepository(IProductRepository):
                         current_app.logger.info(f"Uploading files to cloud")
                         prefix_files = f"{prefix_base}/documents_product/{path_datetime}"
                         for idx, o in enumerate(objects_cloud):
-                            # todo truncate name file
                             name_truncated = truncate_name(o.filename)
                             key_bd = build_url_bd(prefix_files, name_truncated)
                             key_storage = build_url_storage(prefix_files, name_truncated)
@@ -273,7 +272,6 @@ class ProductRepository(IProductRepository):
                         current_app.logger.info(f"Uploading images to cloud")
                         prefix_images = f"{prefix_base}/product_images/{path_datetime}"
                         for i in images:
-                            # todo truncate name image
                             name_truncated = truncate_name(i.filename)
                             key_bd = build_url_bd(prefix_images, name_truncated)
                             key_storage = build_url_storage(prefix_images, name_truncated)
@@ -349,7 +347,7 @@ class ProductRepository(IProductRepository):
                 total = query.from_self().count()
                 total_pages = get_total_pages(total, int(limit))
                 list_objects = get_field_is_like(list_objects, uuid)
-                list_objects = get_urls_files_and_images(list_objects)
+                list_objects = get_extra_product_info(list_objects)
                 return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                                 total_pages=total_pages)
 
@@ -359,7 +357,7 @@ class ProductRepository(IProductRepository):
                 list_objects = query.offset(offset).limit(limit).all()
                 total = query.from_self().count()
                 total_pages = get_total_pages(total, int(limit))
-                list_objects = get_urls_files_and_images(list_objects)
+                list_objects = get_extra_product_info(list_objects)
                 return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                                 total_pages=total_pages)
 
@@ -383,7 +381,7 @@ class ProductRepository(IProductRepository):
                 total_pages = get_total_pages(total, int(limit))
 
                 list_objects = get_field_is_like(list_objects, uuid)
-                list_objects = get_urls_files_and_images(list_objects)
+                list_objects = get_extra_product_info(list_objects)
                 return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                                 total_pages=total_pages)
             elif 'seller' in roles:
@@ -396,7 +394,7 @@ class ProductRepository(IProductRepository):
                 list_objects = query.offset(offset).limit(limit).all()
                 total_pages = get_total_pages(total, int(limit))
 
-                list_objects = get_urls_files_and_images(list_objects)
+                list_objects = get_extra_product_info(list_objects)
                 return ProductsPaginationEntity(limit=limit, offset=offset, total=total, results=list_objects,
                                                 total_pages=total_pages)
 
@@ -455,7 +453,7 @@ class ProductRepository(IProductRepository):
     def get_detail_product_by_uuid(self, uuid: str) -> ProductEntity:
         with self.session_maker() as session:
             product = get_product_by_uuid_product(session, uuid)
-            product = get_urls_files_and_images([product])[0]
+            product = get_extra_product_info([product])[0]
             res_product = ProductEntity.from_orm(product)
             return res_product
 
@@ -554,7 +552,6 @@ class ProductRepository(IProductRepository):
                             current_app.logger.info(f"Uploading files to cloud")
                             prefix_files = f"{prefix_base}/documents_product/{path_datetime}"
                             for idx, o in enumerate(objects_cloud):
-                                # todo truncate name file
                                 name_truncated = truncate_name(o.filename)
                                 key_bd = build_url_bd(prefix_files, name_truncated)
                                 key_storage = build_url_storage(prefix_files, name_truncated)
@@ -595,7 +592,6 @@ class ProductRepository(IProductRepository):
                             current_app.logger.info(f"Uploading images to cloud")
                             prefix_images = f"{prefix_base}/product_images/{path_datetime}"
                             for i in images:
-                                # todo truncate name file
                                 name_truncated = truncate_name(i.filename)
                                 key_bd = build_url_bd(prefix_images, name_truncated)
                                 key_storage = build_url_storage(prefix_images, name_truncated)
@@ -652,7 +648,7 @@ class ProductRepository(IProductRepository):
                         Product.expected_price_per_kg <= filter_entity.price_per_kg_end,
                         Product.available_for_sale >= filter_entity.available_for_sale).all()
 
-            list_e_objects = get_urls_files_and_images(list_objects)
+            list_e_objects = get_extra_product_info(list_objects)
             return ProductsListEntity(results=list_e_objects)
 
     def get_products_filter_buyer(self, filter_entity: ProductFilterBuyerEntity) -> ProductsPaginationEntity:
@@ -668,7 +664,7 @@ class ProductRepository(IProductRepository):
             total_pages = get_total_pages(total, int(filter_entity.limit))
 
             list_objects = get_field_is_like(list_objects, filter_entity.user_uuid)
-            list_e_objects = get_urls_files_and_images(list_objects)
+            list_e_objects = get_extra_product_info(list_objects)
             return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
                                             results=list_e_objects, total_pages=total_pages)
 
@@ -681,7 +677,7 @@ class ProductRepository(IProductRepository):
                 .filter(Product.company_id == company_id,
                         Product.status != 'Deleted',
                         Product.basic_product == filter_entity.basic_product).all()
-            list_e_objects = get_urls_files_and_images(list_objects)
+            list_e_objects = get_extra_product_info(list_objects)
             return ProductsListEntity(results=list_e_objects)
 
     def get_products_filter_buyer_basic_product(self, filter_entity: ProductFilterBuyerBasicProductEntity) \
@@ -698,7 +694,7 @@ class ProductRepository(IProductRepository):
 
             list_objects = get_field_is_like(list_objects, filter_entity.user_uuid)
 
-            list_e_objects = get_urls_files_and_images(list_objects)
+            list_e_objects = get_extra_product_info(list_objects)
             return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
                                             results=list_e_objects, total_pages=total_pages)
 
@@ -712,7 +708,7 @@ class ProductRepository(IProductRepository):
                         Product.status != 'Deleted',
                         Product.basic_product.ilike('%' + filter_entity.basic_product + '%')).all()
 
-            list_e_objects = get_urls_files_and_images(list_objects)
+            list_e_objects = get_extra_product_info(list_objects)
             return ProductsListEntity(results=list_e_objects)
 
     def get_products_filter_buyer_search_bar(self, filter_entity: ProductFilterBuyerBasicProductEntity) \
@@ -728,7 +724,7 @@ class ProductRepository(IProductRepository):
             total_pages = get_total_pages(total, int(filter_entity.limit))
 
             list_objects = get_field_is_like(list_objects, filter_entity.user_uuid)
-            list_e_objects = get_urls_files_and_images(list_objects)
+            list_e_objects = get_extra_product_info(list_objects)
 
             return ProductsPaginationEntity(limit=filter_entity.limit, offset=filter_entity.offset, total=total,
                                             results=list_e_objects, total_pages=total_pages)
@@ -763,11 +759,6 @@ class ProductRepository(IProductRepository):
         # json.loads(Model().json())
         with self.session_maker() as session:
             product = get_product_by_uuid_product(session, order_entity.uuid_product)
-            seller = session.query(Product) \
-                .join(Company, Product.company_id == Company.id) \
-                .join(User, Company.user_id == User.id) \
-                .filter(Product.uuid == order_entity.uuid_product).first()
-
             render_data['url_product_image'] = product.url_images_ap[0]
             render_data['basic_product'] = product.basic_product
             render_data['product_type'] = product.product_type
@@ -777,4 +768,4 @@ class ProductRepository(IProductRepository):
         send_email_with_template(uuid_user=order_entity.uuid_buyer,
                                  type_email="TemplateSuccessfulOrderBuyer", render_data=render_data)
 
-        return  order_entity
+        return order_entity

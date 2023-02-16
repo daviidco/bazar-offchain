@@ -20,7 +20,7 @@ from src.domain.ports.company_interface import ICompanyRepository
 from src.infrastructure.adapters.database.models import User
 from src.infrastructure.adapters.database.models.company import Company, ProfileImage, File
 from src.infrastructure.adapters.database.repositories.utils import send_email, build_url_bd, build_url_storage, \
-    get_total_pages, build_urls_from_profile_image, truncate_name
+    get_total_pages, build_urls_from_profile_image, truncate_name, admin_emails
 from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
 from src.infrastructure.config.default import AWS_REGION
@@ -136,7 +136,7 @@ class CompanyRepository(ICompanyRepository):
 
                             send_email(subject="Review Documents",
                                        data=data_email,
-                                       destination=[current_app.config['EMAIL_BAZAR_ADMIN']],
+                                       destination=admin_emails,
                                        is_html=True)
                         return res_company
                     finally:

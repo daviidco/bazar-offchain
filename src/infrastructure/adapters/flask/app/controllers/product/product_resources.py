@@ -761,7 +761,7 @@ class ProductOrderEmailBuyer(Resource):
     @api.doc(security='Private JWT')
     @api.expect(successful_order_seller_model)
     @requires_auth
-    # @requires_role(["buyer"])
+    @requires_role(["buyer"])
     def post(self, *args, **kwargs):
         """Sends email to buyer with summary order"""
         entity = SuccessfulOrderBuyerEntity.parse_obj(request.json)

@@ -22,6 +22,17 @@ from src.infrastructure.adapters.flask.app.controllers.wishlist.blueprints.wishl
 from src.infrastructure.adapters.flask.app.utils.logger import configure_logging
 from src.infrastructure.adapters.flask.configuration_injector import configure_inject
 
+# Pending to do
+""" - Endpoint bazar-auth get admins email
+    - Configure admins email in bazar-offchain
+    - Get uuid from token's claims bazar-auth
+    - Improves send email to admin with generic method send_email_with_template to  the templates: TemplateAdminReview 
+        and TemplateAdminProduct (Create company and create Product)
+        and improve with jinja2. After that, save static template htm in repo - bazar-auth
+    - Fix models swagger. swagger works but show popup because not has some models registered
+    - UnitTest - Resource, IMPL Interface 
+"""
+
 application = Flask(__name__)
 application.config.from_object('src.infrastructure.config.default')
 # Load the configuration depending of environment

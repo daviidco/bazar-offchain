@@ -23,12 +23,18 @@ from src.infrastructure.adapters.flask.app.utils.error_handling import api_error
 from src.infrastructure.config.config_parameters import get_parameter_value
 from src.infrastructure.config.default import URL_EMAIL_LAMBDA, URL_MS_BAZAR_AUTH, AWS_REGION, LINK_BAZAR, ORIGIN_EMAIL
 from src.infrastructure.templates_email import TemplateAdminProduct
+
 #
 # This file contains utils functions to be used to global level
 # @author David Córdoba
 #
 
 AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
+
+
+def admin_emails():
+    admins_email = current_app['EMAIL_BAZAR_ADMIN'].split(';')
+    return admins_email
 
 
 def truncate_name(name: str, max_len: int = 20) -> str:
@@ -273,7 +279,7 @@ def send_email_to_admin(uuid_user, product, prefix_files):
 
     send_email(subject="Review Documents - Product",
                data=data_email,
-               destination=[current_app.config['EMAIL_BAZAR_ADMIN']],
+               destination=admin_emails(),
                is_html=True)
 
 
@@ -291,7 +297,7 @@ def send_email_with_template(uuid_user, type_email, render_data: dict = None):
                      'TemplateAdminProductRejected',
                      'TemplateSuccessfulOrderSeller',
                      'TemplateSuccessfulOrderBuyer']
-    
+
     if type_email not in allowed_types:
         current_app.logger.error(f"type email: {type_email} to seller not recognized")
         return False
@@ -303,6 +309,9 @@ def send_email_with_template(uuid_user, type_email, render_data: dict = None):
     if type_email == 'TemplateAdminUserApproved':
         subject = 'Review User - Approved'
         data_email = render_template(f'{type_email}.html', link_bazar=LINK_BAZAR, **render_data)
+        # if you want see static template
+        # with open("TemplateAdminUserApprovedSTATIC.html", "wb") as f:
+        #     f.write(data_email.encode())
 
     elif type_email == 'TemplateAdminUserRejected':
         subject = 'Review User - Rejected'
@@ -323,6 +332,9 @@ def send_email_with_template(uuid_user, type_email, render_data: dict = None):
     elif type_email == 'TemplateSuccessfulOrderBuyer':
         subject = 'Bazar purchase confirmation'
         data_email = render_template(f'{type_email}.html', **render_data)
+
+    # if you want sent email to test uncomment next line with your email
+    # seller_email = ['custom@hotmail.com', 'custom@gmail.com']
 
     return send_email(subject=subject, data=data_email, destination=seller_email, is_html=True)
 

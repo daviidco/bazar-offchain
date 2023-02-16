@@ -17,7 +17,7 @@ from src.infrastructure.config.default import *
 #
 
 APP_ENV = APP_ENV_TESTING
-EMAIL_BAZAR_ADMIN = 'dperez@cafetosoftware.com'
+EMAIL_BAZAR_ADMIN = 'dperez@cafetosoftware.com;adminbazar@yopmail.com'
 
 
 # Basic parameters

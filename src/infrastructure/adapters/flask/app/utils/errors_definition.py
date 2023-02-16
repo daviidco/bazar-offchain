@@ -94,7 +94,7 @@ APIErrors = {
     'RoleWithoutPermission': {"error": {"code": "E2204",
                                         "message": "Role hasn't permission",
                                         "description": "Role hasn't permission.",
-                                        "status_code": 422}},
+                                        "status_code": 401}},
     # Product
     'ProductSavingError': {"error": {"code": "E2209",
                                      "message": "Error saving product",

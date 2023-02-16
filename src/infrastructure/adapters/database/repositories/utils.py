@@ -33,7 +33,7 @@ AWS_BUCKET_NAME = get_parameter_value('AWS_BUCKET_NAME')
 
 
 def admin_emails():
-    admins_email = current_app['EMAIL_BAZAR_ADMIN'].split(';')
+    admins_email = current_app.config['EMAIL_BAZAR_ADMIN'].split(';')
     return admins_email
 
 

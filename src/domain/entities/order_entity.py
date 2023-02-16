@@ -38,4 +38,4 @@ class SuccessfulOrderBuyerEntity(OrderBaseEntity):
 
 
 class SuccessfulOrderSellerEntity(OrderBaseEntity):
-    uuid_incoterm: str
+    uuid_incoterm: UUID

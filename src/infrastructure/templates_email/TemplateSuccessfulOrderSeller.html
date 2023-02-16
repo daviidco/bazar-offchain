@@ -26,9 +26,9 @@
 <body>
     <div style="text-align: left;">
         <header>
-            <img src="https://s3-offchain-test.s3.us-east-2.amazonaws.com/email_images/assets/group-12860.png" alt="">
+            <img src="https://s3-offchain-test.s3.us-east-2.amazonaws.com/email_images/assets/group-12861.png" alt="">
         </header>
-        <section style="padding-left: 65px; padding-right: 65px; margin-top: 31px; margin-bottom: 41px;">
+        <section style="padding-left: 65px; padding-right: 65px; margin-top: 31px; margin-bottom: 41px; width:45%">
             <h2>Congratulations!!! You have sold a product</h2>
             <h3 style="font-style: normal;">Summary of your sale</h3>
 
@@ -42,7 +42,7 @@
                 <div><p>{{product_type}} | {{variety}}</p></div></div>
             </div>
             <hr>
-            <table style="width: 150%; margin-left:20%; margin-right:20%">
+            <table style="margin-left: 20%;">
 
                 {%if user_name%}
                 <tr>
@@ -91,7 +91,7 @@
 
                 {%if total_pay_bnb%}
                 <tr>
-                    <td style="font-weight: bold;">Total payment in LKS</td>
+                    <td style="font-weight: bold; width:62%;">Total payment in BNB</td>
                     <td style="font-weight: bold;">{{total_pay_bnb}}</td>
                 </tr>
                 {%endif%}

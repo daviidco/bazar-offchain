@@ -128,7 +128,6 @@ class TestProductEntity:
     data_product_filter_seller_basic_product = dict(data_product_filter_basic_product)
     data_product_filter_buyer_basic_product = dict(data_product_filter_basic_product, **{'limit': 10, 'offset': 1})
 
-
     def test_base_product_entity(self):
         product_1 = ProductBaseEntity.parse_obj(self.data_base_product)
         validate_data_entity([product_1], ProductBaseEntity, [self.data_base_product])
